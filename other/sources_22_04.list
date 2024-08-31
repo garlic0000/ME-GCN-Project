@@ -1,9 +1,5 @@
 # ubuntu 22.04
 # 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
-# sudo dpkg  --print-architecture # 查看架构
-# 输出的架构是 amd64
-# [arch=amd64]
-# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
 deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
 # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse
 deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse

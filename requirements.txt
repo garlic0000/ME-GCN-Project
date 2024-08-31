@@ -34,11 +34,9 @@ tensorboard-data-server==0.7.0
 tensorboard-plugin-wit==1.8.1
 tensorboardX==2.6
 
-## pytorch 1.13.1
+# Pytorch 1.13.1
 torch==1.13.1
-## torchvision==0.11.2+cu102
 torchvision==0.14.1
-## 新增
 torchaudio==0.13.1
 
 # CUDA 10.2
