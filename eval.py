@@ -13,7 +13,7 @@ if __name__ == '__main__':
     args = opts.parse_args()
     
     # load config & params.
-    with open("/kaggle/working/AUW-GCN-test/config.yaml", encoding="UTF-8") as f:
+    with open("/kaggle/working/ME-GCN-Project/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         if args.dataset is not None:
             dataset = args.dataset

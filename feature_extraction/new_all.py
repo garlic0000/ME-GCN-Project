@@ -8,7 +8,7 @@ from new_feature import feature
 from new_feature_segment import segment_for_train, segment_for_test
 from apex_sample import apex_sampling
 if __name__ == "__main__":
-    with open("/kaggle/working/AUW-GCN-test/feature_extraction/config.yaml", encoding="UTF-8") as f:
+    with open("/kaggle/working/ME-GCN-Project/feature_extraction/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']
         opt = yaml_config[dataset]

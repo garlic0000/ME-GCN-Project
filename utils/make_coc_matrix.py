@@ -119,4 +119,4 @@ np.save('./co_matrix_SAMM_12ROI.npy', co_matrix)
 # np.save('./co_matrix_CAS(ME)_2_12ROI.npy', co_matrix)
 
 # kaggle上测试
-#!cd AUW-GCN-test/utils/ && python make_coc_matrix.py
+#!cd ME-GCN-Project/utils/ && python make_coc_matrix.py

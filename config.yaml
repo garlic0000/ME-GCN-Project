@@ -31,12 +31,12 @@ cas(me)^2:
   macro_right_min_dis: 7  # macro_min // 2
   macro_right_max_dis: 29
 
-  project_root: "/kaggle/working/AUW-GCN-test"
+  project_root: "/kaggle/working/ME-GCN-Project"
   feature_root: ~
-  segment_feat_root: "/kaggle/working/AUW-GCN-test/features/cas(me)^2/feature_segment"
+  segment_feat_root: "/kaggle/working/ME-GCN-Project/features/cas(me)^2/feature_segment"
   model_save_root: ~
   output_dir_name: ~
-  anno_csv: "/kaggle/working/AUW-GCN-test/info_csv/cas(me)_new.csv"
+  anno_csv: "/kaggle/working/ME-GCN-Project/info_csv/cas(me)_new.csv"
   num_workers: 2
   device: 'cuda:0'
 
@@ -102,12 +102,12 @@ samm:
   macro_right_min_dis: 6
   macro_right_max_dis: 27
 
-  project_root: "/kaggle/working/AUW-GCN-test"
+  project_root: "/kaggle/working/ME-GCN-Project"
   feature_root: ~
-  segment_feat_root: "/kaggle/working/AUW-GCN-test/features/samm_25/feature_segment_25"
+  segment_feat_root: "/kaggle/working/ME-GCN-Project/features/samm_25/feature_segment_25"
   model_save_root: ~
   output_dir_name: ~
-  anno_csv: "/kaggle/working/AUW-GCN-test/info_csv/samm_new_25.csv"
+  anno_csv: "/kaggle/working/ME-GCN-Project/info_csv/samm_new_25.csv"
   num_workers: 2
   device: 'cuda:0'
 

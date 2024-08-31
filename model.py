@@ -84,7 +84,7 @@ class GCN(nn.Module):
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
-        mat_path = os.path.join('/kaggle/working/AUW-GCN-test',
+        mat_path = os.path.join('/kaggle/working/ME-GCN-Project',
             'assets',
             '{}.npy'.format(opt['dataset'])
         )
@@ -137,7 +137,7 @@ class AUwGCN(torch.nn.Module):
 if __name__ == "__main__":
     import yaml
     # load config & params.
-    with open("/kaggle/working/AUW-GCN-test/config.yaml", encoding="UTF-8") as f:
+    with open("/kaggle/working/ME-GCN-Project/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']
         opt = yaml_config[dataset]
