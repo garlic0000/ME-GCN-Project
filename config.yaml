@@ -1,6 +1,6 @@
 # dataset: "samm" # "cas(me)^2"
 #dataset: "cas(me)^2"
-dataset: "cas(me)^2"
+dataset: "samm"
 
 cas(me)^2:
   dataset: "cas(me)^2"
@@ -129,8 +129,7 @@ samm:
   epochs: 100
   batch_size: 128
 
-  # verbose: False
-  verbose: True
+  verbose: False
 
   macro_ration: 0.7
   micro_normal_range: 1
