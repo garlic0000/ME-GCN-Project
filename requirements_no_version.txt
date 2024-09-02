@@ -11,10 +11,14 @@ Markdown
 MarkupSafe
 numpy
 # cu11 是不是cuda11的版本
-nvidia-cublas-cu11
-nvidia-cuda-nvrtc-cu11
-nvidia-cuda-runtime-cu11
-nvidia-cudnn-cu11
+# nvidia-cublas-cu11
+# nvidia-cuda-nvrtc-cu11
+# nvidia-cuda-runtime-cu11
+# nvidia-cudnn-cu11
+nvidia-cublas-cu12
+nvidia-cuda-nvrtc-cu12
+nvidia-cuda-runtime-cu12
+nvidia-cudnn-cu12
 oauthlib
 packaging
 pandas
