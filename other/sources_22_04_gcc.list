@@ -14,3 +14,6 @@ deb http://security.ubuntu.com/ubuntu/ jammy-security main restricted universe m
 # 预发布软件源，不建议启用
 # deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
 # # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
+
+# 用于下载 gcc-7 g++-7
+deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal main universe
