@@ -17,10 +17,10 @@ if __name__ == "__main__":
     # os.environ['CUDA_VISIBLE_DEVICES']    = '3, 4'
     # 只有0可以用
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    # 对cas(me)^2而言 不需要进行sampling
-    print("================ sampling ================")
-    # 顶点 采样？
-    apex_sampling(opt)
+    # # 对cas(me)^2而言 不需要进行sampling
+    # print("================ sampling ================")
+    # # 顶点 采样？
+    # apex_sampling(opt)
     print("================ crop ================")
     crop(opt)
 
