@@ -18,9 +18,9 @@ if __name__ == "__main__":
     # 只有0可以用
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     # 对cas(me)^2而言 不需要进行sampling
-    # print("================ sampling ================")
-    # # 顶点 采样？
-    # apex_sampling(opt)
+    print("================ sampling ================")
+    # 顶点 采样？
+    apex_sampling(opt)
     print("================ crop ================")
     crop(opt)
 

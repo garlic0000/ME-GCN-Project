@@ -67,7 +67,8 @@ class RetinaFace(nn.Module):
                 backbone.load_state_dict(new_state_dict)
         elif cfg['name'] == 'Resnet50':
             import torchvision.models as models
-            # UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+            # UserWarning: The parameter 'pretrained' is deprecated since 0.13
+            # and may be removed in the future, please use 'weights' instead.
             # backbone = models.resnet50(pretrained=cfg['pretrain'])
             backbone = models.resnet50(weights=cfg['pretrain'])
 
