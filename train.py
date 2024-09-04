@@ -64,6 +64,27 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
     micro_se_acc_am = AverageMeter()
     macro_se_acc_am = AverageMeter()
 
+    # 用于二分类的损失函数
+    bi_loss_apex = partial(_probability_loss, gamma=opt["abfcm_apex_gamma"],
+                           alpha=opt["abfcm_apex_alpha"],
+                           lb_smooth=opt["abfcm_label_smooth"])
+
+    bi_loss_action = partial(_probability_loss,
+                             gamma=opt["abfcm_action_gamma"],
+                             alpha=opt["abfcm_action_alpha"],
+                             lb_smooth=opt["abfcm_label_smooth"])
+
+    # 用于三分类的损失函数
+    _tmp_alpha = opt["abfcm_start_end_alpha"]
+    cls_loss_func = MultiCEFocalLoss_New(
+        class_num=3,
+        alpha=torch.tensor(
+            [_tmp_alpha / 2, _tmp_alpha / 2, 1 - _tmp_alpha],
+            dtype=torch.float32),
+        gamma=opt["abfcm_start_end_gama"],
+        # lb_smooth=0.06,
+    )
+
     for batch_idx, (feature, micro_apex_score, macro_apex_score,
                     micro_action_score, macro_action_score,
                     micro_start_end_label, macro_start_end_label) in enumerate(data_loader):
