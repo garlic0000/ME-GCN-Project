@@ -1,7 +1,8 @@
 cmake \
     -DBUILD_EXAMPLES=OFF \
     -DWITH_QT=OFF \
-    -DCUDA_GENERATION=Auto \
+    # -DCUDA_GENERATION=Auto \
+    -DCUDA_GENERATION=Major6 \
     -DOpenGL_GL_PREFERENCE=GLVND \
     -DBUILD_opencv_hdf=OFF \
     -DBUILD_PERF_TESTS=OFF \
@@ -47,6 +48,8 @@ cmake \
     -DMKL_USE_MULTITHREAD=ON \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DWITH_CUDA=ON \
+    -DCUDA_ARCH_BIN=6.0 \
+    -DCUDA_ARCH_PTX=6.0 \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_NVCUVID=OFF \
