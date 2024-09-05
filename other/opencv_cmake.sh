@@ -47,6 +47,7 @@ cmake \
     -DMKL_USE_MULTITHREAD=ON \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DWITH_CUDA=ON \
+    -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_NVCUVID=OFF \
     -DBUILD_opencv_cudacodec=OFF \
