@@ -49,9 +49,8 @@ cmake \
     -DOpenBLAS_LIB=/lib/x86_64-linux-gnu/libopenblas.so \
     -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
     -DOGRE_LIB_DIR=/usr/lib/x86_64-linux-gnu \
-    -DOGRE_LIBRARY=/usr/lib/x86_64-linux-gnu/libOgreMain.so \
-    -DLAPACK_LIBRARIES=/lib/x86_64-linux-gnu/liblapack.so \
-    -DLAPACK_LIBRARIES_DIR=/lib/x86_64-linux-gnu \
+    -DLAPACK_INCLUDE_DIRS=/usr/include \
+    -DLAPACK_LIB_DIRS=/usr/lib/x86_64-linux-gnu/lapack \
     -DAtlas_CLAPACK_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/atlas \
     -DAtlas_CBLAS_LIBRARY=/lib/x86_64-linux-gnu/libatlas.so \
     -DAtlas_LIBRARIES=/lib/x86_64-linux-gnu/libatlas.so \
