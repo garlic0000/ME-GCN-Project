@@ -167,14 +167,14 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
 if __name__ == '__main__':
     from pprint import pprint
     import opts
-    # /opt/conda/lib/python3.10/multiprocessing/popen_fork.py: 66: RuntimeWarning: os.fork()
-    # was called.os.fork() is incompatible
-    # with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-    # self.pid = os.fork()
-
-    # 使用spawn而不是fork: Python的multiprocessing库默认使用fork来创建子进程
-    # 但在多线程应用中可能会出现问题。你可以通过设置multiprocessing的启动方式为spawn来避免这种问题。
-    multiprocessing.set_start_method("spawn")
+    # # /opt/conda/lib/python3.10/multiprocessing/popen_fork.py: 66: RuntimeWarning: os.fork()
+    # # was called.os.fork() is incompatible
+    # # with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
+    # # self.pid = os.fork()
+    #
+    # # 使用spawn而不是fork: Python的multiprocessing库默认使用fork来创建子进程
+    # # 但在多线程应用中可能会出现问题。你可以通过设置multiprocessing的启动方式为spawn来避免这种问题。
+    # multiprocessing.set_start_method("spawn")
     args = opts.parse_args()
 
     # prep output folder
