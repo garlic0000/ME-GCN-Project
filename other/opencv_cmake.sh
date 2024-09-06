@@ -46,7 +46,10 @@ cmake \
     -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
     -DOpenBLAS_DIR=/usr/lib/x86_64-linux-gnu/openblas-pthread \
     -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
-    -DOGRE_LIBRARY=/usr/lib/lib/x86_64-linux-gnu/libOgreMain.so
+    -DOGRE_LIBRARY=/usr/lib/lib/x86_64-linux-gnu/libOgreMain.so\
+    -DLAPACK_LIBRARIES=/lib/x86_64-linux-gnu/liblapack.so \
+    -DLAPACK_LIBRARIES_DIR=/lib/x86_64-linux-gnu \
+    -DAtlas_CLAPACK_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/atlas \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
