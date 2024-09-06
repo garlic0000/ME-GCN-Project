@@ -45,11 +45,16 @@ cmake \
     -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
     -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
     -DOpenBLAS_DIR=/usr/lib/x86_64-linux-gnu/openblas-pthread \
+    -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/openblas-pthread \
+    -DOpenBLAS_LIB=/lib/x86_64-linux-gnu/libopenblas.so \
     -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
-    -DOGRE_LIBRARY=/usr/lib/lib/x86_64-linux-gnu/libOgreMain.so\
+    -DOGRE_LIB_DIR=/usr/lib/x86_64-linux-gnu \
+    -DOGRE_LIBRARY=/usr/lib/x86_64-linux-gnu/libOgreMain.so \
     -DLAPACK_LIBRARIES=/lib/x86_64-linux-gnu/liblapack.so \
     -DLAPACK_LIBRARIES_DIR=/lib/x86_64-linux-gnu \
     -DAtlas_CLAPACK_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/atlas \
+    -DAtlas_CBLAS_LIBRARY=/lib/x86_64-linux-gnu/libatlas.so \
+    -DAtlas_LIBRARIES=/lib/x86_64-linux-gnu/libatlas.so \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
