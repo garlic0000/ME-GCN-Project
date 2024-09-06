@@ -44,11 +44,11 @@ cmake \
     -DPYTHON3_LIBRARY=/opt/conda/lib/libpython3.10.so \
     -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
     -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
-    -DOpenBLAS_DIR=/usr/lib/x86_64-linux-gnu/openblas-pthread \
     -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/openblas-pthread \
     -DOpenBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblas.so \
     -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
-    -DOGRE_LIB_DIR=/usr/lib/x86_64-linux-gnu/OGRE-1.9.0 \
+    -DOGRE_LIB_DIR=/usr/lib/x86_64-linux-gnu \
+    -DOGRE_LIBRARY=/usr/lib/x86_64-linux-gnu/libOgreMain.so \
     -DLAPACK_INCLUDE_DIR=/usr/include/x86_64-linux-gnu \
     -DLAPACK_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblapack.so \
     -DAtlas_CLAPACK_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/atlas \
