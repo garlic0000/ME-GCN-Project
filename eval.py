@@ -5,6 +5,7 @@ from datasets import LOSO_DATASET
 import os
 import yaml
 import multiprocessing
+import warnings
 
 from utils.eval_utils import eval_single_epoch, nms_single_epoch, calculate_epoch_metrics, \
                              choose_best_epoch
@@ -20,6 +21,9 @@ if __name__ == '__main__':
     # # 使用spawn而不是fork: Python的multiprocessing库默认使用fork来创建子进程
     # # 但在多线程应用中可能会出现问题。你可以通过设置multiprocessing的启动方式为spawn来避免这种问题。
     # multiprocessing.set_start_method("spawn")
+    # 使用spawn太慢了
+    warnings.filterwarnings("ignore", category=RuntimeWarning, message="os.fork() was called.")
+
     args = opts.parse_args()
 
     # load config & params.
