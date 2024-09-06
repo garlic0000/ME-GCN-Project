@@ -40,10 +40,10 @@ cmake \
     -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
     -DPYTHON_DEFAULT_EXECUTABLE=/opt/conda/bin/python3 \
     -DPYTHON3_EXECUTABLE=/opt/conda/bin/python3 \
-    -DPYTHON3_INCLUDE_DIR=/opt/conda/envs/newCondaEnvironment/include/python3.8 \
-    -DPYTHON3_LIBRARY=/opt/conda/envs/newCondaEnvironment/lib/libpython3.8.so \
-    -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/envs/newCondaEnvironment/lib/python3.8/site-packages/numpy/core/include \
-    -DPYTHON3_PACKAGES_PATH=/opt/conda/envs/newCondaEnvironment/lib/python3.8/site-packages \
+    -DPYTHON3_INCLUDE_DIR=/opt/conda/include/python3.10 \
+    -DPYTHON3_LIBRARY=/opt/conda/lib/libpython3.10.so \
+    -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
+    -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
