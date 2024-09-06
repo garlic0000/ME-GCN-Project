@@ -39,11 +39,11 @@ cmake \
     -DHAVE_opencv_python3=ON \
     -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
     -DPYTHON_DEFAULT_EXECUTABLE=/opt/conda/bin/python3 \
-    -DPYTHON3_EXECUTABLE=/opt/conda/bin/python3 \
-    -DPYTHON3_INCLUDE_DIR=/opt/conda/include/python3.10 \
-    -DPYTHON3_LIBRARY=/opt/conda/lib/libpython3.10.so \
-    -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
-    -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
+    -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
+    -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.10 \
+    -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.10.so \
+    -DPYTHON_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
+    -DPYTHON_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
     -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/openblas-pthread \
     -DOpenBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblas.so \
     -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
@@ -54,6 +54,8 @@ cmake \
     -DAtlas_CBLAS_LIBRARY=/usr/lib/x86_64-linux-gnu/libatlas.so \
     -DAtlas_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/atlas \
     -DAtlas_LIBRARY=/usr/lib/x86_64-linux-gnu/libatlas.so \
+    -DCERES_INCLUDE_DIR=/usr/include \
+    -DCERES_LIBRARY=/usr/lib/x86_64-linux-gnu/libceres.so \
     -DGLOG_INCLUDE_DIR=/usr/include \
     -DGLOG_LIBRARY=/usr/lib/x86_64-linux-gnu/libglog.so \
     -DGFLAGS_INCLUDE_DIR=/usr/include \
