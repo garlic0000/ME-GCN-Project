@@ -8,7 +8,7 @@ cmake \
     -DBUILD_TESTS=OFF \
     -DCMAKE_BUILD_TYPE=RELEASE \
     -DBUILD_opencv_cnn_3dobj=OFF \
-    -DBUILD_opencv_dnn=OFF \
+    -DBUILD_opencv_dnn=ON \
     -DBUILD_opencv_datasets=OFF \
     -DBUILD_opencv_aruco=OFF \
     -DBUILD_opencv_tracking=OFF \
@@ -33,9 +33,15 @@ cmake \
     -DBUILD_JAVA=OFF \
     -DBUILD_opencv_python2=OFF \
     -DBUILD_NEW_PYTHON_SUPPORT=ON \
-    -DBUILD_opencv_python3=OFF \
-    -DHAVE_opencv_python3=OFF \
-    -DPYTHON_DEFAULT_EXECUTABLE="$(which python)" \
+    -DBUILD_opencv_python3=ON \
+    -DHAVE_opencv_python3=ON \
+    -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
+    -DPYTHON_DEFAULT_EXECUTABLE=/opt/conda/bin/python3 \
+    -DPYTHON3_EXECUTABLE=/opt/conda/bin/python3 \
+    -DPYTHON3_INCLUDE_DIR=/opt/conda/envs/newCondaEnvironment/include/python3.8 \
+    -DPYTHON3_LIBRARY=/opt/conda/envs/newCondaEnvironment/lib/libpython3.8.so \
+    -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/envs/newCondaEnvironment/lib/python3.8/site-packages/numpy/core/include \
+    -DPYTHON3_PACKAGES_PATH=/opt/conda/envs/newCondaEnvironment/lib/python3.8/site-packages \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
