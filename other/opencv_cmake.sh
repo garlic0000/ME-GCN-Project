@@ -45,6 +45,8 @@ cmake \
     -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
     -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
     -DOpenBLAS_DIR=/usr/lib/x86_64-linux-gnu/openblas-pthread \
+    -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
+    -DOGRE_LIBRARY=/usr/lib/lib/x86_64-linux-gnu/libOgreMain.so
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
