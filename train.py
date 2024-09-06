@@ -35,8 +35,6 @@ class AverageMeter(object):
     def __init__(self):
         self.sum = 0
         self.count = 0
-        self.correct = 0
-        self.total = 0
 
     def update(self, val, n=1):
         self.sum += val
@@ -45,24 +43,12 @@ class AverageMeter(object):
     def avg(self):
         return self.sum / self.count
 
-    def update_accuracy(self, preds, labels):
-        _, predicted = torch.max(preds, 1)
-        self.correct += (predicted == labels).sum().item()
-        self.total += labels.size(0)
-
-    def accuracy(self):
-        return self.correct / self.total
-
 
 def train(opt, data_loader, model, optimizer, epoch, device, writer):
+    # 训练模式
     model.train()
-
-    # 损失率和准确率积累器
+    # 损失率积累器
     loss_am = AverageMeter()
-    bi_apex_acc_am = AverageMeter()
-    bi_action_acc_am = AverageMeter()
-    micro_se_acc_am = AverageMeter()
-    macro_se_acc_am = AverageMeter()
 
     # 用于二分类的损失函数
     bi_loss_apex = partial(_probability_loss, gamma=opt["abfcm_apex_gamma"],
@@ -85,11 +71,15 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
         # lb_smooth=0.06,
     )
 
+    # 循环训练
     for batch_idx, (feature, micro_apex_score, macro_apex_score,
                     micro_action_score, macro_action_score,
-                    micro_start_end_label, macro_start_end_label) in enumerate(data_loader):
+                    micro_start_end_label, macro_start_end_label
+                    ) in enumerate(data_loader):
         # forward pass
+        b, t, n, c = feature.shape
         feature = feature.to(device)
+
         micro_apex_score = micro_apex_score.to(device)
         macro_apex_score = macro_apex_score.to(device)
         micro_action_score = micro_action_score.to(device)
@@ -97,24 +87,32 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
         micro_start_end_label = micro_start_end_label.to(device)
         macro_start_end_label = macro_start_end_label.to(device)
 
-        output_probability = model(feature)
         STEP = int(opt["RECEPTIVE_FILED"] // 2)
+
+        # 获取模型预测
+        output_probability = model(feature)
         output_probability = output_probability[:, :, STEP:-STEP]
 
         output_micro_apex = output_probability[:, 6, :]
         output_macro_apex = output_probability[:, 7, :]
         output_micro_action = output_probability[:, 8, :]
         output_macro_action = output_probability[:, 9, :]
-        output_micro_start_end = output_probability[:, 0:0 + 3, :]
-        output_macro_start_end = output_probability[:, 3:3 + 3, :]
 
-        # 二分类损失
-        loss_micro_apex = bi_loss_apex(output_micro_apex, micro_apex_score)
-        loss_macro_apex = bi_loss_apex(output_macro_apex, macro_apex_score)
-        loss_micro_action = bi_loss_action(output_micro_action, micro_action_score)
-        loss_macro_action = bi_loss_action(output_macro_action, macro_action_score)
+        output_micro_start_end = output_probability[:, 0: 0 + 3, :]
+        output_macro_start_end = output_probability[:, 3: 3 + 3, :]
 
-        # 三分类损失
+        # 计算损失 二分类损失
+        loss_micro_apex = bi_loss_apex(output_micro_apex,
+                                       micro_apex_score)
+
+        loss_macro_apex = bi_loss_apex(output_macro_apex,
+                                       macro_apex_score)
+        loss_micro_action = bi_loss_action(output_micro_action,
+                                           micro_action_score)
+        loss_macro_action = bi_loss_action(output_macro_action,
+                                           macro_action_score)
+        # 计算损失 三分类损失
+
         loss_micro_start_end = cls_loss_func(
             output_micro_start_end.permute(0, 2, 1).contiguous(),
             micro_start_end_label)
@@ -122,7 +120,7 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
             output_macro_start_end.permute(0, 2, 1).contiguous(),
             macro_start_end_label)
 
-        # 总损失
+        # 加权的聚合损失
         loss = (1.8 * loss_micro_apex
                 + 1.0 * loss_micro_start_end
                 + 0.1 * loss_micro_action
@@ -132,6 +130,7 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
                         + 0.1 * loss_macro_action
                 ))
 
+        # update step
         # 反向传播和优化
         optimizer.zero_grad()
         loss.backward()
@@ -139,27 +138,10 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
 
         # 更新损失
         loss_am.update(loss.detach())
-        bi_apex_acc_am.update_accuracy(output_micro_apex, micro_apex_score)
-        bi_action_acc_am.update_accuracy(output_micro_action, micro_action_score)
-        micro_se_acc_am.update_accuracy(output_micro_start_end.permute(0, 2, 1), micro_start_end_label)
-        macro_se_acc_am.update_accuracy(output_macro_start_end.permute(0, 2, 1), macro_start_end_label)
-
         writer.add_scalar("Loss/train", loss, epoch)
-
-        # Log accuracy to TensorBoard
-        writer.add_scalar("Accuracy/Micro_Apex", bi_apex_acc_am.accuracy(), epoch)
-        writer.add_scalar("Accuracy/Micro_Action", bi_action_acc_am.accuracy(), epoch)
-        writer.add_scalar("Accuracy/Micro_Start_End", micro_se_acc_am.accuracy(), epoch)
-        writer.add_scalar("Accuracy/Macro_Start_End", macro_se_acc_am.accuracy(), epoch)
-
     current_lr = optimizer.param_groups[0]['lr']
-    results = "[Epoch {0:03d}/{1:03d}]\tLoss {2:.5f}(train)\tAccuracy Micro Apex {3:.2f}%\tAccuracy Micro Action {4:.2f}%\tAccuracy Micro Start-End {5:.2f}%\tAccuracy Macro Start-End {6:.2f}%\tCurrent Learning rate {7:.5f}\n".format(
-        epoch, opt["epochs"], loss_am.avg(),
-        bi_apex_acc_am.accuracy() * 100,
-        bi_action_acc_am.accuracy() * 100,
-        micro_se_acc_am.accuracy() * 100,
-        macro_se_acc_am.accuracy() * 100,
-        current_lr)
+    results = "[Epoch {0:03d}/{1:03d}]\tLoss {2:.5f}(train)\tCurrent Learning rate {3:.5f}\n".format(
+        epoch, opt["epochs"], loss_am.avg(), current_lr)
 
     print(results)
 
