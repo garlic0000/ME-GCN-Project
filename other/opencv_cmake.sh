@@ -44,6 +44,7 @@ cmake \
     -DPYTHON3_LIBRARY=/opt/conda/lib/libpython3.10.so \
     -DPYTHON3_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
     -DPYTHON3_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
+    -DOpenBLAS_DIR=/usr/lib/x86_64-linux-gnu/openblas-pthread \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
