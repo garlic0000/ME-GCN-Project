@@ -47,7 +47,6 @@ cmake \
     -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/openblas-pthread \
     -DOpenBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblas.so \
     -DOGRE_INCLUDE_DIR=/usr/lib/include/OGRE \
-    -DOGRE_LIB_DIR=/usr/lib/x86_64-linux-gnu \
     -DOGRE_LIBRARY=/usr/lib/x86_64-linux-gnu/libOgreMain.so \
     -DLAPACK_INCLUDE_DIR=/usr/include/x86_64-linux-gnu \
     -DLAPACK_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblapack.so \
@@ -55,6 +54,10 @@ cmake \
     -DAtlas_CBLAS_LIBRARY=/usr/lib/x86_64-linux-gnu/libatlas.so \
     -DAtlas_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/atlas \
     -DAtlas_LIBRARY=/usr/lib/x86_64-linux-gnu/libatlas.so \
+    -DGLOG_INCLUDE_DIR=/usr/include \
+    -DGLOG_LIBRARY=/usr/lib/x86_64-linux-gnu/libglog.so \
+    -DGFLAGS_INCLUDE_DIR=/usr/include \
+    -DGFLAGS_LIBRARY=/usr/lib/x86_64-linux-gnu/libgflags.so \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
