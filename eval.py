@@ -67,9 +67,21 @@ if __name__ == '__main__':
                 weight_file = os.path.join(
                     opt["model_save_root"], 
                     "checkpoint_epoch_" + str(epoch).zfill(3) + ".pth.tar")
-                # 这里为什么是cpu
+                # 这里为什么是cpu？
+                #如果你的训练模型是在 GPU 上训练的，但在运行时没有可用的 GPU，
+                # 或者你希望确保代码能够在没有 GPU 的环境中运行，那么将模型加载到 CPU 是一种合理的选择
+                # 有时将模型加载到 CPU 上可以节省 GPU 内存，尤其是在模型调试或推理时
+                # weights_only=True？
+                # ou are using torch.load with weights_only=False (the current default value),
+                # which uses the default pickle module implicitly.
+                # It is possible to construct malicious pickle data
+                # which will execute arbitrary code during unpickling
+                # 当前 torch.load() 函数默认会使用 weights_only=False，这意味着在加载模型时不仅会加载模型权重，
+                # 还会加载其他可能嵌入的对象。然而，加载不受信任的文件时，可能存在安全风险，
+                # 因为恶意代码可以通过 pickle 的反序列化机制在未受控制的情况下执行
+                # 在未来版本中，weights_only 参数将默认为 True，这意味着只加载模型权重，不加载潜在的其他对象
                 checkpoint = torch.load(weight_file,
-                                        map_location=torch.device("cpu"))
+                                        map_location=torch.device("cpu"), weights_only=True)
                 model.load_state_dict(checkpoint['state_dict'])
                 eval_single_epoch(opt, model, dataloader, epoch, device)
 

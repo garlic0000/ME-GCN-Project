@@ -50,8 +50,9 @@ def load_pretrain_model():
     # 预训练模型？下载的目录中没有
     pretrained_weight_file_path = ("/home/whcold/workspace/micro-expression/"
                                    "bsn_spotting_regression/3_class.pth")
+
     checkpoint = torch.load(pretrained_weight_file_path,
-                            map_location=torch.device("cpu"))
+                            map_location=torch.device("cpu"), weights_only=True)
     model.load_state_dict(checkpoint['model'])
 
 
