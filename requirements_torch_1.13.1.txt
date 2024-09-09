@@ -1,3 +1,10 @@
+torch==1.13.1
+torchvision==0.14.1
+torchaudio==0.13.1
+nvidia-cublas-cu11==11.10.3.66
+nvidia-cuda-nvrtc-cu11==11.7.99
+nvidia-cuda-runtime-cu11==11.7.99
+nvidia-cudnn-cu11==8.5.0.96
 absl-py
 cachetools
 certifi
@@ -10,10 +17,7 @@ importlib-metadata
 Markdown
 MarkupSafe
 numpy
-nvidia-cublas-cu11==11.10.3.66
-nvidia-cuda-nvrtc-cu11==11.7.99
-nvidia-cuda-runtime-cu11==11.7.99
-nvidia-cudnn-cu11==8.5.0.96
+
 oauthlib
 packaging
 pandas
@@ -33,9 +37,7 @@ tensorboard
 tensorboard-data-server
 tensorboard-plugin-wit
 tensorboardX
-torch==1.13.1
-torchvision==0.14.1
-torchaudio==0.13.1
+
 typing_extensions
 urllib3
 Werkzeug
