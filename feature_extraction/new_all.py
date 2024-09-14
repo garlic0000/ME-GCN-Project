@@ -19,6 +19,8 @@ if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     print("================ sampling ================")
     # 对数据集进行采样
+    # 从已经被拆解为图片帧中的视频中选取特定的帧
+    # 所以原始数据是图片
     apex_sampling(opt)
     print("================ crop ================")
     crop(opt)

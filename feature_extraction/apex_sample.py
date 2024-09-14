@@ -20,8 +20,12 @@ def get_img_sampling_count(root_path, sampling_ratio):
 
 def apex_sampling(opt):
     try:
+        # 原始数据路径 被分解为图片帧的视频
+        # 原始数据路径是 图片
         original_root_path = opt["original_root_path"]
+        # 保存采样的路径
         simpled_root_path = opt["simpled_root_path"]
+        # 读取注释文件
         # original_anno_csv_path = opt["original_anno_csv_path"]
         anno_csv_path = opt["anno_csv_path"]
         SAMPLING_RATIO = opt["SAMPLING_RATIO"]
