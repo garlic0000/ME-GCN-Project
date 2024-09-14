@@ -36,6 +36,7 @@ cmake \
     -DBUILD_opencv_dnns_easily_fooled=OFF \
     -DBUILD_JAVA=OFF \
     -DBUILD_opencv_python2=OFF \
+    -DOPENCV_ENABLE_CXX11=ON \
     -DOPENCV_ENABLE_PYTHON=ON \
     -DOPENCV_PYTHON3_LIMITED_API=OFF \
     -DOPENCV_ENABLE_PYTHON_GENERATION=OFF \
