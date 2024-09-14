@@ -35,6 +35,7 @@ cmake \
     -DBUILD_JAVA=OFF \
     -DBUILD_opencv_python2=OFF \
     -DOPENCV_ENABLE_PYTHON=ON \
+    -DOPENCV_PYTHON3_LIMITED_API=OFF \
     -DBUILD_NEW_PYTHON_SUPPORT=ON \
     -DBUILD_opencv_python3=ON \
     -DHAVE_opencv_python3=ON \
