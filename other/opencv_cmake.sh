@@ -48,6 +48,7 @@ cmake \
     -DCUDA_ARCH_BIN=6.0 \
     -DCUDA_ARCH_PTX=6.0 \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.3 \
+    -DCUDA_CUDA_LIBRARY=/usr/local/cuda-12.3/lib64/stubs/libcuda.so \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
