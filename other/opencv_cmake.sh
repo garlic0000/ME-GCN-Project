@@ -40,6 +40,10 @@ cmake \
     -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.10.so \
     -DPYTHON_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
     -DPYTHON_PACKAGES_PATH=/opt/conda/lib/python3.10/site-packages \
+    -DGLOG_INCLUDE_DIR=/usr/include \
+    -DGLOG_LIBRARY=/usr/lib/x86_64-linux-gnu/libglog.so \
+    -DGFLAGS_INCLUDE_DIR=/usr/include \
+    -DGFLAGS_LIBRARY=/usr/lib/x86_64-linux-gnu/libgflags.so \
     -DWITH_CUDA=ON \
     -DCUDA_ARCH_BIN=6.0 \
     -DCUDA_ARCH_PTX=6.0 \
@@ -48,6 +52,7 @@ cmake \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
     -DWITH_OPENGL=ON \
+    -DOpenGL_GL_PREFERENCE=GLVND \
     -DWITH_FFMPEG=ON \
     -DWITH_XINE=ON \
     -DOPENCV_ENABLE_NONFREE=ON \
