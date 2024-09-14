@@ -2,6 +2,7 @@ cmake \
     -DBUILD_EXAMPLES=OFF \
     -DBUILD_opencv_denseflow=ON \
     -DBUILD_opencv_sfm=OFF \
+    -DWITH_ADE=OFF
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
     -DWITH_QT=OFF \
