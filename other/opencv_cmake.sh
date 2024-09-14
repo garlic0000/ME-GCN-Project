@@ -52,6 +52,8 @@ cmake \
     -DCUDA_ARCH_BIN=6.0 \
     -DCUDA_ARCH_PTX=6.0 \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
+    -DWITH_NVCUVID=OFF \
+    -DBUILD_opencv_cudacodec=OFF \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
@@ -59,6 +61,7 @@ cmake \
     -DOpenGL_GL_PREFERENCE=GLVND \
     -DWITH_FFMPEG=ON \
     -DWITH_XINE=ON \
+    -DCUSTOM_HAL=OFF \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DOPENCV_GENERATE_PKGCONFIG=ON \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
