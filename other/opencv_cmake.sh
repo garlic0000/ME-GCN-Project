@@ -57,8 +57,10 @@ cmake \
     -DGLOG_LIBRARY=/usr/lib/x86_64-linux-gnu/libglog.so \
     -DGFLAGS_INCLUDE_DIR=/usr/include \
     -DGFLAGS_LIBRARY=/usr/lib/x86_64-linux-gnu/libgflags.so \
-    -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu \
+    -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/openblas-pthread \
     -DOpenBLAS_LIB=/usr/lib/x86_64-linux-gnu/libopenblas.so \
+    -DLAPACKE_INCLUDE_DIR=/usr/include \
+    -DLAPACKE_LIBRARIES=/usr/lib/x86_64-linux-gnu/liblapacke.so \
     -DWITH_CUDA=ON \
     -DCUDA_ARCH_BIN=6.0 \
     -DCUDA_ARCH_PTX=6.0 \
