@@ -38,12 +38,11 @@ cmake \
     -DBUILD_opencv_dnn_modern=OFF \
     -DBUILD_opencv_dnns_easily_fooled=OFF \
     -DBUILD_JAVA=OFF \
-    -DBUILD_opencv_python2=OFF \
+    -DBUILD_opencv_python3=OFF \
     -DOPENCV_ENABLE_CXX11=ON \
     -DOPENCV_ENABLE_PYTHON_GENERATION=OFF \
-    -DBUILD_NEW_PYTHON_SUPPORT=ON \
-    -DBUILD_opencv_python3=ON \
-    -DHAVE_opencv_python3=ON \
+    -DBUILD_NEW_PYTHON_SUPPORT=OFF \
+    -DHAVE_opencv_python3=OFF \
     -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
     -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.10 \
     -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.10.so \
