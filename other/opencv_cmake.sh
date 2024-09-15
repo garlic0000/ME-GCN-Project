@@ -13,9 +13,6 @@ cmake \
     -DBUILD_JASPER=OFF \
     -DWITH_JULIA=OFF \
     -DBUILD_JULIA=OFF \
-    -DBUILD_opencv_java_bindings_generator=OFF \
-    -DBUILD_opencv_js=OFF \
-    -DBUILD_opencv_python_bindings_generator=OFF \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
     -DWITH_QT=OFF \
@@ -85,7 +82,6 @@ cmake \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
     -DWITH_NVCUVID=OFF \
     -DBUILD_opencv_cudacodec=OFF \
-    -DCMAKE_CXX_FLAGS="-Wno-missing-declarations -Wno-maybe-uninitialized" \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
