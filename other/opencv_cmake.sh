@@ -13,6 +13,17 @@ cmake \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
     -DWITH_QT=OFF \
+    -DBUILD_opencv_alphamat=OFF \
+    -DBUILD_opencv_fuzzy=OFF \
+    -DBUILD_opencv_hfs=OFF \
+    -DBUILD_opencv_img_hash=OFF \
+    -DBUILD_opencv_mcc=OFF \
+    -DBUILD_opencv_plot=OFF \
+    -DBUILD_opencv_quality=OFF \
+    -DBUILD_opencv_rapid=OFF \
+    -DBUILD_opencv_structured_light=OFF \
+    -DBUILD_opencv_surface_matching=OFF \
+    -DBUILD_opencv_wechat_qrcode=OFF \
     -DCMAKE_BUILD_TYPE=RELEASE \
     -DBUILD_opencv_hdf=OFF \
     -DBUILD_PERF_TESTS=OFF \
