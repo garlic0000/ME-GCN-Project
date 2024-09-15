@@ -21,7 +21,6 @@ cmake \
     -DBUILD_opencv_hfs=OFF \
     -DBUILD_opencv_img_hash=OFF \
     -DBUILD_opencv_mcc=OFF \
-    -DBUILD_opencv_plot=OFF \
     -DBUILD_opencv_quality=OFF \
     -DBUILD_opencv_rapid=OFF \
     -DBUILD_opencv_structured_light=OFF \
@@ -91,6 +90,7 @@ cmake \
     -DWITH_FFMPEG=ON \
     -DWITH_XINE=ON \
     -DWITH_CUSTOM_HAL=OFF \
+    -DENABLE_HAL=OFF \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DOPENCV_GENERATE_PKGCONFIG=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
