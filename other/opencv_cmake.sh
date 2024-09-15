@@ -72,5 +72,6 @@ cmake \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DOPENCV_GENERATE_PKGCONFIG=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DENABLE_PRECOMPILED_HEADERS=OFF \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
     ..
