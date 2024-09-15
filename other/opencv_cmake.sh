@@ -13,6 +13,9 @@ cmake \
     -DBUILD_JASPER=OFF \
     -DWITH_JULIA=OFF \
     -DBUILD_JULIA=OFF \
+    -DBUILD_opencv_java_bindings_generator=OFF \
+    -DBUILD_opencv_js=OFF \
+    -DBUILD_opencv_python_bindings_generator=OFF \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
     -DWITH_QT=OFF \
