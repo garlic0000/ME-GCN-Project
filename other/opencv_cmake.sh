@@ -5,6 +5,7 @@ cmake \
     -DWITH_ADE=OFF \
     -DBUILD_opencv_gapi=OFF \
     -DBUILD_opencv_highgui=OFF \
+    -DWITH_GAPI=OFF \
     -DWITH_PROTOBUF=OFF \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
