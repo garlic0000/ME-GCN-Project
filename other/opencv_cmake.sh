@@ -96,7 +96,7 @@ cmake \
     -DENABLE_HAL=OFF \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DOPENCV_GENERATE_PKGCONFIG=ON \
-    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/opencv-4.10 \
     -DENABLE_PRECOMPILED_HEADERS=OFF \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
     ..
