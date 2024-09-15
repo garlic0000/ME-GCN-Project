@@ -7,6 +7,7 @@ cmake \
     -DBUILD_opencv_highgui=OFF \
     -DWITH_GAPI=OFF \
     -DWITH_PROTOBUF=OFF \
+    -DWITH_OPENJPEG=OFF \
     -DBUILD_OPENJPEG=OFF \
     -DBUILD_JULIA=OFF \
     -DWITH_VTK=OFF \
