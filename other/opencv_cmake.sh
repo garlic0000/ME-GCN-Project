@@ -11,6 +11,7 @@ cmake \
     -DBUILD_OPENJPEG=OFF \
     -DWITH_JASPER=OFF \
     -DBUILD_JASPER=OFF \
+    -DWITH_JULIA=OFF \
     -DBUILD_JULIA=OFF \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
@@ -41,6 +42,7 @@ cmake \
     -DBUILD_opencv_rgbd=OFF \
     -DBUILD_opencv_reg=OFF \
     -DWITH_OGRE=OFF \
+    -DWITH_OVIS=OFF \
     -DBUILD_opencv_ovis=OFF \
     -DBUILD_opencv_matlab=OFF \
     -DBUILD_opencv_freetype=OFF \
