@@ -85,6 +85,7 @@ cmake \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
     -DWITH_NVCUVID=OFF \
     -DBUILD_opencv_cudacodec=OFF \
+    -DCMAKE_CXX_FLAGS="-Wno-missing-declarations -Wno-maybe-uninitialized" \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
