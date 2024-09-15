@@ -26,6 +26,7 @@ cmake \
     -DBUILD_opencv_saliency=OFF \
     -DBUILD_opencv_rgbd=OFF \
     -DBUILD_opencv_reg=OFF \
+    -DWITH_OGRE=OFF \
     -DBUILD_opencv_ovis=OFF \
     -DBUILD_opencv_matlab=OFF \
     -DBUILD_opencv_freetype=OFF \
@@ -50,6 +51,8 @@ cmake \
     -DGLOG_LIBRARY=/usr/lib/x86_64-linux-gnu/libglog.so \
     -DGFLAGS_INCLUDE_DIR=/usr/include \
     -DGFLAGS_LIBRARY=/usr/lib/x86_64-linux-gnu/libgflags.so \
+    -DOpenBLAS_INCLUDE_DIR=/usr/include/x86_64-linux-gnu/openblas-pthread \
+    -DOpenBLAS_LIB=/usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblas.so \
     -DWITH_CUDA=ON \
     -DCUDA_ARCH_BIN=6.0 \
     -DCUDA_ARCH_PTX=6.0 \
