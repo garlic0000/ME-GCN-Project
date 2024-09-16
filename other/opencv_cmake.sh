@@ -92,7 +92,6 @@ cmake \
     -DBUILD_opencv_video=ON \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DOPENCV_GENERATE_PKGCONFIG=ON \
-    -DOPENCV_ENABLE_CXX11=ON \
     -DBUILD_opencv_denseflow=ON \
     -DCMAKE_INSTALL_PREFIX=/usr/local/opencv-4.10 \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
