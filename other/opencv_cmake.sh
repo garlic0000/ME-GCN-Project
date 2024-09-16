@@ -36,7 +36,7 @@ cmake \
     -DBUILD_opencv_python3=OFF \
     -DHAVE_opencv_python3=OFF \
     -DPYTHON_DEFAULT_EXECUTABLE=/opt/conda/bin/python3 \
-    -DWITH_OPENGL=ON \
+    -DWITH_OPENGL=OFF \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
     -DWITH_TBB=ON \
