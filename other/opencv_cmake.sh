@@ -82,6 +82,7 @@ cmake \
     -DCUDA_ARCH_PTX=6.0 \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
     -DWITH_OPENCL=ON \
+    -DOpenCL_VERSION=3.0 \
     -DOpenCL_LIBRARY=/usr/local/cuda/targets/x86_64-linux/lib/libOpenCL.so \
     -DOpenCL_INCLUDE_DIR=/usr/local/cuda/targets/x86_64-linux/include/CL \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
