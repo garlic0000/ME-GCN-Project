@@ -35,7 +35,7 @@ cmake \
     -DBUILD_NEW_PYTHON_SUPPORT=ON \
     -DBUILD_opencv_python3=OFF \
     -DHAVE_opencv_python3=OFF \
-    -DPYTHON_DEFAULT_EXECUTABLE=/opt/conda/bin/python3 \
+    -DPYTHON_DEFAULT_EXECUTABLE="$(which python)" \
     -DWITH_OPENGL=ON \
     -DWITH_VTK=OFF \
     -DFORCE_VTK=OFF \
@@ -55,7 +55,7 @@ cmake \
     -DMKL_WITH_OPENMP=ON \
     -DWITH_XINE=ON \
     -DENABLE_PRECOMPILED_HEADERS=OFF \
-    -DCMAKE_INSTALL_PREFIX=/usr/local/opencv-4.10 \
+    -DCMAKE_INSTALL_PREFIX="$ROOTDIR" \
     -DOPENCV_GENERATE_PKGCONFIG=ON \
     -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
     ..
