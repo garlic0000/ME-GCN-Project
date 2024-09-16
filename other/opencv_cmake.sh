@@ -83,8 +83,8 @@ cmake \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda \
     -DWITH_OPENCL=ON \
     -DOpenCL_VERSION=3.0 \
-    -DOpenCL_LIBRARY=/usr/local/cuda/targets/x86_64-linux/lib/libOpenCL.so \
-    -DOpenCL_INCLUDE_DIR=/usr/local/cuda/targets/x86_64-linux/include/CL \
+    -DOpenCL_LIBRARY=/usr/local/cuda/lib64/libOpenCL.so \
+    -DOpenCL_INCLUDE_DIR=/usr/local/cuda/include/ \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
