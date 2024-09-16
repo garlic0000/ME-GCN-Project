@@ -1,7 +1,6 @@
 cmake \
     -DBUILD_EXAMPLES=OFF \
     -DWITH_QT=OFF \
-    -DCUDA_GENERATION=Auto \
     -DOpenGL_GL_PREFERENCE=GLVND \
     -DBUILD_opencv_hdf=OFF \
     -DBUILD_PERF_TESTS=OFF \
