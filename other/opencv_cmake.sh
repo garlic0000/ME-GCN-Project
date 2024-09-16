@@ -4,7 +4,6 @@ cmake \
     -DBUILD_opencv_sfm=OFF \
     -DWITH_ADE=OFF \
     -DBUILD_opencv_gapi=OFF \
-    -DBUILD_opencv_highgui=OFF \
     -DWITH_GAPI=OFF \
     -DWITH_PROTOBUF=OFF \
     -DWITH_OPENJPEG=OFF \
