@@ -87,6 +87,7 @@ cmake \
     -DNVCC_FLAGS_EXTRA="--default-stream per-thread" \
     -DWITH_CUBLAS=ON \
     -DCUDA_FAST_MATH=ON \
+    -DWITH_GTK=ON \
     -DWITH_OPENGL=OFF \
     -DWITH_FFMPEG=ON \
     -DWITH_XINE=ON \
