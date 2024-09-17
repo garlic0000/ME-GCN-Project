@@ -38,14 +38,16 @@ def crop(opt):
     except KeyError:
         print(f"Dataset {dataset} does not need to be cropped")
         print("terminate")
-        exit(1)
+        # exit(1)
+        return
 
     sum_count = get_img_count(simpled_root_path, dataset)
     print("img count = ", sum_count)
 
     if not os.path.exists(simpled_root_path):
         print(f"path {simpled_root_path} is not exist")
-        exit(1)
+        # exit(1)
+        return
 
     if not os.path.exists(cropped_root_path):
         os.makedirs(cropped_root_path)

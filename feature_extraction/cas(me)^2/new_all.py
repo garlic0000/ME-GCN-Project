@@ -17,7 +17,7 @@ if __name__ == "__main__":
     # os.environ['CUDA_VISIBLE_DEVICES']    = '3, 4'
     # 只有0可以用
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    # print("================ sampling ================")
+    print("================ sampling ================")
     """
     对数据集进行采样
     从已经被拆解为图片帧中的视频中选取关键帧(表情帧)
@@ -26,12 +26,9 @@ if __name__ == "__main__":
     可直接进行面部关键点处理
     但是  使用数据库裁剪的检测不出人脸
     """
-    # apex_sampling(opt)
-    print("数据库中已经存在选好的关键帧")
+    apex_sampling(opt)
     print("================ crop ================")
-    # crop(opt)
-    # print("数据集中存在已经裁剪好的标注的关键帧")
-    # print("跳过 采样关键帧 裁剪 这两个步骤")
+    crop(opt)
     print("使用裁剪的图片检测不出人脸关键帧")
     print("================ record ================")
     record_face_and_landmarks(opt)
