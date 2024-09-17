@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # 对数据集进行采样
     # 从已经被拆解为图片帧中的视频中选取特定的帧
     # 所以原始数据是图片
-    apex_sampling(opt)
+    # apex_sampling(opt)
     print("================ crop ================")
     crop(opt)
     print("================ record ================")
