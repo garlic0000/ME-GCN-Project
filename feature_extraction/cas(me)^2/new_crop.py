@@ -7,7 +7,11 @@ import yaml
 import shutil
 
 from tools import FaceDetector
+"""
+CROPPED_SIZE: 500
+1.使用数据集自带的剪切好的图片
 
+"""
 
 def get_img_count(root_path, dataset):
     count = 0

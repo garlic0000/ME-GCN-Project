@@ -1,19 +1,4 @@
-dataset: "cas(me)^2"  # "cross" #"samm_25" #"cas(me)^2"    
-
-#cas(me)^2:
-#  dataset: "cas(me)^2"
-#  # original_root_path: "/home/whcold/Datas/public_micro_dataset/samm/samm_long_original"
-#  # simpled_root_path:  "/home/whcold/Datas/public_micro_dataset/samm_25/original_25"
-#  cropped_root_path:  "/data/xjtupanda/my_dataset/ME_dataset/orig_data/casme/CAS(ME)2_longVideoFaceCropped/longVideoFaceCropped"
-#  optflow_root_path:  "/data/xjtupanda/my_dataset/ME_dataset/orig_data/optical_flow/casme"
-#  feature_root_path:  "/data/xjtupanda/my_dataset/ME_dataset/roi_feats/casme"
-#  # feature_segment_root_path:  "/home/whcold/Datas/public_micro_dataset/cas(me)^2/feature_segment"
-#  # original_anno_csv_path: "./samm_new.csv"
-#  anno_csv_path: "./cas(me)_new.csv"
-#  # SAMPLING_RATIO: 8
-#  # CROPPED_SIZE: 500
-#  SEGMENT_LENGTH: 256
-#  RECEPTIVE_FILED: 15 # should be odd
+dataset: "cas(me)^2"
 cas(me)^2:
   dataset: "cas(me)^2"
   # 云服务器上的命名为casme2 实际上是cas(me)^2
@@ -28,11 +13,15 @@ cas(me)^2:
   # 将抽样的图片直接粘贴到已裁剪的地方
   # cropped_root_path: "/kaggle/working/cropped/cropped"
   # cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
-  cropped_root_path: "/kaggle/input/casme2/selectedpic/selectedpic"
+  cropped_root_path: "/kaggle/working/cropped"
   optflow_root_path: "/kaggle/working/data/cas(me)^2/optflow_apex"
   feature_root_path: "/kaggle/working/data/cas(me)^2/feature_apex"
   feature_segment_root_path:  "/kaggle/working/data/cas(me)^2/feature_segment_apex"
   # original_anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
   anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
+  CROPPED_SIZE: 500
   SEGMENT_LENGTH: 256
   RECEPTIVE_FILED: 15 # should be odd
+
+
+# 操作的目录必须可写
