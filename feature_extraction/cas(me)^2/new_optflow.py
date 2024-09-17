@@ -47,7 +47,7 @@ def optflow(opt):
                         # sh: 1: denseflow: not found
                         # 需要安装desenflow
                         # 处理视频 获取光流特征
-                        cmd = (f'denseflow "{str(type_item)}" -b=10 -a=tvl1 '
+                        cmd = (f'sudo denseflow "{str(type_item)}" -b=10 -a=tvl1 '
                                f'-s={opt_step} -if -o="{new_sub_dir_path}"')
                         os.system(cmd)
                         tq.update()

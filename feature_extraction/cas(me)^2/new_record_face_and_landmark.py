@@ -96,7 +96,7 @@ def record_face_and_landmarks(opt):
                                 img, face_box=(left, top, right, bottom))
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
-                            print(f"subject: {sub_item.name}, "
+                            print(f"subject: {sub_item.name}, " 
                                   "em_type: {type_item.name}, index: {index}")
                             break
                         # print(f"face_width: {right-left+1}")

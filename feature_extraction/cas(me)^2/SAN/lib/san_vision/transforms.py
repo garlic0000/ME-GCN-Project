@@ -143,7 +143,16 @@ class ToTensor(object):
       elif pic.mode == 'I;16':
         img = torch.from_numpy(np.array(pic, np.int16, copy=False))
       else:
+        """
+        UserWarning: TypedStorage is deprecated. 
+        It will be removed in the future and UntypedStorage will be the only storage class. 
+        This should only matter to you if you are using storages directly.  
+        To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
         img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
+        """
+        img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
+        # 还未修改 因为只是警告
+        # img = torch.ByteTensor(torch.UntypedStorage.from_buffer(pic.tobytes()))
       # PIL image mode: 1, L, P, I, F, RGB, YCbCr, RGBA, CMYK
       if pic.mode == 'YCbCr':
         nchannel = 3
