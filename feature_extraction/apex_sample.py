@@ -44,7 +44,12 @@ def apex_sampling(opt):
 
     if not os.path.exists(simpled_root_path):
         os.makedirs(simpled_root_path)
+    # 对于cas(me)^2而言
+    # raise KeyError(key) from err
+    # KeyError: 'Filename'
     df = pd.read_csv(anno_csv_path)
+    print("打印列名")
+    print(df.columns)
     # sampling img
     with tqdm(total=sum_count) as tq:
         for sub_item in Path(original_root_path).iterdir():
@@ -63,9 +68,7 @@ def apex_sampling(opt):
                 img_path_list = glob.glob(
                     os.path.join(str(type_item), "*.jpg"))
                 img_path_list.sort()
-                # 对于cas(me)^2而言
-                # raise KeyError(key) from err
-                # KeyError: 'Filename'
+
                 label = df[(df['Filename']==type_item.name) & (df['Subject']==int(sub_item.name[3:5]))]
                 apex = int(label['ApexFrame'])
                 on = int(label['OnsetFrame'])
