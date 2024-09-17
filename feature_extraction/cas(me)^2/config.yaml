@@ -27,7 +27,8 @@ cas(me)^2:
   # 使用代码统一裁剪也检测不出人脸
   # 将抽样的图片直接粘贴到已裁剪的地方
   # cropped_root_path: "/kaggle/working/cropped/cropped"
-  cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
+  # cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
+  cropped_root_path: "/kaggle/input/casme2/selectedpic/selectedpic"
   optflow_root_path: "/kaggle/working/data/cas(me)^2/optflow_apex"
   feature_root_path: "/kaggle/working/data/cas(me)^2/feature_apex"
   feature_segment_root_path:  "/kaggle/working/data/cas(me)^2/feature_segment_apex"
