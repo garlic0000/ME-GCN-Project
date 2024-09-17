@@ -8,12 +8,14 @@ cas(me)^2:
   # 云服务器上的命名为casme2 实际上是cas(me)^2
   # 设置为可修改的路径 否则denseflow无权限执行
   # simpled_root_path: "/kaggle/input/casme2/selectedpic/selectedpic"
+  # simpled_root_path: "/kaggle/working/selectedpic"
   # 使用数据库裁剪的检测不出人脸
   # 使用代码统一裁剪也检测不出人脸
   # 将抽样的图片直接粘贴到已裁剪的地方
-  # cropped_root_path: "/kaggle/working/cropped/cropped"
+  # cropped_root_path: "/kaggle/working/cropped"
   # cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
-  cropped_root_path: "/kaggle/working/cropped"
+  simpled_root_path: "/kaggle/working/selectedpic"
+  cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
   optflow_root_path: "/kaggle/working/data/cas(me)^2/optflow_apex"
   feature_root_path: "/kaggle/working/data/cas(me)^2/feature_apex"
   feature_segment_root_path:  "/kaggle/working/data/cas(me)^2/feature_segment_apex"
