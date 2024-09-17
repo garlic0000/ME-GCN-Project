@@ -91,6 +91,7 @@ def record_face_and_landmarks(opt):
                     for index, img_path in enumerate(img_path_list):
                         img = cv2.imread(img_path)
                         try:
+                            # 对已经进行人脸裁剪的图像进行检测
                             left, top, right, bottom = face_detector.cal(img)
                             x_list, y_list = landmark_detector.cal(
                                 img, face_box=(left, top, right, bottom))
