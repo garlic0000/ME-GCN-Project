@@ -17,11 +17,11 @@ dataset: "cas(me)^2"  # "cross" #"samm_25" #"cas(me)^2"
 cas(me)^2:
   dataset: "cas(me)^2"
   # 云服务器上的命名为casme2 实际上是cas(me)^2
-  # original_root_path: "/kaggle/input/casme2/rawvideo"
+  original_root_path: "/kaggle/input/casme2/rawvideo"
   # simpled_root_path: "/kaggle/input/casme2/rawpic/rawpic"
   # 设置为可修改的路径
-  # simpled_root_path: "/kaggle/working/data/cas(me)^2/sampled_apex"
-  simpled_root_path: "/kaggle/input/casme2/rawpic/rawpic"
+  simpled_root_path: "/kaggle/working/data/cas(me)^2/sampled_apex"
+  # simpled_root_path: "/kaggle/input/casme2/rawpic/rawpic"
   cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
   optflow_root_path: "/kaggle/working/data/cas(me)^2/optflow_apex"
   feature_root_path: "/kaggle/working/data/cas(me)^2/feature_apex"
