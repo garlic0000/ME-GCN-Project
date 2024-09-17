@@ -63,7 +63,6 @@ cmake \
     -DCMAKE_CXX_FLAGS="-Wno-deprecated-declarations" \
     -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
     -DPYTHON_DEFAULT_EXECUTABLE=/opt/conda/bin/python3 \
-    -DPYTHON_EXECUTABLE=/opt/conda/bin/python3 \
     -DPYTHON_INCLUDE_DIR=/opt/conda/include/python3.10 \
     -DPYTHON_LIBRARY=/opt/conda/lib/libpython3.10.so \
     -DPYTHON_NUMPY_INCLUDE_DIRS=/opt/conda/lib/python3.10/site-packages/numpy/core/include \
