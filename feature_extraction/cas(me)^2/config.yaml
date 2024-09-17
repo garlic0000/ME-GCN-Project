@@ -22,7 +22,8 @@ cas(me)^2:
   # 设置为可修改的路径
   # 由于CAS(ME)^2存在已经取样和裁剪的图片 因此直接使用
   # 云服务器上的命名为casme2 实际上是cas(me)^2
-  cropped_root_path: "/kaggle/input/casme2/cropped/cropped"
+  # 设置为可修改的路径 否则denseflow无权限执行
+  cropped_root_path: "/kaggle/working/cropped/cropped"
   optflow_root_path: "/kaggle/working/data/cas(me)^2/optflow_apex"
   feature_root_path: "/kaggle/working/data/cas(me)^2/feature_apex"
   feature_segment_root_path:  "/kaggle/working/data/cas(me)^2/feature_segment_apex"
