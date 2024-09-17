@@ -31,6 +31,6 @@ cas(me)^2:
   feature_segment_root_path:  "/kaggle/working/data/cas(me)^2/feature_segment_apex"
   # original_anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
   anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
-  CROPPED_SIZE: 500
+  CROPPED_SIZE: 600
   SEGMENT_LENGTH: 256
   RECEPTIVE_FILED: 15 # should be odd
