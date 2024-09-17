@@ -205,7 +205,7 @@ if __name__ == "__main__":
     # code_final = "/home/whcold/cold_datas/samm/samm_anno.xlsx"
     # code_final = parse_code_final(code_final)
 
-    with open("/kaggle/working/ME-GCN-Project/feature_extraction/config.yaml", encoding="UTF-8") as f:
+    with open("/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']
         opt = yaml_config[dataset]

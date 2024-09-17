@@ -54,7 +54,7 @@ def optflow(opt):
 
 
 if __name__ == "__main__":
-    with open("/kaggle/working/ME-GCN-Project/feature_extraction/config.yaml", encoding="UTF-8") as f:
+    with open("/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']
         opt = yaml_config[dataset]
