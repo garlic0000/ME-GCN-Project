@@ -49,6 +49,7 @@ def optflow(opt):
                         # 处理视频 获取光流特征
                         cmd = (f'denseflow "{str(type_item)}" -b=10 -a=tvl1 '
                                f'-s={opt_step} -if -o="{new_sub_dir_path}"')
+                        print(cmd)
                         os.system(cmd)
                         tq.update()
 
