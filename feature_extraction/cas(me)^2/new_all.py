@@ -26,11 +26,11 @@ if __name__ == "__main__":
     可直接进行面部关键点处理
     但是  使用数据库裁剪的检测不出人脸
     """
-    apex_sampling(opt)
-    print("================ crop ================")
-    crop(opt)
-    print("使用裁剪的图片检测不出人脸关键帧")
-    print("================ record ================")
+    # apex_sampling(opt)
+    # print("================ crop ================")
+    # crop(opt)
+    # print("使用裁剪的图片检测不出人脸关键帧")
+    # print("================ record ================")
     record_face_and_landmarks(opt)
     print("================ optical flow ================")
     optflow(opt)
