@@ -150,9 +150,9 @@ class ToTensor(object):
         To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
         img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
         """
-        img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
+        # img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))
         # 还未修改 因为只是警告
-        # img = torch.ByteTensor(torch.UntypedStorage.from_buffer(pic.tobytes()))
+        img = torch.ByteTensor(torch.UntypedStorage.from_buffer(pic.tobytes()))
       # PIL image mode: 1, L, P, I, F, RGB, YCbCr, RGBA, CMYK
       if pic.mode == 'YCbCr':
         nchannel = 3
