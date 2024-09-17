@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # print("================ crop ================")
     # crop(opt)
     # print("使用裁剪的图片检测不出人脸关键帧")
-    # print("================ record ================")
+    print("================ record ================")
     record_face_and_landmarks(opt)
     print("================ optical flow ================")
     optflow(opt)
