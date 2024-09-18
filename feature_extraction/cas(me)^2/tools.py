@@ -116,8 +116,6 @@ class LandmarkDetector:
             x_list = []
             y_list = []
             for p in shape.parts():
-                print("打印 p.x p.y")
-                print(p.x, p.y)
                 x_list.append(p.x)
                 y_list.append(p.y)
             # print(dir(shape))  # 'num_parts', 'part', 'parts', 'rect'
@@ -128,6 +126,7 @@ class LandmarkDetector:
             # # print(type(shape.part(0)))  # <class 'dlib.point'>
             # # 打印出第一个关键点和第2个关键点的坐标
             # print("Part 0: {}, Part 1: {} ...".format(shape.part(0), shape.part(1)))
+            return x_list, y_list
 
 
 
