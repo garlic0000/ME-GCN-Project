@@ -69,7 +69,7 @@ def record_face_and_landmarks(opt):
     print("img count = ", sum_count)
     # face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
     #face_detector = FaceDetector(face_det_model_path)
-    landmark_model_path = '/kaggle/input/dlib/pytorch/default/1/shape_predictor_68_face_landmarks.dat'
+    landmark_model_path = '/kaggle/input/dlib/pytorch/default/2/shape_predictor_68_face_landmarks.dat'
     landmark_detector = LandmarkDetector(landmark_model_path)
 
     with tqdm(total=sum_count) as tq:
