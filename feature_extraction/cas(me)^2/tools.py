@@ -76,17 +76,19 @@ class LandmarkDetector:
 
 
 class FaceDetector:
-    def __init__(self, img):
+    def __init__(self):
         """
         img 或者img_path
         """
-        self.det = RetinaFace.detect_faces(img)
+        # 加载模型
+        self.det = RetinaFace.build_model()
 
-    def cal(self):
+    def cal(self, img):
         """
         数据集中 图片中只有一张脸
         """
-        left, top, right, bottom = self.det.get("face_1").get("facial_area")
+        faces = self.det.detect_faces(img)
+        left, top, right, bottom =faces.get("face_1").get("facial_area")
         return left, top, right, bottom
 
 

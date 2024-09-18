@@ -53,7 +53,8 @@ def crop(opt):
         os.makedirs(cropped_root_path)
 
     # face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
-    # face_detector = FaceDetector(face_det_model_path)
+    # 加载模型
+    face_detector = FaceDetector()
 
     with tqdm(total=sum_count) as tq:
         for sub_item in Path(simpled_root_path).iterdir():
@@ -86,7 +87,7 @@ def crop(opt):
                         if index == 0:
                             h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
-                                FaceDetector(img).cal()
+                                face_detector.cal(img)
                             face_width = (face_right - face_left + 1)
                             face_height = (face_bottom - face_top + 1)
                             vertical_remain = h - face_height
