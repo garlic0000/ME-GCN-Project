@@ -67,9 +67,9 @@ def record_face_and_landmarks(opt):
 
     sum_count = get_img_count(cropped_root_path)
     print("img count = ", sum_count)
-    face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
-    face_detector = FaceDetector(face_det_model_path)
-    landmark_model_path = '/kaggle/input/checkpoint/pytorch/default/1/san_checkpoint_49.pth.tar'
+    # face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
+    #face_detector = FaceDetector(face_det_model_path)
+    landmark_model_path = '/kaggle/input/dlib/pytorch/default/1/shape_predictor_68_face_landmarks.dat'
     landmark_detector = LandmarkDetector(landmark_model_path)
 
     with tqdm(total=sum_count) as tq:
@@ -92,9 +92,9 @@ def record_face_and_landmarks(opt):
                         img = cv2.imread(img_path)
                         try:
                             # 对已经进行人脸裁剪的图像进行检测
-                            left, top, right, bottom = face_detector.cal(img)
+                            left, top, right, bottom = FaceDetector(img).cal()
                             x_list, y_list = landmark_detector.cal(
-                                img, face_box=(left, top, right, bottom))
+                                img)
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
                             print(f"subject: {sub_item.name}, " 

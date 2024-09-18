@@ -5,8 +5,12 @@ import matplotlib.pyplot as plt
 import cv2
 
 import torch
-from SAN.san_api import SanLandmarkDetector
-from retinaface.api import Facedetecor as RetinaFaceDetector
+# from SAN.san_api import SanLandmarkDetector
+# from retinaface.api import Facedetecor as RetinaFaceDetector
+from retinaface import RetinaFace
+import os
+import dlib
+
 
 def imshow_for_test(windowname, img, face_boundarys=None, landmarks=None):
     # 将BGR格式转换为RGB格式，cv2默认是BGR，而plt需要RGB
@@ -37,28 +41,52 @@ def imshow_for_test(windowname, img, face_boundarys=None, landmarks=None):
 
 
 class LandmarkDetector:
-    def __init__(self, model_path):
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.det = SanLandmarkDetector(model_path, device)
+    def __init__(self, predictor_path):
+        # 检测人脸框
+        self.detector = dlib.get_frontal_face_detector()
+        # 下载人脸关键点检测模型： http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
+        # 解压为 shape_predictor_68_face_landmarks.dat
+        # predictor_path = './model/shape_predictor_68_face_landmarks.dat'
+        # 检测人脸关键点
+        self.predictor = dlib.shape_predictor(predictor_path)
 
-    def cal(self, img, offset=None, face_box=None):
-        if face_box is None:
-            face_box = (0, 0, img.shape[1], img.shape[0])
-        locs, _ = self.det.detect(img, face_box)
-        x_list = [
-            loc[0] if offset is None else loc[0] - offset[0] for loc in locs]
-        y_list = [
-            loc[1] if offset is None else loc[1] - offset[1] for loc in locs]
-        return x_list, y_list
+
+
+    def cal(self, img):
+        # 可能已经使用cv2读好了
+        # img = cv2.imread(img_path)
+        # # 1 表示图像向上采样一次，图像将被放大一倍，这样可以检测更多的人脸
+        for k, d in enumerate(self.detector(img)):
+            # Get the landmarks/parts for the face in box d.
+            shape = self.predictor(img, d)
+            x_list = []
+            y_list = []
+            for p in shape.parts():
+                x_list.append(p.x)
+                y_list.append(p.y)
+            # print(dir(shape))  # 'num_parts', 'part', 'parts', 'rect'
+            # print(shape.num_parts)  # 68   打印出关键点的个数
+            # print(shape.rect)  # 检测到每个面部的矩形框 [(118, 139) (304, 325)]
+            # print(
+            #     shape.parts())  # points[(147, 182), (150, 197), (154, 211), (160, 225),...,(222, 227), (215, 228)]   # 68个关键点坐标
+            # # print(type(shape.part(0)))  # <class 'dlib.point'>
+            # # 打印出第一个关键点和第2个关键点的坐标
+            # print("Part 0: {}, Part 1: {} ...".format(shape.part(0), shape.part(1)))
+
 
 
 class FaceDetector:
-    def __init__(self, model_path):
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.det = RetinaFaceDetector(model_path, device)
+    def __init__(self, img):
+        """
+        img 或者img_path
+        """
+        self.det = RetinaFace.detect_faces(img)
 
-    def cal(self, img):
-        left, top, right, bottom = self.det.get_face_box(img)
+    def cal(self):
+        """
+        数据集中 图片中只有一张脸
+        """
+        left, top, right, bottom = self.det.get("face_1").get("facial_area")
         return left, top, right, bottom
 
 
