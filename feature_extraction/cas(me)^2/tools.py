@@ -59,6 +59,10 @@ class LandmarkDetector:
         for k, d in enumerate(self.detector(img)):
             # Get the landmarks/parts for the face in box d.
             shape = self.predictor(img, d)
+            print("打印面部矩形框")
+            print(shape.rect)
+            print("打印关键点个数")
+            print(shape.num_parts)
             x_list = []
             y_list = []
             for p in shape.parts():

@@ -109,14 +109,15 @@ def crop(opt):
                             padding_left = (
                                 (CROPPED_SIZE - face_width) - padding_right)
 
-                            # clip_left = face_left - padding_left
-                            # clip_right = face_right + padding_right
-                            # clip_top = face_top - padding_top
-                            # clip_bottom = face_bottom + padding_bottom
-                            clip_left = face_left 
-                            clip_right = face_right 
-                            clip_top = face_top 
-                            clip_bottom = face_bottom 
+                            # 对上 下 左 右 进行填充
+                            clip_left = face_left - padding_left
+                            clip_right = face_right + padding_right
+                            clip_top = face_top - padding_top
+                            clip_bottom = face_bottom + padding_bottom
+                            # clip_left = face_left
+                            # clip_right = face_right
+                            # clip_top = face_top
+                            # clip_bottom = face_bottom
 
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
