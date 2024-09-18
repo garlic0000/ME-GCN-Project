@@ -90,40 +90,21 @@ def crop(opt):
                         # 对第一个图像进行剪切
                         # 将之后的图像进行对齐
                         if index == 0:
-                            h, w, c = img.shape
+                            # h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
                                 face_detector.cal(img)
-                            face_width = (face_right - face_left + 1)
-                            face_height = (face_bottom - face_top + 1)
-                            vertical_remain = h - face_height
-                            horizontal_remain = w - face_width
-                            # vertical_remain_top = face_top
-                            vertical_remain_bottom = h - face_bottom - 1
-                            # horizontal_remain_left = face_left
-                            horizontal_remain_right = w - face_right - 1
-                            padding_bottom = int(
-                                vertical_remain_bottom
-                                / vertical_remain
-                                * (CROPPED_SIZE - face_height))
-                            padding_top = (
-                                (CROPPED_SIZE - face_height) - padding_bottom)
-                            padding_right = int(
-                                horizontal_remain_right
-                                / horizontal_remain
-                                * (CROPPED_SIZE - face_width))
-                            padding_left = (
-                                (CROPPED_SIZE - face_width) - padding_right)
-
                             # 对上 下 左 右 进行填充
                             # clip_left = face_left - padding_left
                             # clip_right = face_right + padding_right
                             # clip_top = face_top - padding_top
                             # clip_bottom = face_bottom + padding_bottom
-                            clip_left = face_left
-                            clip_right = face_right
+                            padding = 100
+                            clip_left = face_left -100
+                            clip_right = face_right + 100
                             clip_top = face_top
                             clip_bottom = face_bottom
-
+                        # 之后所有的图片都按照这个尺寸进行剪切
+                        # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
                         cv2.imwrite(os.path.join(
