@@ -97,7 +97,7 @@ def crop(opt):
                             # clip_bottom = face_bottom + padding_bottom
                             # padding = 100 左侧扩宽了一些 右侧扩宽特别多
                             padding_left = 80
-                            padding_right = 50
+                            padding_right = 10
                             clip_left = face_left - padding_left
                             clip_right = face_right + padding_right
                             clip_top = face_top
