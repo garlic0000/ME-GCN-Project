@@ -81,13 +81,13 @@ class FaceDetector:
         img 或者img_path
         """
         # 加载模型
-        self.det = RetinaFace.build_model()
+        self.model = RetinaFace.build_model()
 
     def cal(self, img):
         """
         数据集中 图片中只有一张脸
         """
-        faces = self.det.detect_faces(img)
+        faces = RetinaFace.detect_faces(img, self.model)
         print("打印检测到的人脸")
         print(faces)
         left, top, right, bottom =faces.get("face_1").get("facial_area")
