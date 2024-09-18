@@ -120,7 +120,7 @@ class LandmarkDetector:
             # # print(type(shape.part(0)))  # <class 'dlib.point'>
             # # 打印出第一个关键点和第2个关键点的坐标
             # print("Part 0: {}, Part 1: {} ...".format(shape.part(0), shape.part(1)))
-            print("关键点个数:{}".format(shape.num_parts), end='\n')
+            # print("关键点个数:{}".format(shape.num_parts), end='\n')
             return x_list, y_list
 
 
@@ -142,7 +142,7 @@ class FaceDetector:
         # w,h 人脸的宽高
         x, y, w, h =faces.get("face_1").get("facial_area")
         left, top, right, bottom = x, y, x+w, y+h
-        print("脸部区域:{}".format((left, top, right, bottom)), end=' ')
+        # print("脸部区域:{}".format((left, top, right, bottom)), end=' ')
         return left, top, right, bottom
 
 

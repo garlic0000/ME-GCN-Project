@@ -90,6 +90,8 @@ def crop(opt):
                             # h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
                                 face_detector.cal(img)
+                            print("\n")
+                            print("视频第一帧脸部区域:{}".format((face_left, face_top, face_right, face_bottom)))
                             # 对上 下 左 右 进行填充
                             # clip_left = face_left - padding_left
                             # clip_right = face_right + padding_right

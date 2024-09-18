@@ -96,10 +96,18 @@ def record_face_and_landmarks(opt):
                             # 对已经进行人脸裁剪的图像进行检测
                             left, top, right, bottom = face_detector.cal(img)
                             x_list, y_list = landmark_detector.cal(img)
+                            # 测试用
+                            if index == 0:
+                                print("\n")
+                                print("视频第一帧面部区域:{}".format((left, top, right, bottom)))
+                                print("关键点数:{}".format(len(x_list)))
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
                             print(f"subject: {sub_item.name}, " 
                                   "em_type: {type_item.name}, index: {index}")
+                            print("\n")
+                            print("该路径的图片裁剪和关键点检测出错")
+                            print(img_path)
                             break
                         # print(f"face_width: {right-left+1}")
                         # print(f"face_height: {bottom-top+1}")
