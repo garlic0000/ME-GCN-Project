@@ -87,6 +87,8 @@ def crop(opt):
                     for index, img_path in enumerate(img_path_list):
                         img = cv2.imread(img_path)
                         # 为什么index == 0
+                        # 对第一个图像进行剪切
+                        # 将之后的图像进行对齐
                         if index == 0:
                             h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
@@ -113,14 +115,14 @@ def crop(opt):
                                 (CROPPED_SIZE - face_width) - padding_right)
 
                             # 对上 下 左 右 进行填充
-                            clip_left = face_left - padding_left
-                            clip_right = face_right + padding_right
-                            clip_top = face_top - padding_top
-                            clip_bottom = face_bottom + padding_bottom
-                            # clip_left = face_left
-                            # clip_right = face_right
-                            # clip_top = face_top
-                            # clip_bottom = face_bottom
+                            # clip_left = face_left - padding_left
+                            # clip_right = face_right + padding_right
+                            # clip_top = face_top - padding_top
+                            # clip_bottom = face_bottom + padding_bottom
+                            clip_left = face_left
+                            clip_right = face_right
+                            clip_top = face_top
+                            clip_bottom = face_bottom
 
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
