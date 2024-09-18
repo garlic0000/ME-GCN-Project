@@ -86,6 +86,7 @@ def optflow(opt):
                                f'-s={opt_step} -if -o="{new_sub_dir_path}"')
                         # print("\n")
                         #                         # print(cmd)
+                        print("\n")
                         os.system(cmd)
                         tq.update()
 

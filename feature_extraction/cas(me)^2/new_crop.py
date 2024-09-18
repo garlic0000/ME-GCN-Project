@@ -91,7 +91,8 @@ def crop(opt):
                             face_left, face_top, face_right, face_bottom = \
                                 face_detector.cal(img)
                             print("\n")
-                            print("视频第一帧脸部区域:{}".format((face_left, face_top, face_right, face_bottom)))
+                            d_path = os.path.dirname(img_path)
+                            print(d_path)
                             # 对上 下 左 右 进行填充
                             # clip_left = face_left - padding_left
                             # clip_right = face_right + padding_right
@@ -99,9 +100,9 @@ def crop(opt):
                             # clip_bottom = face_bottom + padding_bottom
                             # padding = 100 左侧扩宽了一些 右侧扩宽特别多
                             padding_left = 80
-                            padding_right = 10
+                            # padding_right = 10
                             clip_left = face_left - padding_left
-                            clip_right = face_right + padding_right
+                            clip_right = face_right
                             clip_top = face_top
                             clip_bottom = face_bottom
                         # 之后所有的图片都按照这个尺寸进行剪切

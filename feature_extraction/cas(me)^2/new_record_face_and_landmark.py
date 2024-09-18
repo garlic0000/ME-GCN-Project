@@ -99,8 +99,8 @@ def record_face_and_landmarks(opt):
                             # 测试用
                             if index == 0:
                                 print("\n")
-                                print("视频第一帧面部区域:{}".format((left, top, right, bottom)))
-                                print("关键点数:{}".format(len(x_list)))
+                                dir_path = os.path.dirname(img_path)
+                                print(dir_path)
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
                             print("\n")
