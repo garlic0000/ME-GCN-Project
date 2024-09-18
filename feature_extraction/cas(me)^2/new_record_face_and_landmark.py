@@ -110,6 +110,7 @@ def record_face_and_landmarks(opt):
 
                         rows_face.append((left, top, right, bottom))
                         rows_landmark.append(x_list + y_list)
+                        # 这里是一张一张的更新
                         tq.update()
                     if len(rows_face) == len(img_path_list):
                         record_csv(csv_face_path, rows_face)

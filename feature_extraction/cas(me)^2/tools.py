@@ -107,10 +107,6 @@ class LandmarkDetector:
         for k, d in enumerate(self.detector(img)):
             # Get the landmarks/parts for the face in box d.
             shape = self.predictor(img, d)
-            print("打印面部矩形框")
-            print(shape.rect)
-            print("打印关键点个数")
-            print(shape.num_parts)
             x_list = []
             y_list = []
             for p in shape.parts():
@@ -124,6 +120,7 @@ class LandmarkDetector:
             # # print(type(shape.part(0)))  # <class 'dlib.point'>
             # # 打印出第一个关键点和第2个关键点的坐标
             # print("Part 0: {}, Part 1: {} ...".format(shape.part(0), shape.part(1)))
+            print("关键点个数:{}".format(shape.num_parts))
             return x_list, y_list
 
 
@@ -141,12 +138,11 @@ class FaceDetector:
         数据集中 图片中只有一张脸
         """
         faces = RetinaFace.detect_faces(img)
-        print("打印检测到的人脸")
-        print(faces)
         # x,y 左上坐标
         # w,h 人脸的宽高
         x, y, w, h =faces.get("face_1").get("facial_area")
         left, top, right, bottom = x, y, x+w, y+h
+        print("脸部区域:{}".format((left, top, right, bottom)), end=' ')
         return left, top, right, bottom
 
 

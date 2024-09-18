@@ -110,6 +110,8 @@ def crop(opt):
                                     new_dir_path,
                                     f"img_{str(index+1).zfill(5)}.jpg"), img)
                         # 有的路径下的图片为空 所以不是一张一张进行更新
+                        # 像是一个列表一个列表的更新
+                        # 但是统计到11409张还不是11409
                         tq.update()
 
 
