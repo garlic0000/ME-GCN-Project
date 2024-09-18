@@ -87,7 +87,7 @@ class FaceDetector:
         """
         数据集中 图片中只有一张脸
         """
-        faces = RetinaFace.detect_faces(img, self.model)
+        faces = RetinaFace.detect_faces(img)
         print("打印检测到的人脸")
         print(faces)
         left, top, right, bottom =faces.get("face_1").get("facial_area")
