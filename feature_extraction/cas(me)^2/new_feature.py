@@ -54,6 +54,7 @@ def feature(opt):
                     landmark_root_path,
                     sub_item.name, type_item.name, "landmarks.csv")
                 if not os.path.exists(csv_landmark_path):
+                    print("\n")
                     print(f"{csv_landmark_path} does not exist")
                     continue
                 with open(csv_landmark_path, 'r') as f:
