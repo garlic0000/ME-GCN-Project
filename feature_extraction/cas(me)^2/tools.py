@@ -103,6 +103,7 @@ class LandmarkDetector:
         # 可能已经使用cv2读好了
         # img = cv2.imread(img_path)
         # # 1 表示图像向上采样一次，图像将被放大一倍，这样可以检测更多的人脸
+        # 这里的放大不知道是否对原图产生影响
         for k, d in enumerate(self.detector(img)):
             # Get the landmarks/parts for the face in box d.
             shape = self.predictor(img, d)
