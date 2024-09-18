@@ -101,8 +101,9 @@ def crop(opt):
                             # padding = 100 左侧扩宽了一些 右侧扩宽特别多
                             padding_left = 80
                             # padding_right = 10
+                            cutting_right = 20
                             clip_left = face_left - padding_left
-                            clip_right = face_right
+                            clip_right = face_right - cutting_right
                             clip_top = face_top
                             clip_bottom = face_bottom
                         # 之后所有的图片都按照这个尺寸进行剪切
