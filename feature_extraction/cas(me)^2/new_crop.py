@@ -109,7 +109,7 @@ def crop(opt):
                         cv2.imwrite(os.path.join(
                                     new_dir_path,
                                     f"img_{str(index+1).zfill(5)}.jpg"), img)
-                        # 每裁剪一张图片就进行更新 但是实际上不是一张一张进行的更新
+                        # 有的路径下的图片为空 所以不是一张一张进行更新
                         tq.update()
 
 

@@ -97,7 +97,7 @@ def record_face_and_landmarks(opt):
                             left, top, right, bottom = face_detector.cal(img)
                             print(left, top, right, bottom)
                             x_list, y_list = landmark_detector.cal(img)
-                            print(x_list, y_list)
+                            print(len(x_list) + len(y_list))
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
                             print(f"subject: {sub_item.name}, " 
