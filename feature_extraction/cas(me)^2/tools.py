@@ -111,9 +111,13 @@ class LandmarkDetector:
             print(shape.rect)
             print("打印关键点个数")
             print(shape.num_parts)
+            print("打印关键点")
+            print(shape.parts())
             x_list = []
             y_list = []
             for p in shape.parts():
+                print("打印 p.x p.y")
+                print(p.x, p.y)
                 x_list.append(p.x)
                 y_list.append(p.y)
             # print(dir(shape))  # 'num_parts', 'part', 'parts', 'rect'
