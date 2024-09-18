@@ -19,6 +19,7 @@ def get_img_count(cropped_root_path):
         if sub_item.is_dir():
             for type_item in sub_item.iterdir():
                 if type_item.is_dir():
+                    # # 计算目录下所有 .jpg 文件的数量
                     count += len(
                         glob.glob(os.path.join(str(type_item), "*.jpg")))
     return count

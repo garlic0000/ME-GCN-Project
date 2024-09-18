@@ -25,6 +25,7 @@ def get_img_count(root_path, dataset):
                     and (type_item.name == "032_3"
                          or type_item.name == "032_6")):
                 continue
+            # # 计算目录下所有 .jpg 文件的数量
             count += len(glob.glob(os.path.join(str(type_item), "*.jpg")))
     return count
 
@@ -78,12 +79,14 @@ def crop(opt):
                         str(type_item), new_dir_path, dirs_exist_ok=True)
                     continue
 
+                # 获取目录下所有 .jpg 文件的路径，并将它们存储在一个列表中
                 img_path_list = glob.glob(
                     os.path.join(str(type_item), "*.jpg"))
                 if len(img_path_list) > 0:
                     img_path_list.sort()
                     for index, img_path in enumerate(img_path_list):
                         img = cv2.imread(img_path)
+                        # 为什么index == 0
                         if index == 0:
                             h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
