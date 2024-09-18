@@ -103,12 +103,12 @@ def record_face_and_landmarks(opt):
                             print(f"subject: {sub_item.name}, " 
                                   "em_type: {type_item.name}, index: {index}")
                             break
-                        print(f"face_width: {right-left+1}")
-                        print(f"face_height: {bottom-top+1}")
-                        print(f"image_width: {img.shape[1]}")
-                        print(f"image_width: {img.shape[0]}")
-                        show_img(img, (left, top, right, bottom),
-                                 x_list + y_list)
+                        # print(f"face_width: {right-left+1}")
+                        # print(f"face_height: {bottom-top+1}")
+                        # print(f"image_width: {img.shape[1]}")
+                        # print(f"image_width: {img.shape[0]}")
+                        # show_img(img, (left, top, right, bottom),
+                        #          x_list + y_list)
 
                         rows_face.append((left, top, right, bottom))
                         rows_landmark.append(x_list + y_list)
