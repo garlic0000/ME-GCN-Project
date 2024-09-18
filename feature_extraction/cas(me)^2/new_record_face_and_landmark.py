@@ -103,9 +103,9 @@ def record_face_and_landmarks(opt):
                                 print("关键点数:{}".format(len(x_list)))
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
+                            print("\n")
                             print(f"subject: {sub_item.name}, " 
                                   "em_type: {type_item.name}, index: {index}")
-                            print("\n")
                             print("该路径的图片裁剪和关键点检测出错")
                             print(img_path)
                             break
