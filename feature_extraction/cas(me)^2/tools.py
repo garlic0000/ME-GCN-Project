@@ -120,7 +120,7 @@ class LandmarkDetector:
             # # print(type(shape.part(0)))  # <class 'dlib.point'>
             # # 打印出第一个关键点和第2个关键点的坐标
             # print("Part 0: {}, Part 1: {} ...".format(shape.part(0), shape.part(1)))
-            print("关键点个数:{}".format(shape.num_parts))
+            print("关键点个数:{}".format(shape.num_parts), end='\n')
             return x_list, y_list
 
 
