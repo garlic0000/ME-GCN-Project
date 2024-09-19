@@ -41,6 +41,8 @@ def solve_img_size(subitem, typeitem):
     padding_top, padding_bottom, padding_left, padding_right = 0, 0, 0, 0
     padding_left = 80
     # s24/happy4_4/img_00009.jpg 脸部裁剪后 无法检测人脸
+    # s27 原图 头部太靠上
+    s27_dir_list = ['happy3_3', 'happy1_6', 'happy1_5', 'happy3_2', 'happy1_1', 'anger1_3', 'disgust2_1', 'disgust2_8', 'happy2_1', 'disgust2_6', 'disgust2_9', 'disgust2_7', 'disgust2_4', 'disgust2_5', 'happy2_3', 'happy3_1', 'happy1_2', 'happy2_2', 'happy1_4', 'happy1_7', 'anger1_1']
     if subitem.name == "s24" and typeitem.name == "happy4_4":
         padding_top = 10
         padding_bottom = 10
@@ -48,9 +50,11 @@ def solve_img_size(subitem, typeitem):
         padding_top = 10
     elif subitem.name == "s37" and typeitem.name == "happy3_1":
         padding_top = 20
-    elif subitem.name == "s27":
-        padding_top = 10
-        padding_bottom =10
+    elif subitem.name == "s27" and typeitem.name in s27_dir_list:
+        # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
+        # 这里的处理还得
+        padding_top = -1 # 一个标志
+        padding_bottom = 10
     return padding_top, padding_bottom, padding_left, padding_right
 
 
@@ -124,7 +128,9 @@ def crop(opt):
                             clip_bottom = face_bottom + padding_bottom
                             clip_left = face_left - padding_left
                             clip_right = face_right + padding_right
-
+                            # 对s27的处理
+                            if padding_top == -1:
+                                clip_top = 0
                         # 之后所有的图片都按照这个尺寸进行剪切
                         # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
