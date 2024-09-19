@@ -9,6 +9,9 @@ import pandas as pd
 
 
 def parse_code_final(anno_file):
+    """
+    最后一个阶段 命名需要进行处理
+    """
     xl = pd.ExcelFile(anno_file)  # Specify directory of excel file
     code_final = xl.parse(xl.sheet_names[0])  # Get data
 

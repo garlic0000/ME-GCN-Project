@@ -29,6 +29,28 @@ def get_img_count(root_path, dataset):
             count += len(glob.glob(os.path.join(str(type_item), "*.jpg")))
     return count
 
+def solve_img_size(subitem, typeitem):
+    """
+    处理不同图片的尺寸
+    padding_top 向上填充 -
+    padding_bottom 向下填充 +
+    padding_left 向左填充 -
+    padding_right 向右填充 +
+    """
+    # 首先应测试 不进行任何填充 图片有多少能检测成功
+    padding_top, paddding_bottom, padding_left, padding_right = 0, 0, 0, 0
+    # 左-80 右-40的情况下
+    # s27 21张图片有问题
+    # s37  2张图片有问题
+    # s24  1张图片有问题
+    # if subitem == "s":
+    #     if typeitem == "happy":
+    #         right_cutting = 0
+    #         return right_cutting
+    # else:
+    #     return 40
+    return padding_top, paddding_bottom, padding_left, padding_right
+
 
 def crop(opt):
     try:
@@ -93,19 +115,14 @@ def crop(opt):
                             print("\n")
                             d_path = os.path.dirname(img_path)
                             print(d_path)
-                            # 对上 下 左 右 进行填充
-                            # clip_left = face_left - padding_left
-                            # clip_right = face_right + padding_right
-                            # clip_top = face_top - padding_top
-                            # clip_bottom = face_bottom + padding_bottom
-                            # padding = 100 左侧扩宽了一些 右侧扩宽特别多
-                            padding_left = 80
-                            # padding_right = 10
-                            cutting_right = 40
+                            # 对上 下 左 右 进行填充或裁剪
+                            padding_top, paddding_bottom, padding_left, padding_right = \
+                                solve_img_size(sub_item, type_item)
+                            clip_top = face_top - padding_top
+                            clip_bottom = face_bottom + padding_bottom
                             clip_left = face_left - padding_left
-                            clip_right = face_right - cutting_right
-                            clip_top = face_top
-                            clip_bottom = face_bottom
+                            clip_right = face_right + padding_right
+
                         # 之后所有的图片都按照这个尺寸进行剪切
                         # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
