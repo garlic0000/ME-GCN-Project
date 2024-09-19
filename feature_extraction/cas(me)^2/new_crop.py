@@ -39,6 +39,7 @@ def solve_img_size(subitem, typeitem):
     """
     # 首先应测试 不进行任何填充 图片有多少能检测成功
     padding_top, padding_bottom, padding_left, padding_right = 0, 0, 0, 0
+    padding_left = 80
     # 左-80 右-40的情况下
     # s27 21张图片有问题
     # s37  2张图片有问题

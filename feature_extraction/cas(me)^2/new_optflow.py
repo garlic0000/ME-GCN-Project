@@ -53,6 +53,15 @@ def get_dir_count(root_path):
                         count += 1
     return count
 
+"""
+光流特征是整张图片提取？
+然后再剪切ROIs？
+
+为什么不是先剪切AUs 形成ROIs之后再从中提取？
+
+这样剪切的ROIs不好对齐吗？
+
+"""
 
 def optflow(opt):
     cropped_root_path = opt["cropped_root_path"]
@@ -83,7 +92,9 @@ def optflow(opt):
                         # 需要安装desenflow
                         # 处理视频 获取光流特征
                         # 输出处理的当前路径
+
                         print(os.path.join(cropped_root_path, sub_item, type_item))
+                        print("\n")
                         cmd = (f'denseflow "{str(type_item)}" -b=10 -a=tvl1 '
                                f'-s={opt_step} -if -o="{new_sub_dir_path}"')
                         print("\n")
