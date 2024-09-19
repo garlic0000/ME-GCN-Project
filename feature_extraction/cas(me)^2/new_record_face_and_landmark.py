@@ -106,6 +106,8 @@ def record_face_and_landmarks(opt):
                             print("\n")
                             print("该路径的图片裁剪和关键点检测出错")
                             print(img_path)
+                            face_detector.info(img)
+                            landmark_detector.info(img)
                             break
                         # print(f"face_width: {right-left+1}")
                         # print(f"face_height: {bottom-top+1}")

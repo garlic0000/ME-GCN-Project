@@ -99,6 +99,8 @@ class LandmarkDetector:
 
 
 
+
+
     def cal(self, img):
         # 可能已经使用cv2读好了
         # img = cv2.imread(img_path)
@@ -123,6 +125,16 @@ class LandmarkDetector:
             # print("关键点个数:{}".format(shape.num_parts), end='\n')
             return x_list, y_list
 
+    def info(self, img):
+        """
+        输出信息，用于调错
+        """
+        for k, d in enumerate(self.detector(img)):
+            # Get the landmarks/parts for the face in box d.
+            shape = self.predictor(img, d)
+            print("面部矩形框")
+            print(shape.rect)
+
 
 
 class FaceDetector:
@@ -132,6 +144,7 @@ class FaceDetector:
         """
         # 加载模型
         self.model = RetinaFace.build_model()
+
 
     def cal(self, img):
         """
@@ -144,6 +157,11 @@ class FaceDetector:
         left, top, right, bottom = x, y, x+w, y+h
         # print("脸部区域:{}".format((left, top, right, bottom)), end=' ')
         return left, top, right, bottom
+
+    def info(self, img):
+        faces = RetinaFace.detect_faces(img)
+        print("检测到的脸部区域:")
+        print(faces)
 
 
 def get_top_optical_flows(optflows, percent):
