@@ -164,7 +164,6 @@ def segment_for_train(opt):
                     "time length of labels is incorrect"
                 feature_list.append(feature)
                 labels_list.append(labels)
-
             for index in range(len(feature_list)):
                 np.savez(
                     os.path.join(
@@ -174,7 +173,7 @@ def segment_for_train(opt):
                     feature=feature_list[index],
                     label=labels_list[index],
                     video_name=video_name)
-
+    print("segment for train Finished!")
 
 def segment_for_test(opt):
     feature_root_path = opt["feature_root_path"]
@@ -197,8 +196,15 @@ def segment_for_test(opt):
             if not type_item.is_dir():
                 continue
             video_name = type_item.name
+            # test文件夹为空的原因是没有feature.npy文件
+            # 测试集是直接复制？
+            # 我觉得测试集应该从整个数据集中选取
+            # 要保存为npz文件吗？
+            #
             feature_path = os.path.join(str(type_item), "feature.npy")
             shutil.copy(feature_path, os.path.join(out_dir, video_name+".npy"))
+
+    print("segment for test Finished!")
 
 
 if __name__ == "__main__":

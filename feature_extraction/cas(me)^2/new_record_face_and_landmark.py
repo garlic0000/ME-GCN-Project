@@ -121,6 +121,7 @@ def record_face_and_landmarks(opt):
                         # 这里是一张一张的更新
                         tq.update()
                     if len(rows_face) == len(img_path_list):
+                        # 所有的脸都检测成功才能记载，而且只记载一次
                         record_csv(csv_face_path, rows_face)
                         record_csv(csv_landmark_path, rows_landmark)
 
