@@ -165,10 +165,16 @@ class FaceDetector:
 
 
 def get_top_optical_flows(optflows, percent):
+    """
+    筛选出最显著的光流
+    如果是三维的 则展开为二维
+    """
     assert type(optflows) == np.ndarray, "optflows must be numpy ndarray"
     tmp_optflows = optflows
+    # 如果输入是三维 (height, width, 2)，则展平为 (height*width, 2)
     if optflows.ndim == 3 and optflows.shape[-1] == 2:
         tmp_optflows = optflows.reshape(-1, 2)
+    # 已经是二维 不需要任何改变
     elif optflows.ndim == 2 and optflows.shape[-1] == 2:
         tmp_optflows = optflows
     else:
