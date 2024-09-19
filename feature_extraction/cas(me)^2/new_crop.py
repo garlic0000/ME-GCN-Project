@@ -41,10 +41,11 @@ def solve_img_size(subitem, typeitem):
     padding_top, padding_bottom, padding_left, padding_right = 0, 0, 0, 0
     padding_left = 80
     # s24/happy4_4/img_00009.jpg 脸部裁剪后 无法检测人脸
-    if subitem == "s24" and typeitem == "happy4_4":
+    if subitem.name == "s24" and typeitem.name == "happy4_4":
         padding_top = 20
         padding_bottom = 20
         print("测试测试测试测试测试测试测试")
+        print(subitem.name, typeitem.name)
         print(padding_top, padding_bottom)
     return padding_top, padding_bottom, padding_left, padding_right
 
