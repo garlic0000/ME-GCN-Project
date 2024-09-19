@@ -48,6 +48,9 @@ def solve_img_size(subitem, typeitem):
         padding_top = 10
     elif subitem.name == "s37" and typeitem.name == "happy3_1":
         padding_top = 20
+    elif subitem.name == "s27":
+        padding_top = 10
+        padding_bottom =10
     return padding_top, padding_bottom, padding_left, padding_right
 
 
