@@ -44,9 +44,8 @@ def solve_img_size(subitem, typeitem):
     if subitem.name == "s24" and typeitem.name == "happy4_4":
         padding_top = 10
         padding_bottom = 10
-        print("测试测试测试测试测试测试测试")
-        print(subitem.name, typeitem.name)
-        print(padding_top, padding_bottom)
+    elif subitem.name == "s37" and (typeitem.name == "happy1_1" or typeitem.name == "happy3_1"):
+        padding_top = 10
     return padding_top, padding_bottom, padding_left, padding_right
 
 
