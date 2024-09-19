@@ -38,7 +38,7 @@ def solve_img_size(subitem, typeitem):
     padding_right 向右填充 +
     """
     # 首先应测试 不进行任何填充 图片有多少能检测成功
-    padding_top, paddding_bottom, padding_left, padding_right = 0, 0, 0, 0
+    padding_top, padding_bottom, padding_left, padding_right = 0, 0, 0, 0
     # 左-80 右-40的情况下
     # s27 21张图片有问题
     # s37  2张图片有问题
@@ -49,7 +49,7 @@ def solve_img_size(subitem, typeitem):
     #         return right_cutting
     # else:
     #     return 40
-    return padding_top, paddding_bottom, padding_left, padding_right
+    return padding_top, padding_bottom, padding_left, padding_right
 
 
 def crop(opt):
@@ -116,7 +116,7 @@ def crop(opt):
                             d_path = os.path.dirname(img_path)
                             print(d_path)
                             # 对上 下 左 右 进行填充或裁剪
-                            padding_top, paddding_bottom, padding_left, padding_right = \
+                            padding_top, padding_bottom, padding_left, padding_right = \
                                 solve_img_size(sub_item, type_item)
                             clip_top = face_top - padding_top
                             clip_bottom = face_bottom + padding_bottom
