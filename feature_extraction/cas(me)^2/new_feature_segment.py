@@ -59,6 +59,9 @@ def segment_for_train(opt):
     for sub_item in Path(feature_root_path).iterdir():
         if not sub_item.is_dir():
             continue
+        # sub_item.name 需要被替换
+        # 被换成s15之类的
+        # 如果原本是s15之类的就不需要换
         out_dir = os.path.join(
             feature_segment_root_path, "train", sub_item.name)
         if not os.path.exists(out_dir):
@@ -71,6 +74,7 @@ def segment_for_train(opt):
         for feature_path in feature_path_list:
             feature_name = os.path.split(feature_path)[-1]
             video_name = os.path.splitext(feature_name)[0]
+            # 这是
             tmp_df = anno_df[anno_df['video_name'] == video_name]
             video_feature = np.load(feature_path)  # (t, 12, 2)
             frame_count = video_feature.shape[0]
