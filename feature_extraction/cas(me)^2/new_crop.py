@@ -48,10 +48,17 @@ def solve_img_size(subitem, typeitem):
     if subitem.name == "s24" and typeitem.name == "happy4_4":
         padding_top = 10
         padding_bottom = 10
+    # 0502
     elif subitem.name == "s37" and typeitem.name == "happy1_1":
         padding_top = 10
+    # 0505
     elif subitem.name == "s37" and typeitem.name == "happy3_1":
         padding_top = 20
+    # ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "anger2": "0402",
+    #                          "happy1": "0502", "happy2": "0503", "happy3": "0505", "happy4": "0507", "happy5": "0508"}
+    # "happy1": "0502", "happy2": "0503", "happy3": "0505"
+    # "anger1": "0401"
+    # "disgust2": "0102"
     elif subitem.name == "s27" and typeitem.name in s27_dir_list:
         # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
         # 这里的处理还得

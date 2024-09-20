@@ -15,7 +15,8 @@ cas(me)^2:
   # cropped_root_path: "/kaggle/working/cropped"
   # cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
   # 在上传文件时 遇到了问题 只能改文件名
-  simpled_root_path: "/kaggle/working/selectedpic"
+  # 使用全部图片
+  simpled_root_path: "/kaggle/working/rawpic"
   cropped_root_path: "/kaggle/working/data/casme_2/cropped_apex"
   optflow_root_path: "/kaggle/working/data/casme_2/optflow_apex"
   feature_root_path: "/kaggle/working/data/casme_2/feature_apex"
