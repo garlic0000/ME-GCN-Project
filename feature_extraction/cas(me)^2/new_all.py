@@ -27,8 +27,8 @@ if __name__ == "__main__":
     但是  使用数据库裁剪的检测不出人脸
     """
     # apex_sampling(opt)
-    print("处理文件夹名称")
-    changeFilesWithCSV(opt)
+    # print("处理文件夹名称")
+    # changeFilesWithCSV(opt)
     print("================ crop ================")
     crop(opt)
     print("================ record ================")

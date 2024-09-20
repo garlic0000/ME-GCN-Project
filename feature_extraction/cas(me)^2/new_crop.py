@@ -128,6 +128,7 @@ def crop(opt):
                             face_left, face_top, face_right, face_bottom = \
                                 face_detector.cal(img)
                             print("\n")
+                            # 输出视频文件夹的名称
                             d_path = os.path.dirname(img_path)
                             print(d_path)
                             # 对上 下 左 右 进行填充或裁剪

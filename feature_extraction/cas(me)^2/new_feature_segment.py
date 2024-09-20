@@ -232,4 +232,4 @@ if __name__ == "__main__":
         opt = yaml_config[dataset]
 
     segment_for_train(opt)
-    # segment_for_test(opt)
+    segment_for_test(opt)
