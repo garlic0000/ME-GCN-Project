@@ -98,9 +98,17 @@ def crop(opt):
             for type_item in sub_item.iterdir():
                 if not type_item.is_dir():
                     continue
-
+                # 在这里修改
+                # s15 15_0101
+                # casme_015,casme_015_0401
+                # subject video_name
+                # 将type_item改为别的
+                # s15 casme_015
+                # /kaggle/input/casme2/rawpic/rawpic/s15/15_0101disgustingteeth
+                s_name = "casme_0{}".format(sub_item.name[1:-1])
+                v_name = "casme_0{}".format(type_item.name[0:7])
                 new_dir_path = os.path.join(
-                    cropped_root_path, sub_item.name, type_item.name)
+                    cropped_root_path, s_name, v_name)
                 if not os.path.exists(new_dir_path):
                     os.makedirs(new_dir_path)
                 # there will be some problem when crop face from 032_3 032_6.
