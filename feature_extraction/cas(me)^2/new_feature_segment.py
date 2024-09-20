@@ -45,8 +45,8 @@ def segment_for_train(opt):
     feature_root_path = opt["feature_root_path"]
     feature_segment_root_path = opt["feature_segment_root_path"]
     anno_csv_path = opt["anno_csv_path"]
-    SEGMENT_LENGTH = opt["SEGMENT_LENGTH"]
-    RECEPTIVE_FILED = opt["RECEPTIVE_FILED"]
+    SEGMENT_LENGTH = opt["SEGMENT_LENGTH"]  # 256
+    RECEPTIVE_FILED = opt["RECEPTIVE_FILED"]  # 15？
     STEP = int(RECEPTIVE_FILED // 2)
 
     assert os.path.exists(feature_root_path), f"{feature_root_path} not exists"
@@ -74,8 +74,14 @@ def segment_for_train(opt):
         for feature_path in feature_path_list:
             feature_name = os.path.split(feature_path)[-1]
             video_name = os.path.splitext(feature_name)[0]
+            print("feature_name")
+            print(feature_name)
+            print("video_name")
+            print(video_name)
             # 这是
             tmp_df = anno_df[anno_df['video_name'] == video_name]
+            print("tmp_tf")
+            print(tmp_df)
             video_feature = np.load(feature_path)  # (t, 12, 2)
             frame_count = video_feature.shape[0]
             start_array = tmp_df.start_frame.values
