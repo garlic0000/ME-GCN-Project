@@ -105,7 +105,7 @@ def crop(opt):
                 # 将type_item改为别的
                 # s15 casme_015
                 # /kaggle/input/casme2/rawpic/rawpic/s15/15_0101disgustingteeth
-                s_name = "casme_0{}".format(sub_item.name[1:-1])
+                s_name = "casme_0{}".format(sub_item.name[1:])
                 v_name = "casme_0{}".format(type_item.name[0:7])
                 new_dir_path = os.path.join(
                     cropped_root_path, s_name, v_name)
@@ -139,6 +139,7 @@ def crop(opt):
                             # 输出视频文件夹的名称
                             d_path = os.path.dirname(img_path)
                             print(d_path)
+                            print(new_dir_path)
                             # 对上 下 左 右 进行填充或裁剪
                             padding_top, padding_bottom, padding_left, padding_right = \
                                 solve_img_size(sub_item, type_item)
