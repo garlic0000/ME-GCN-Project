@@ -97,9 +97,9 @@ def optflow(opt):
                         print("\n")
                         cmd = (f'denseflow "{str(type_item)}" -b=10 -a=tvl1 '
                                f'-s={opt_step} -if -o="{new_sub_dir_path}"')
-                        print("\n")
                         #                         # print(cmd)
                         os.system(cmd)
+                        print("\n")
                         tq.update()
 
 
