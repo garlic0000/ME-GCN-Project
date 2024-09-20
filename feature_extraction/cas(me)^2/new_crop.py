@@ -40,6 +40,8 @@ def solve_img_size(subitem, typeitem):
     # 首先应测试 不进行任何填充 图片有多少能检测成功
     padding_top, padding_bottom, padding_left, padding_right = 0, 0, 0, 0
     padding_left = 80
+    # 右侧的要往左移 40 因此是 -40
+    padding_right = -40
     # s24/happy4_4/img_00009.jpg 脸部裁剪后 无法检测人脸
     # s27 原图 头部太靠上
     s27_dir_list = ['happy3_3', 'happy1_6', 'happy1_5', 'happy3_2', 'happy1_1', 'anger1_3', 'disgust2_1', 'disgust2_8', 'happy2_1', 'disgust2_6', 'disgust2_9', 'disgust2_7', 'disgust2_4', 'disgust2_5', 'happy2_3', 'happy3_1', 'happy1_2', 'happy2_2', 'happy1_4', 'happy1_7', 'anger1_1']
