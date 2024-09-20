@@ -1,5 +1,5 @@
 import yaml
-
+from changeFilesWithAnnoCSV import changeFilesWithCSV
 from new_sampling import sampling
 from new_crop import crop
 from new_record_face_and_landmark import record_face_and_landmarks
@@ -28,6 +28,8 @@ if __name__ == "__main__":
     """
     # apex_sampling(opt)
     # print("================ crop ================")
+    print("处理文件夹名称")
+    changeFilesWithCSV(opt)
     # crop(opt)
     # print("================ record ================")
     # record_face_and_landmarks(opt)
@@ -35,6 +37,6 @@ if __name__ == "__main__":
     # optflow(opt)
     # print("================ feature ================")
     # feature(opt)
-    print("================ feature segment ================")
-    segment_for_train(opt)
-    segment_for_test(opt)
+    # print("================ feature segment ================")
+    # segment_for_train(opt)
+    # segment_for_test(opt)
