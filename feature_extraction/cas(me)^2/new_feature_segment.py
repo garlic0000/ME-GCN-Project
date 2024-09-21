@@ -215,7 +215,7 @@ def segment_for_test(opt):
             # 测试集是直接复制？
             # 我觉得测试集应该从整个数据集中选取
             # 要保存为npz文件吗？
-            #
+
             feature_path = os.path.join(str(type_item), "feature.npy")
             shutil.copy(feature_path, os.path.join(out_dir, video_name+".npy"))
 

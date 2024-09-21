@@ -60,21 +60,25 @@ def solve_img_size(subitem, typeitem):
     padding_right = -40
     # s24/happy4_4/img_00009.jpg 脸部裁剪后 无法检测人脸
     # s27 原图 头部太靠上
-    if subitem.name == "s24" and typeitem.name == "happy4_4":
+    if subitem.name == "s31" and typeitem.name == "31_0507climbingthewall":
         padding_top = 10
         padding_bottom = 10
-    elif subitem.name == "casme_037":
+    elif subitem.name == "s37":
         padding_top = 20
     # ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "anger2": "0402",
     #                          "happy1": "0502", "happy2": "0503", "happy3": "0505", "happy4": "0507", "happy5": "0508"}
     # "happy1": "0502", "happy2": "0503", "happy3": "0505"
     # "anger1": "0401"
     # "disgust2": "0102"
-    elif subitem.name == "casme_027":
+    elif subitem.name == "s27":
         # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
         # 这里的处理还得
         padding_top = -1 # 一个标志
         padding_bottom = 10
+    elif subitem.name == "s21":
+        # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
+        # 这里的处理还得
+        padding_top = -1 # 一个标志
     return padding_top, padding_bottom, padding_left, padding_right
 
 
@@ -165,7 +169,9 @@ def crop(opt):
                         # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
-
+                        # 用于调错
+                        # 检测裁剪后的图片是否能检测到人脸
+                        check_crop(img, img_path)
                         cv2.imwrite(os.path.join(
                                     new_dir_path,
                                     f"img_{str(index+1).zfill(5)}.jpg"), img)
