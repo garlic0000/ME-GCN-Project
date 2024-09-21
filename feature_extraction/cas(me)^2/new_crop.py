@@ -29,6 +29,22 @@ def get_img_count(root_path, dataset):
             count += len(glob.glob(os.path.join(str(type_item), "*.jpg")))
     return count
 
+def check_crop(img, img_path):
+    """
+    检测裁剪后的图片是否能再次检测人脸
+    用于调整裁剪尺寸用
+    """
+    face_detector = FaceDetector()
+    try:
+        face_left, face_top, face_right, face_bottom = \
+            face_detector.cal(img)
+    except Exception:
+        print("\n")
+        print("该路径的图片裁剪出错")
+        print(img_path)
+        face_detector.info(img)
+
+
 def solve_img_size(subitem, typeitem):
     """
     处理不同图片的尺寸
@@ -44,22 +60,17 @@ def solve_img_size(subitem, typeitem):
     padding_right = -40
     # s24/happy4_4/img_00009.jpg 脸部裁剪后 无法检测人脸
     # s27 原图 头部太靠上
-    s27_dir_list = ['happy3_3', 'happy1_6', 'happy1_5', 'happy3_2', 'happy1_1', 'anger1_3', 'disgust2_1', 'disgust2_8', 'happy2_1', 'disgust2_6', 'disgust2_9', 'disgust2_7', 'disgust2_4', 'disgust2_5', 'happy2_3', 'happy3_1', 'happy1_2', 'happy2_2', 'happy1_4', 'happy1_7', 'anger1_1']
     if subitem.name == "s24" and typeitem.name == "happy4_4":
         padding_top = 10
         padding_bottom = 10
-    # 0502
-    elif subitem.name == "s37" and typeitem.name == "happy1_1":
-        padding_top = 10
-    # 0505
-    elif subitem.name == "s37" and typeitem.name == "happy3_1":
+    elif subitem.name == "casme_037":
         padding_top = 20
     # ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "anger2": "0402",
     #                          "happy1": "0502", "happy2": "0503", "happy3": "0505", "happy4": "0507", "happy5": "0508"}
     # "happy1": "0502", "happy2": "0503", "happy3": "0505"
     # "anger1": "0401"
     # "disgust2": "0102"
-    elif subitem.name == "s27" and typeitem.name in s27_dir_list:
+    elif subitem.name == "casme_027":
         # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
         # 这里的处理还得
         padding_top = -1 # 一个标志
@@ -154,6 +165,7 @@ def crop(opt):
                         # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
+
                         cv2.imwrite(os.path.join(
                                     new_dir_path,
                                     f"img_{str(index+1).zfill(5)}.jpg"), img)
