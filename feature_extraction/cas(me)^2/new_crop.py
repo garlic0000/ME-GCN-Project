@@ -183,6 +183,10 @@ def crop(opt):
 
 
 if __name__ == "__main__":
+    import os
+    # os.environ['CUDA_VISIBLE_DEVICES']    = '3, 4'
+    # 只有0可以用
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     with open("/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']
