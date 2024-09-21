@@ -162,20 +162,20 @@ def crop(opt):
                             clip_bottom = face_bottom + padding_bottom
                             clip_left = face_left - padding_left
                             clip_right = face_right + padding_right
-                            # 对s27的处理
+                            # 对s27 s21的处理
                             if padding_top == -1:
                                 clip_top = 0
                         # 之后所有的图片都按照这个尺寸进行剪切
                         # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
-                        # 用于调错
-                        # 检测裁剪后的图片是否能检测到人脸
-                        check_crop(img, img_path)
+                        # # 用于调错
+                        # # 检测裁剪后的图片是否能检测到人脸
+                        # check_crop(img, img_path)
                         # 不写 只测试
-                        # cv2.imwrite(os.path.join(
-                        #             new_dir_path,
-                        #             f"img_{str(index+1).zfill(5)}.jpg"), img)
+                        cv2.imwrite(os.path.join(
+                                    new_dir_path,
+                                    f"img_{str(index+1).zfill(5)}.jpg"), img)
                         # 有的路径下的图片为空 所以不是一张一张进行更新
                         # 像是一个列表一个列表的更新
                         # 但是统计到11409张还不是11409
