@@ -185,7 +185,6 @@ def segment_for_test(opt):
     assert os.path.exists(anno_csv_path), f"{anno_csv_path} not exists"
     if not os.path.exists(feature_segment_root_path):
         os.makedirs(feature_segment_root_path)
-
     for sub_item in Path(feature_root_path).iterdir():
         if not sub_item.is_dir():
             continue
