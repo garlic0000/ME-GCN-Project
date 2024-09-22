@@ -74,7 +74,7 @@ def solve_img_size(subitem, typeitem):
         # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
         # 这里的处理还得
         padding_top = -1 # 一个标志
-        padding_bottom = 10
+        padding_bottom = 20
     elif subitem.name == "s21":
         # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
         # 这里的处理还得
