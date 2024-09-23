@@ -68,10 +68,9 @@ def record_face_and_landmarks(opt):
 
     sum_count = get_img_count(cropped_root_path)
     print("img count = ", sum_count)
-    # face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
-    # 加载模型
-    face_detector = FaceDetector()
-    landmark_model_path = '/kaggle/input/dlib/pytorch/default/1/shape_predictor_68_face_landmarks.dat'
+    face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
+    face_detector = FaceDetector(face_det_model_path)
+    landmark_model_path = '/kaggle/input/checkpoint/pytorch/default/1/san_checkpoint_49.pth.tar'
     landmark_detector = LandmarkDetector(landmark_model_path)
 
     with tqdm(total=sum_count) as tq:
@@ -95,7 +94,7 @@ def record_face_and_landmarks(opt):
                         try:
                             # 对已经进行人脸裁剪的图像进行检测
                             left, top, right, bottom = face_detector.cal(img)
-                            x_list, y_list = landmark_detector.cal(img)
+                            x_list, y_list = landmark_detector.cal(img, face_box=(left, top, right, bottom))
                             # 测试用
                             if index == 0:
                                 print("\n")
@@ -106,8 +105,8 @@ def record_face_and_landmarks(opt):
                             print("\n")
                             print("该路径的图片裁剪和关键点检测出错")
                             print(img_path)
-                            face_detector.info(img)
-                            landmark_detector.info(img)
+                            # face_detector.info(img)
+                            # landmark_detector.info(img)
                             break
                         # print(f"face_width: {right-left+1}")
                         # print(f"face_height: {bottom-top+1}")

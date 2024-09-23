@@ -1,0 +1,35 @@
+dataset: "cas(me)^2"
+cas(me)^2:
+  dataset: "cas(me)^2"
+  # 云服务器上的命名为casme2 实际上是cas(me)^2
+  # original_root_path: "/kaggle/input/casme2/rawpic/rawpic"
+  # 设置为可修改的路径
+  # 由于CAS(ME)^2存在已经取样和裁剪的图片 因此直接使用
+  # 云服务器上的命名为casme2 实际上是cas(me)^2
+  # 设置为可修改的路径 否则denseflow无权限执行
+  # simpled_root_path: "/kaggle/input/casme2/selectedpic/selectedpic"
+  # simpled_root_path: "/kaggle/working/selectedpic"
+  # 使用数据库裁剪的检测不出人脸
+  # 使用代码统一裁剪也检测不出人脸
+  # 将抽样的图片直接粘贴到已裁剪的地方
+  # cropped_root_path: "/kaggle/working/cropped"
+  # cropped_root_path: "/kaggle/working/data/cas(me)^2/cropped_apex"
+  # 在上传文件时 遇到了问题 只能改文件名
+  # 使用全部图片
+  # /kaggle/input/casme2/rawpic/rawpic/s27/27_0508funnydunkey
+  # 用于调试错误
+  # /kaggle/working/rawpic
+#  simpled_root_path: "/kaggle/working/rawpic"
+  simpled_root_path: "/kaggle/input/casme2/rawpic/rawpic"
+  cropped_root_path: "/kaggle/working/data/casme_2/cropped_apex"
+  optflow_root_path: "/kaggle/working/data/casme_2/optflow_apex"
+  feature_root_path: "/kaggle/working/data/casme_2/feature_apex"
+  feature_segment_root_path:  "/kaggle/working/data/casme_2/feature_segment_apex"
+  # original_anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
+  anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
+  CROPPED_SIZE: 500
+  SEGMENT_LENGTH: 256
+  RECEPTIVE_FILED: 15 # should be odd
+
+
+# 操作的目录必须可写

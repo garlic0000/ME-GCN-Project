@@ -29,20 +29,20 @@ def get_img_count(root_path, dataset):
             count += len(glob.glob(os.path.join(str(type_item), "*.jpg")))
     return count
 
-def check_crop(img, img_path):
-    """
-    检测裁剪后的图片是否能再次检测人脸
-    用于调整裁剪尺寸用
-    """
-    face_detector = FaceDetector()
-    try:
-        face_left, face_top, face_right, face_bottom = \
-            face_detector.cal(img)
-    except Exception:
-        print("\n")
-        print("该路径的图片裁剪出错")
-        print(img_path)
-        face_detector.info(img)
+# def check_crop(img, img_path):
+#     """
+#     检测裁剪后的图片是否能再次检测人脸
+#     用于调整裁剪尺寸用
+#     """
+#     face_detector = FaceDetector()
+#     try:
+#         face_left, face_top, face_right, face_bottom = \
+#             face_detector.cal(img)
+#     except Exception:
+#         print("\n")
+#         print("该路径的图片裁剪出错")
+#         print(img_path)
+#         face_detector.info(img)
 
 
 def solve_img_size(subitem, typeitem):
@@ -102,9 +102,8 @@ def crop(opt):
     if not os.path.exists(cropped_root_path):
         os.makedirs(cropped_root_path)
 
-    # face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
-    # 加载模型
-    face_detector = FaceDetector()
+    face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
+    face_detector = FaceDetector(face_det_model_path)
 
     with tqdm(total=sum_count) as tq:
         for sub_item in Path(simpled_root_path).iterdir():
@@ -150,22 +149,26 @@ def crop(opt):
                             # h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
                                 face_detector.cal(img)
-                            print("\n")
-                            # 输出视频文件夹的名称
-                            d_path = os.path.dirname(img_path)
-                            print(d_path)
-                            print(new_dir_path)
-                            # 对上 下 左 右 进行填充或裁剪
-                            padding_top, padding_bottom, padding_left, padding_right = \
-                                solve_img_size(sub_item, type_item)
-                            clip_top = face_top - padding_top
-                            clip_bottom = face_bottom + padding_bottom
-                            clip_left = face_left - padding_left
-                            clip_right = face_right + padding_right
-                            # 对s27 s21的处理
-                            if padding_top == -1:
-                                clip_top = 0
-                        # 之后所有的图片都按照这个尺寸进行剪切
+                            # print("\n")
+                            # # 输出视频文件夹的名称
+                            # d_path = os.path.dirname(img_path)
+                            # print(d_path)
+                            # print(new_dir_path)
+                            # # 对上 下 左 右 进行填充或裁剪
+                            # padding_top, padding_bottom, padding_left, padding_right = \
+                            #     solve_img_size(sub_item, type_item)
+                            # clip_top = face_top - padding_top
+                            # clip_bottom = face_bottom + padding_bottom
+                            # clip_left = face_left - padding_left
+                            # clip_right = face_right + padding_right
+                            # # 对s27 s21的处理
+                            # if padding_top == -1:
+                            #     clip_top = 0
+                            clip_left = face_left
+                            clip_right = face_right
+                            clip_top = face_top
+                            clip_bottom = face_bottom
+                            # 之后所有的图片都按照这个尺寸进行剪切
                         # 保证光流提取时 图片的尺寸一致
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]

@@ -60,8 +60,7 @@ cas(me)^2:
   epochs: 100
   batch_size: 128
 
-  # verbose: False
-  verbose: True
+  verbose: False
 
 
   macro_ration: 0.5 # balance micro and macro
