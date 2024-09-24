@@ -83,7 +83,7 @@ def crop(opt):
     if not os.path.exists(cropped_root_path):
         os.makedirs(cropped_root_path)
 
-    face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
+    face_det_model_path = opt.get("face_det_model_path")
     face_detector = FaceDetector(face_det_model_path)
 
     with tqdm(total=sum_count) as tq:

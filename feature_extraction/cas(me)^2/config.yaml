@@ -30,6 +30,8 @@ cas(me)^2:
   CROPPED_SIZE: 500
   SEGMENT_LENGTH: 256
   RECEPTIVE_FILED: 15 # should be odd
+  face_det_model_path: "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
+  landmark_model_path: "/kaggle/input/checkpoint/pytorch/default/1/san_checkpoint_49.pth.tar"
 
 
 # 操作的目录必须可写

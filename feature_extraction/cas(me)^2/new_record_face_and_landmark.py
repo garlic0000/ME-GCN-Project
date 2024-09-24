@@ -68,9 +68,9 @@ def record_face_and_landmarks(opt):
 
     sum_count = get_img_count(cropped_root_path)
     print("img count = ", sum_count)
-    face_det_model_path = "/kaggle/input/checkpoint/pytorch/default/1/retinaface_Resnet50_Final.pth"
+    face_det_model_path = opt.get("face_det_model_path")
     face_detector = FaceDetector(face_det_model_path)
-    landmark_model_path = '/kaggle/input/checkpoint/pytorch/default/1/san_checkpoint_49.pth.tar'
+    landmark_model_path = opt.get("landmark_model_path")
     landmark_detector = LandmarkDetector(landmark_model_path)
 
     with tqdm(total=sum_count) as tq:
@@ -93,8 +93,12 @@ def record_face_and_landmarks(opt):
                         img = cv2.imread(img_path)
                         try:
                             # 对已经进行人脸裁剪的图像进行检测
-                            left, top, right, bottom = face_detector.cal(img)
-                            x_list, y_list = landmark_detector.cal(img, face_box=(left, top, right, bottom))
+                            face_box = face_detector.cal(img)
+                            # 已经进行人脸裁剪的图像没法进行人脸检测
+                            # 或者不用再进行人脸检测
+                            if face_box is None:
+                                face_box = 0, 0, img.shape[1], img.shape[0]
+                            x_list, y_list = landmark_detector.cal(img, face_box=face_box)
                             # 测试用
                             if index == 0:
                                 print("\n")
@@ -103,19 +107,11 @@ def record_face_and_landmarks(opt):
                         except Exception:
                             # subject: s35, em_type: {type_item.name}, index: {index}
                             print("\n")
-                            print("该路径的图片裁剪和关键点检测出错")
+                            print("该路径的图片关键点检测出错")
                             print(img_path)
                             face_detector.info(img)
-                            # landmark_detector.info(img)
                             break
-                        # print(f"face_width: {right-left+1}")
-                        # print(f"face_height: {bottom-top+1}")
-                        # print(f"image_width: {img.shape[1]}")
-                        # print(f"image_width: {img.shape[0]}")
-                        # show_img(img, (left, top, right, bottom),
-                        #          x_list + y_list)
-
-                        rows_face.append((left, top, right, bottom))
+                        rows_face.append(face_box)
                         rows_landmark.append(x_list + y_list)
                         # 这里是一张一张的更新
                         tq.update()
