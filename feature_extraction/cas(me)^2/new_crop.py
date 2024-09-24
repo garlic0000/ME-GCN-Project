@@ -45,22 +45,6 @@ def get_img_count(root_path, dataset):
 #         face_detector.info(img)
 
 
-def solve_img_size(subitem, typeitem):
-    """
-    处理不同图片的尺寸
-    padding_top 向上填充 -
-    padding_bottom 向下填充 +
-    padding_left 向左填充 -
-    padding_right 向右填充 +
-    """
-    # 首先应测试 不进行任何填充 图片有多少能检测成功
-    # 很多张图片头顶最多扩充14
-    padding_top = 14
-    padding_bottom = 14
-    padding_left, padding_right = 50, 50
-    if subitem.name == "s27":
-        padding_top = -1  # 一个标志
-    return padding_top, padding_bottom, padding_left, padding_right
 
 
 def crop(opt):
@@ -101,24 +85,17 @@ def crop(opt):
                 # s15 casme_015
                 # /kaggle/input/casme2/rawpic/rawpic/s15/15_0101disgustingteeth
 
-                # s_name = "casme_0{}".format(sub_item.name[1:])
-                # v_name = "casme_0{}".format(type_item.name[0:7])
-                # new_dir_path = os.path.join(
-                #     cropped_root_path, s_name, v_name)
+                s_name = "casme_0{}".format(sub_item.name[1:])
+                v_name = "casme_0{}".format(type_item.name[0:7])
                 new_dir_path = os.path.join(
-                    cropped_root_path, sub_item.name, type_item.name)
+                    cropped_root_path, s_name, v_name)
+                # new_dir_path = os.path.join(
+                #     cropped_root_path, sub_item.name, type_item.name)
                 if not os.path.exists(new_dir_path):
                     os.makedirs(new_dir_path)
                 # there will be some problem when crop face from 032_3 032_6.
                 # These two directory should be copied to croped directory
                 # directly.
-                if (dataset == "samm_25"
-                    and (type_item.name == "samm_032_3"
-                         or type_item.name == "samm_032_6")):
-                    shutil.copytree(
-                        str(type_item), new_dir_path, dirs_exist_ok=True)
-                    continue
-
                 # 获取目录下所有 .jpg 文件的路径，并将它们存储在一个列表中
                 img_path_list = glob.glob(
                     os.path.join(str(type_item), "*.jpg"))
