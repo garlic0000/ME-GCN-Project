@@ -57,7 +57,7 @@ def solve_img_size(subitem, typeitem):
     # 很多张图片头顶最多扩充14
     padding_top = 14
     padding_bottom = 14
-    padding_left, padding_right = 40, 40
+    padding_left, padding_right = 50, 50
     if subitem.name == "s27":
         padding_top = -1  # 一个标志
     return padding_top, padding_bottom, padding_left, padding_right
