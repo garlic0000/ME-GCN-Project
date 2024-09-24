@@ -81,6 +81,9 @@ def solve_img_size(subitem, typeitem):
     #     padding_top = -1 # 一个标志
     if subitem.name == "s27" or subitem.name == "s21":
         padding_top = -1  # 一个标志
+    # 031、040、027、024、033、032、035、025、026、020需要全部重新调整
+    elif subitem.name in ["s31", "s40", "s27", "s24", "s33", "s32", "s35", "s25", "s26", "s20"]:
+        padding_top, padding_bottom, padding_left, padding_right = 30, 30, 30, 30
     return padding_top, padding_bottom, padding_left, padding_right
 
 
