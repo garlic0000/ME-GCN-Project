@@ -55,6 +55,12 @@ class LandmarkDetector:
             loc[1] if offset is None else loc[1] - offset[1] for loc in locs]
         return x_list, y_list
 
+    def info(self, img, face_box=None):
+        if face_box is None:
+            face_box = (0, 0, img.shape[1], img.shape[0])
+        locs, _ = self.det.detect(img, face_box)
+        print(locs)
+
 
 
 
@@ -66,8 +72,13 @@ class FaceDetector:
 
     def cal(self, img):
         # 用于测试 输出检测格式
-        self.info(img)
+        # self.info(img)
         left, top, right, bottom = self.det.get_face_box(img)
+        # 检测到已裁剪的人脸图像时
+        if left < 0:
+            left = 0
+        if top < 0:
+            top = 0
         return left, top, right, bottom
 
     def info(self, img):
