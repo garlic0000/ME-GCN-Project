@@ -54,7 +54,7 @@ def solve_img_size(subitem, typeitem):
     padding_right 向右填充 +
     """
     # 首先应测试 不进行任何填充 图片有多少能检测成功
-    padding_top, padding_bottom, padding_left, padding_right = 10, 10, 10, 10
+    padding_top, padding_bottom, padding_left, padding_right = 20, 20, 20, 20
     # padding_left = 80
     # # 右侧的要往左移 40 因此是 -40
     # padding_right = -40
