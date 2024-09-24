@@ -54,7 +54,7 @@ def solve_img_size(subitem, typeitem):
     padding_right 向右填充 +
     """
     # 首先应测试 不进行任何填充 图片有多少能检测成功
-    padding_top, padding_bottom, padding_left, padding_right = 20, 20, 20, 20
+    padding_top, padding_bottom, padding_left, padding_right = 15, 15, 15, 15
     # padding_left = 80
     # # 右侧的要往左移 40 因此是 -40
     # padding_right = -40
@@ -81,9 +81,9 @@ def solve_img_size(subitem, typeitem):
     #     padding_top = -1 # 一个标志
     if subitem.name == "s27" or subitem.name == "s21":
         padding_top = -1  # 一个标志
-    # 031、040、027、024、033、032、035、025、026、020需要全部重新调整
-    elif subitem.name in ["s31", "s40", "s27", "s24", "s33", "s32", "s35", "s25", "s26", "s20"]:
-        padding_top, padding_bottom, padding_left, padding_right = 30, 30, 30, 30
+    # # 031、040、027、024、033、032、035、025、026、020需要全部重新调整
+    # elif subitem.name in ["s31", "s40", "s27", "s24", "s33", "s32", "s35", "s25", "s26", "s20"]:
+    #     padding_top, padding_bottom, padding_left, padding_right = 30, 30, 30, 30
     return padding_top, padding_bottom, padding_left, padding_right
 
 
@@ -175,6 +175,11 @@ def crop(opt):
                             # clip_bottom = face_bottom
                             # 之后所有的图片都按照这个尺寸进行剪切
                         # 保证光流提取时 图片的尺寸一致
+                        # 在进行填充时可能会超过图片尺寸
+                        # 进行测试
+                        if clip_top < 0 or clip_bottom < 0 or clip_left < 0 or clip_right < 0:
+                            print(clip_top, clip_bottom, clip_left, clip_right)
+                            continue
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
                         # # 用于调错
