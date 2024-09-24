@@ -54,36 +54,12 @@ def solve_img_size(subitem, typeitem):
     padding_right 向右填充 +
     """
     # 首先应测试 不进行任何填充 图片有多少能检测成功
-    padding_top, padding_bottom, padding_left, padding_right = 14, 14, 14, 14
-    # padding_left = 80
-    # # 右侧的要往左移 40 因此是 -40
-    # padding_right = -40
-    # # s24/happy4_4/img_00009.jpg 脸部裁剪后 无法检测人脸
-    # # s27 原图 头部太靠上
-    # if subitem.name == "s31" and typeitem.name == "31_0507climbingthewall":
-    #     padding_top = 10
-    #     padding_bottom = 10
-    # elif subitem.name == "s37":
-    #     padding_top = 20
-    # # ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "anger2": "0402",
-    # #                          "happy1": "0502", "happy2": "0503", "happy3": "0505", "happy4": "0507", "happy5": "0508"}
-    # # "happy1": "0502", "happy2": "0503", "happy3": "0505"
-    # # "anger1": "0401"
-    # # "disgust2": "0102"
-    # elif subitem.name == "s27":
-    #     # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
-    #     # 这里的处理还得
-    #     padding_top = -1 # 一个标志
-    #     padding_bottom = 20
-    # elif subitem.name == "s21":
-    #     # 对于s27而言 未剪切的图片中, 头发部分几乎没出现
-    #     # 这里的处理还得
-    #     padding_top = -1 # 一个标志
-    if subitem.name == "s27" or subitem.name == "s21":
-        padding_top = -1  # 一个标志
-    # # 031、040、027、024、033、032、035、025、026、020需要全部重新调整
-    # elif subitem.name in ["s31", "s40", "s27", "s24", "s33", "s32", "s35", "s25", "s26", "s20"]:
-    #     padding_top, padding_bottom, padding_left, padding_right = 30, 30, 30, 30
+    # 很多张图片头顶最多扩充14
+    padding_top = 14
+    padding_bottom = 14
+    padding_left, padding_right = 20, 20
+    # if subitem.name == "s27" or subitem.name == "s21":
+    #     padding_top = -1  # 一个标志
     return padding_top, padding_bottom, padding_left, padding_right
 
 
