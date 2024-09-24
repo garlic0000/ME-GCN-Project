@@ -136,26 +136,26 @@ def crop(opt):
                             # print(d_path)
                             # print(new_dir_path)
                             # 对上 下 左 右 进行填充或裁剪
-                            padding_top, padding_bottom, padding_left, padding_right = \
-                                solve_img_size(sub_item, type_item)
-                            clip_top = face_top - padding_top
-                            clip_bottom = face_bottom + padding_bottom
-                            clip_left = face_left - padding_left
-                            clip_right = face_right + padding_right
-                            # 对s27的处理
-                            if padding_top == -1:
-                                clip_top = 0
-                            # clip_left = face_left
-                            # clip_right = face_right
-                            # clip_top = face_top
-                            # clip_bottom = face_bottom
+                            # padding_top, padding_bottom, padding_left, padding_right = \
+                            #     solve_img_size(sub_item, type_item)
+                            # clip_top = face_top - padding_top
+                            # clip_bottom = face_bottom + padding_bottom
+                            # clip_left = face_left - padding_left
+                            # clip_right = face_right + padding_right
+                            # # 对s27的处理
+                            # if padding_top == -1:
+                            #     clip_top = 0
+                            clip_left = face_left
+                            clip_right = face_right
+                            clip_top = face_top
+                            clip_bottom = face_bottom
                             # 之后所有的图片都按照这个尺寸进行剪切
                         # 保证光流提取时 图片的尺寸一致
                         # 在进行填充时可能会超过图片尺寸
                         # 进行测试
-                        if clip_top < 0 or clip_bottom < 0 or clip_left < 0 or clip_right < 0:
-                            print(clip_top, clip_bottom, clip_left, clip_right)
-                            continue
+                        # if clip_top < 0 or clip_bottom < 0 or clip_left < 0 or clip_right < 0:
+                        #     print(clip_top, clip_bottom, clip_left, clip_right)
+                        #     continue
                         img = img[clip_top:clip_bottom + 1,
                                   clip_left:clip_right + 1, :]
                         # # 用于调错

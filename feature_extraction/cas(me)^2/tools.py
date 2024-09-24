@@ -56,14 +56,25 @@ class LandmarkDetector:
         return x_list, y_list
 
 
+
+
+
 class FaceDetector:
     def __init__(self, model_path):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.det = RetinaFaceDetector(model_path, device)
 
     def cal(self, img):
+        # 用于测试 输出检测格式
+        self.info(img)
         left, top, right, bottom = self.det.get_face_box(img)
         return left, top, right, bottom
+
+    def info(self, img):
+        """
+        用于调错
+        """
+        print(self.det.get_face_box(img))
 
 
 def get_top_optical_flows(optflows, percent):
