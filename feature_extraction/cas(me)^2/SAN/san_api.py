@@ -108,4 +108,16 @@ class SanLandmarkDetector(object):
         scale_h, scale_w = cropped_size[0] * 1. / inputs.size(-2) , cropped_size[1] * 1. / inputs.size(-1)
 
         locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[2], locations[:, 1] * scale_h + cropped_size[3]
-        return locations.round().astype(np.int), scores
+        """
+        AttributeError: module 'numpy' has no attribute 'int'.
+        `np.int` was a deprecated alias for the builtin `int`. 
+        To avoid this error in existing code, use `int` by itself. 
+        Doing this will not modify any behavior and is safe. 
+        When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. 
+        If you wish to review your current use, check the release note link for additional information.
+        The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+        https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations. Did you mean: 'inf'?
+        """
+        # return locations.round().astype(np.int), scores
+        # 随便选的精度
+        return locations.round().astype(np.int64), scores
