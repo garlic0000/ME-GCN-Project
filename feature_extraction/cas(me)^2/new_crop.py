@@ -57,9 +57,9 @@ def solve_img_size(subitem, typeitem):
     # 很多张图片头顶最多扩充14
     padding_top = 14
     padding_bottom = 14
-    padding_left, padding_right = 20, 20
-    # if subitem.name == "s27" or subitem.name == "s21":
-    #     padding_top = -1  # 一个标志
+    padding_left, padding_right = 30, 30
+    if subitem.name == "s27":
+        padding_top = -1  # 一个标志
     return padding_top, padding_bottom, padding_left, padding_right
 
 
@@ -142,7 +142,7 @@ def crop(opt):
                             clip_bottom = face_bottom + padding_bottom
                             clip_left = face_left - padding_left
                             clip_right = face_right + padding_right
-                            # 对s27 s21的处理
+                            # 对s27的处理
                             if padding_top == -1:
                                 clip_top = 0
                             # clip_left = face_left
