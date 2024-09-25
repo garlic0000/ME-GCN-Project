@@ -49,8 +49,8 @@ class LandmarkDetector:
         if face_box is None:
             face_box = (0, 0, img.shape[1], img.shape[0])
         locs, _ = self.det.detect(img, face_box)
-        # 用于测试
-        print(len(locs))
+        # # 用于测试
+        # print(len(locs))
         x_list = [
             loc[0] if offset is None else loc[0] - offset[0] for loc in locs]
         y_list = [
@@ -235,7 +235,9 @@ def cal_global_optflow_vector(flows, landmarks):
     Returns:
         global optical flow vector.
     """
-
+    # 这个函数没有任何处理？
+    # 使用下面这个函数的处理？
+    # python函数内嵌套函数？
     def _cal_partial_opt_flow(indices, horizontal_bound, vertical_bound):
 
         (nose_roi_left, nose_roi_top, nose_roi_right,
@@ -263,6 +265,8 @@ def cal_global_optflow_vector(flows, landmarks):
             horizontal_bound=int(length_between_coners * 0.35),
             vertical_bound=int(length_between_coners * 0.35)))
     flow_nose_roi = np.stack(flow_nose_roi_list).reshape(-1, 2)
+    if flow_nose_roi.size == 0:
+        raise ValueError("flow_nose_roi is empty, check ROI boundaries or flow data.")
     flow_nose_roi = get_main_direction_flow(
         flow_nose_roi,
         direction_region=[
@@ -271,6 +275,8 @@ def cal_global_optflow_vector(flows, landmarks):
             (5 * math.pi / 4, 7 * math.pi / 4),
             (7 * math.pi / 4, 8 * math.pi / 4, 0, 1 * math.pi / 4),
         ])
+    if flow_nose_roi is None:
+        raise ValueError("get_main_direction_flow returned None, check flow calculation.")
     flow_nose_roi = get_top_optical_flows(flow_nose_roi, percent=0.88)
     glob_flow_vector = optflow_normalize(flow_nose_roi)
     return glob_flow_vector
@@ -293,6 +299,7 @@ def calculate_roi_freature_list(flow, landmarks, radius):
         vertical_bound=radius
     )
 
+    # 可能有问题
     global_optflow_vector = cal_global_optflow_vector(flow, landmarks)
 
     ior_flows_adjust = ior_flows - global_optflow_vector

@@ -86,16 +86,17 @@ def feature(opt):
                             [(int(row[index]), int(row[index + 68]))
                                 for index in range(int(len(row) // 2))])
 
-                        # try:
-                        ior_feature_list = calculate_roi_freature_list(
-                            flow_x_y, landmarks, radius=5)
-                        ior_feature_list_sequence.append(
-                            np.stack(ior_feature_list, axis=0))
-                        tq.update()
-                        # except Exception:
-                        #     ior_feature_list_sequence = []
-                        #     print(f"{sub_item.name}  {type_item.name}")
-                        #     break
+                        try:
+                            # 这段可能有问题
+                            ior_feature_list = calculate_roi_freature_list(
+                                flow_x_y, landmarks, radius=5)
+                            ior_feature_list_sequence.append(
+                                np.stack(ior_feature_list, axis=0))
+                            tq.update()
+                        except Exception:
+                            ior_feature_list_sequence = []
+                            print(f"{sub_item.name}  {type_item.name}")
+                            break
 
                         # LEFT_EYE_CONER_INDEX = 39
                         # RIGHT_EYE_CONER_INDEX = 42
