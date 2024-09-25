@@ -50,7 +50,7 @@ class LandmarkDetector:
             face_box = (0, 0, img.shape[1], img.shape[0])
         locs, _ = self.det.detect(img, face_box)
         # 用于测试
-        print(locs)
+        print(len(locs))
         x_list = [
             loc[0] if offset is None else loc[0] - offset[0] for loc in locs]
         y_list = [
