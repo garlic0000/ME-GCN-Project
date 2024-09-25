@@ -49,6 +49,8 @@ class LandmarkDetector:
         if face_box is None:
             face_box = (0, 0, img.shape[1], img.shape[0])
         locs, _ = self.det.detect(img, face_box)
+        # 用于测试
+        print(locs)
         x_list = [
             loc[0] if offset is None else loc[0] - offset[0] for loc in locs]
         y_list = [
@@ -74,11 +76,9 @@ class FaceDetector:
         # 用于测试 输出检测格式
         # self.info(img)
         left, top, right, bottom = self.det.get_face_box(img)
-        # 检测到已裁剪的人脸图像时
-        if left < 0:
-            left = 0
-        if top < 0:
-            top = 0
+        # 检测到已裁剪的人脸图像 检测的参数不合法时
+        if left < 0 or top < 0 or right > img.shape[1] or bottom > img.shape[0]:
+            left, top, right, bottom = 0, 0, img.shape[1], img.shape[0]
         return left, top, right, bottom
 
     def info(self, img):
