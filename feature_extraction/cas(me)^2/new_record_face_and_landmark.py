@@ -99,7 +99,6 @@ def record_face_and_landmarks(opt):
                             x_list, y_list = landmark_detector.cal(img, face_box=(left, top, right, bottom))
                             # 测试用
                             if index == 0:
-                                print("\n")
                                 dir_path = os.path.dirname(img_path)
                                 print(dir_path)
                         except Exception:

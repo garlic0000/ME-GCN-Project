@@ -107,6 +107,8 @@ def crop(opt):
                         # 对第一个图像进行剪切
                         # 将之后的图像进行对齐
                         if index == 0:
+                            # 测试用
+                            print(new_dir_path)
                             # h, w, c = img.shape
                             face_left, face_top, face_right, face_bottom = \
                                 face_detector.cal(img)
