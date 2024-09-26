@@ -135,6 +135,11 @@ def get_rectangle_roi_boundary(indices, landmarks,
     roi_landmarks = landmarks[indices]
     left_bound, top_bound = np.min(roi_landmarks, axis=0)
     right_bound, bottom_bound = np.max(roi_landmarks, axis=0)
+    # 测试
+    print("roi 边界计算")
+    print("get_rectangle_roi_boundary")
+    print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
+          f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
     return left_bound-horizontal_bound, top_bound-vertical_bound, \
         right_bound+horizontal_bound, bottom_bound+vertical_bound
 
