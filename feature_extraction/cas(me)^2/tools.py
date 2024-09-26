@@ -45,16 +45,20 @@ class LandmarkDetector:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.det = SanLandmarkDetector(model_path, device)
 
-    def cal(self, img, offset=None, face_box=None):
+    def cal(self, img, face_box=None):
         if face_box is None:
             face_box = (0, 0, img.shape[1], img.shape[0])
         locs, _ = self.det.detect(img, face_box)
         # # 用于测试
         # print(len(locs))
-        x_list = [
-            loc[0] if offset is None else loc[0] - offset[0] for loc in locs]
-        y_list = [
-            loc[1] if offset is None else loc[1] - offset[1] for loc in locs]
+        # 关键点的范围要在 图片范围内
+        x_list = []
+        y_list = []
+        for loc in locs:
+            if loc[0] < 0 or loc[0] > img.shape[1] or loc[1] < 0 or loc[1] > img.shape[0]:
+                print(loc[0], loc[1])
+            x_list.append(loc[0])
+            y_list.append(loc[1])
         return x_list, y_list
 
     def info(self, img, face_box=None):
@@ -136,6 +140,8 @@ def get_rectangle_roi_boundary(indices, landmarks,
     left_bound, top_bound = np.min(roi_landmarks, axis=0)
     right_bound, bottom_bound = np.max(roi_landmarks, axis=0)
     # 测试
+    # 在图像的有效边界之内
+    # 在获取的关键点 landmarks中 要求关键点处于图片尺寸之内
     print("roi 边界计算")
     print("get_rectangle_roi_boundary")
     print(f"left_bound-horizontal_bound: {left_bound-horizontal_bound}, top_bound-vertical_bound: {top_bound-vertical_bound}, "
