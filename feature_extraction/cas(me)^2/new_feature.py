@@ -60,16 +60,17 @@ def feature(opt):
                 with open(csv_landmark_path, 'r') as f:
                     ior_feature_list_sequence = []  # feature in whole video
                     csv_r = csv.reader(f)
-                    # # for debug use
-                    # row_count = 0
-                    # for row in csv_r:
-                    #     row_count += 1
-                    
-                    # if row_count > len(flow_x_path_list):
-                    #     print("video_name:", str(type_item))
-                    #     print("row_count:", row_count)
-                    #     print("flow num:", len(flow_x_path_list))
-                    #     continue
+                    # 用于调试
+                    row_count = 0
+                    for row in csv_r:
+                        row_count += 1
+                    print(len(csv_r) == row_count)
+                    if row_count > len(flow_x_path_list):
+                        print("row_count > flow_x_path_list")
+                        print("video_name:", str(type_item))
+                        print("row_count:", row_count)
+                        print("flow num:", len(flow_x_path_list))
+                        continue
                     
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
