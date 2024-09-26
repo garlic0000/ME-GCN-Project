@@ -64,9 +64,9 @@ def feature(opt):
                     row_count = 0
                     for row in csv_r:
                         row_count += 1
-                    print(row_count)
-                    # TypeError: object of type '_csv.reader' has no len()
                     # print(len(csv_r) == row_count)
+                    # print(row_count)
+                    # TypeError: object of type '_csv.reader' has no len()
                     if row_count > len(flow_x_path_list):
                         print("row_count > flow_x_path_list")
                         print("video_name:", str(type_item))
@@ -76,6 +76,7 @@ def feature(opt):
                     
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
+                            print("index < opt_step")
                             continue
                         i = index - opt_step
                         # 这段有问题
