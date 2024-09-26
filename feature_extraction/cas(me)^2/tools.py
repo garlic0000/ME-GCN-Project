@@ -138,8 +138,8 @@ def get_rectangle_roi_boundary(indices, landmarks,
     # 测试
     print("roi 边界计算")
     print("get_rectangle_roi_boundary")
-    print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
-          f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
+    print(f"left_bound-horizontal_bound: {left_bound-horizontal_bound}, top_bound-vertical_bound: {top_bound-vertical_bound}, "
+          f"right_bound+horizontal_bound: {right_bound+horizontal_bound}, bottom_bound+vertical_bound: {bottom_bound+vertical_bound}")
     return left_bound-horizontal_bound, top_bound-vertical_bound, \
         right_bound+horizontal_bound, bottom_bound+vertical_bound
 
