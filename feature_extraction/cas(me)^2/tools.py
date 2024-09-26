@@ -140,15 +140,6 @@ def get_rectangle_roi_boundary(indices, landmarks,
     roi_landmarks = landmarks[indices]
     left_bound, top_bound = np.min(roi_landmarks, axis=0)
     right_bound, bottom_bound = np.max(roi_landmarks, axis=0)
-    # 测试
-    # 在图像的有效边界之内
-    # 在获取的关键点 landmarks中 要求关键点处于图片尺寸之内
-    """
-    left_bound-horizontal_bound, top_bound-vertical_bound, 
-        right_bound+horizontal_bound, bottom_bound+vertical_bound
-    进行加减操作之后 要处于图片的范围之内
-    可能要进行图片尺寸的导入    
-    """
     return left_bound-horizontal_bound, top_bound-vertical_bound, \
         right_bound+horizontal_bound, bottom_bound+vertical_bound
 
@@ -258,22 +249,37 @@ def cal_global_optflow_vector(flows, landmarks):
             nose_roi_bottom) = get_rectangle_roi_boundary(
                 indices, landmarks,
                 horizontal_bound, vertical_bound)
+        """
+        flow_nose_roi is empty after extraction, checking boundaries...
+ROI boundaries: top=139, bottom=153, left=34, right=27
+        """
+        # 确保左右边界正确
+        if nose_roi_left > nose_roi_right:
+            nose_roi_left, nose_roi_right = nose_roi_right, nose_roi_left  # 交换左右边界
+
+        # 确保上下边界正确
+        if nose_roi_top > nose_roi_bottom:
+            nose_roi_top, nose_roi_bottom = nose_roi_bottom, nose_roi_top  # 交换上下边界
+
         # 使用np.max和np.min确保ROI边界不越界
         nose_roi_left = np.max([nose_roi_left, 0])
         nose_roi_top = np.max([nose_roi_top, 0])
         nose_roi_right = np.min([nose_roi_right, flows.shape[1] - 1])
         nose_roi_bottom = np.min([nose_roi_bottom, flows.shape[0] - 1])
+        # 根据修正后的边界提取ROI
+        if nose_roi_left <= nose_roi_right and nose_roi_top <= nose_roi_bottom:
+            flow_nose_roi = flows[nose_roi_top:nose_roi_bottom + 1, nose_roi_left:nose_roi_right + 1]
+        else:
+            flow_nose_roi = np.array([])  # 如果边界不合理，则设置为空数组
         # # 测试
         # print("鼻子区域的roi")
         # print("_cal_partial_opt_flow")
         # print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
         #       f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
-        flow_nose_roi = flows[
-            nose_roi_top: nose_roi_bottom + 1,
-            nose_roi_left: nose_roi_right + 1]
-
         flow_nose_roi = flow_nose_roi.reshape(-1, 2)
+        # 用于测试
         # 使用 np.max 和 np.min 检查光流区域
+        # 光流值通常应该是较小的浮点数，通常在 -1 到 1 之间波动
         if flow_nose_roi.size == 0:
             print("flow_nose_roi is empty after extraction, checking boundaries...")
             print(
