@@ -76,7 +76,6 @@ def feature(opt):
                     # 测试
                     print("测试")
                     print(enumerate(csv_r))
-                    print(len(enumerate(csv_r)))
                     print("222222")
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
@@ -85,6 +84,7 @@ def feature(opt):
                             continue
                         i = index - opt_step
                         # 测试
+                        print("输出i")
                         print(i)
                         # 这段有问题
                         flow_x = cv2.imread(flow_x_path_list[i],
