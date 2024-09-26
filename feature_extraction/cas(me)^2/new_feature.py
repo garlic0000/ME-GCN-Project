@@ -73,13 +73,15 @@ def feature(opt):
                         print("row_count:", row_count)
                         print("flow num:", len(flow_x_path_list))
                         continue
-                    
+                    # 测试
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
                             print("index < opt_step")
                             print(index, opt_step, row)
                             continue
                         i = index - opt_step
+                        # 测试
+                        print(i)
                         # 这段有问题
                         flow_x = cv2.imread(flow_x_path_list[i],
                                             cv2.IMREAD_GRAYSCALE)
