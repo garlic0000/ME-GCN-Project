@@ -74,6 +74,7 @@ def feature(opt):
                         print("flow num:", len(flow_x_path_list))
                         continue
                     # 测试
+                    print("测试")
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
                             print("index < opt_step")
@@ -126,7 +127,9 @@ def feature(opt):
                         # imshow_for_test(
                         #     "test", flow_x,
                         #     face_boundarys=show_boundary_list)
-
+                    # 测试
+                    print("测试111111111")
+                    print(len(ior_feature_list_sequence))
                     if len(ior_feature_list_sequence) > 0:
                         new_type_dir_path = os.path.join(
                             feature_root_path, sub_item.name)
