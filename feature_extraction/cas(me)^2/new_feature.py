@@ -64,7 +64,9 @@ def feature(opt):
                     row_count = 0
                     for row in csv_r:
                         row_count += 1
-                    print(len(csv_r) == row_count)
+                    print(row_count)
+                    # TypeError: object of type '_csv.reader' has no len()
+                    # print(len(csv_r) == row_count)
                     if row_count > len(flow_x_path_list):
                         print("row_count > flow_x_path_list")
                         print("video_name:", str(type_item))
