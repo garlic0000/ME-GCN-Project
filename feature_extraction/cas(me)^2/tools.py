@@ -281,7 +281,7 @@ def cal_global_optflow_vector(flows, landmarks):
         else:
             print(f"Flow values: min={np.min(flow_nose_roi, axis=0)}, max={np.max(flow_nose_roi, axis=0)}")
 
-    return flow_nose_roi
+        return flow_nose_roi
 
     LEFT_EYE_CONER_INDEX = 39
     RIGHT_EYE_CONER_INDEX = 42
