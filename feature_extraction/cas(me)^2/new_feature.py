@@ -76,6 +76,7 @@ def feature(opt):
                     # 测试
                     print("测试")
                     print(enumerate(csv_r))
+                    print(len(enumerate(csv_r)))
                     print("222222")
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
