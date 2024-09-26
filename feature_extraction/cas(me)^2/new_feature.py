@@ -77,19 +77,12 @@ def feature(opt):
                         print("row_count:", row_count)
                         print("flow num:", len(flow_x_path_list))
                         continue
-                    # 测试
-                    print("测试")
-                    print(enumerate(csv_r))
-                    print("222222")
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
                             print("index < opt_step")
                             print(index, opt_step, row)
                             continue
                         i = index - opt_step
-                        # 测试
-                        print("输出i")
-                        print(i)
                         # 这段有问题
                         flow_x = cv2.imread(flow_x_path_list[i],
                                             cv2.IMREAD_GRAYSCALE)
@@ -108,10 +101,12 @@ def feature(opt):
                                 flow_x_y, landmarks, radius=5)
                             ior_feature_list_sequence.append(
                                 np.stack(ior_feature_list, axis=0))
-                        except Exception:
+                        except Exception as exp:
                             ior_feature_list_sequence = []
                             print("ior_feature_list 有问题")
                             print(f"{sub_item.name}  {type_item.name}")
+                            # 打印异常信息
+                            print(str(exp))
                             break
                         tq.update()
                         # LEFT_EYE_CONER_INDEX = 39
