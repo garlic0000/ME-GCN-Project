@@ -263,17 +263,25 @@ def cal_global_optflow_vector(flows, landmarks):
         nose_roi_top = np.max([nose_roi_top, 0])
         nose_roi_right = np.min([nose_roi_right, flows.shape[1] - 1])
         nose_roi_bottom = np.min([nose_roi_bottom, flows.shape[0] - 1])
-        # 测试
-        print("鼻子区域的roi")
-        print("_cal_partial_opt_flow")
-        print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
-              f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
+        # # 测试
+        # print("鼻子区域的roi")
+        # print("_cal_partial_opt_flow")
+        # print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
+        #       f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
         flow_nose_roi = flows[
             nose_roi_top: nose_roi_bottom + 1,
             nose_roi_left: nose_roi_right + 1]
 
         flow_nose_roi = flow_nose_roi.reshape(-1, 2)
-        return flow_nose_roi
+        # 使用 np.max 和 np.min 检查光流区域
+        if flow_nose_roi.size == 0:
+            print("flow_nose_roi is empty after extraction, checking boundaries...")
+            print(
+                f"ROI boundaries: top={nose_roi_top}, bottom={nose_roi_bottom}, left={nose_roi_left}, right={nose_roi_right}")
+        else:
+            print(f"Flow values: min={np.min(flow_nose_roi, axis=0)}, max={np.max(flow_nose_roi, axis=0)}")
+
+    return flow_nose_roi
 
     LEFT_EYE_CONER_INDEX = 39
     RIGHT_EYE_CONER_INDEX = 42
