@@ -55,6 +55,7 @@ class LandmarkDetector:
         x_list = []
         y_list = []
         for loc in locs:
+            # 这段可能不用检测
             if loc[0] < 0 or loc[0] > img.shape[1] or loc[1] < 0 or loc[1] > img.shape[0]:
                 print(loc[0], loc[1])
             x_list.append(loc[0])
@@ -142,10 +143,12 @@ def get_rectangle_roi_boundary(indices, landmarks,
     # 测试
     # 在图像的有效边界之内
     # 在获取的关键点 landmarks中 要求关键点处于图片尺寸之内
-    print("roi 边界计算")
-    print("get_rectangle_roi_boundary")
-    print(f"left_bound-horizontal_bound: {left_bound-horizontal_bound}, top_bound-vertical_bound: {top_bound-vertical_bound}, "
-          f"right_bound+horizontal_bound: {right_bound+horizontal_bound}, bottom_bound+vertical_bound: {bottom_bound+vertical_bound}")
+    """
+    left_bound-horizontal_bound, top_bound-vertical_bound, 
+        right_bound+horizontal_bound, bottom_bound+vertical_bound
+    进行加减操作之后 要处于图片的范围之内
+    可能要进行图片尺寸的导入    
+    """
     return left_bound-horizontal_bound, top_bound-vertical_bound, \
         right_bound+horizontal_bound, bottom_bound+vertical_bound
 
@@ -255,7 +258,11 @@ def cal_global_optflow_vector(flows, landmarks):
             nose_roi_bottom) = get_rectangle_roi_boundary(
                 indices, landmarks,
                 horizontal_bound, vertical_bound)
-
+        # 测试
+        print("鼻子区域的roi")
+        print("_cal_partial_opt_flow")
+        print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
+              f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
         flow_nose_roi = flows[
             nose_roi_top: nose_roi_bottom + 1,
             nose_roi_left: nose_roi_right + 1]
