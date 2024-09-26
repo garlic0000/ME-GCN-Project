@@ -55,9 +55,10 @@ class LandmarkDetector:
         x_list = []
         y_list = []
         for loc in locs:
-            # 这段可能不用检测
-            if loc[0] < 0 or loc[0] > img.shape[1] or loc[1] < 0 or loc[1] > img.shape[0]:
-                print(loc[0], loc[1])
+            # # 测试
+            # # 这段可能不用检测
+            # if loc[0] < 0 or loc[0] > img.shape[1] or loc[1] < 0 or loc[1] > img.shape[0]:
+            #     print(loc[0], loc[1])
             x_list.append(loc[0])
             y_list.append(loc[1])
         return x_list, y_list
@@ -277,15 +278,15 @@ ROI boundaries: top=139, bottom=153, left=34, right=27
         # print(f"nose_roi_left: {nose_roi_left}, nose_roi_right: {nose_roi_right}, "
         #       f"nose_roi_top: {nose_roi_top}, nose_roi_bottom: {nose_roi_bottom}")
         flow_nose_roi = flow_nose_roi.reshape(-1, 2)
-        # 用于测试
-        # 使用 np.max 和 np.min 检查光流区域
-        # 光流值通常应该是较小的浮点数，通常在 -1 到 1 之间波动
-        if flow_nose_roi.size == 0:
-            print("flow_nose_roi is empty after extraction, checking boundaries...")
-            print(
-                f"ROI boundaries: top={nose_roi_top}, bottom={nose_roi_bottom}, left={nose_roi_left}, right={nose_roi_right}")
-        else:
-            print(f"Flow values: min={np.min(flow_nose_roi, axis=0)}, max={np.max(flow_nose_roi, axis=0)}")
+        # # 用于测试
+        # # 使用 np.max 和 np.min 检查光流区域
+        # # 光流值通常应该是较小的浮点数，通常在 -1 到 1 之间波动
+        # if flow_nose_roi.size == 0:
+        #     print("flow_nose_roi is empty after extraction, checking boundaries...")
+        #     print(
+        #         f"ROI boundaries: top={nose_roi_top}, bottom={nose_roi_bottom}, left={nose_roi_left}, right={nose_roi_right}")
+        # else:
+        #     print(f"Flow values: min={np.min(flow_nose_roi, axis=0)}, max={np.max(flow_nose_roi, axis=0)}")
 
         return flow_nose_roi
 

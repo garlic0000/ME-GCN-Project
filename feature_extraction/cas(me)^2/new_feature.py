@@ -70,17 +70,19 @@ def feature(opt):
                     # print(len(csv_r) == row_count)
                     # print(row_count)
                     # TypeError: object of type '_csv.reader' has no len()
-                    row_count = len(csv_r)
-                    if row_count > len(flow_x_path_list):
-                        print("row_count > flow_x_path_list")
-                        print("video_name:", str(type_item))
-                        print("row_count:", row_count)
-                        print("flow num:", len(flow_x_path_list))
-                        continue
+                    # # 用于测试
+                    # row_count = len(csv_r)
+                    # if row_count > len(flow_x_path_list):
+                    #     print("row_count > flow_x_path_list")
+                    #     print("video_name:", str(type_item))
+                    #     print("row_count:", row_count)
+                    #     print("flow num:", len(flow_x_path_list))
+                    #     continue
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
-                            print("index < opt_step")
-                            print(index, opt_step, row)
+                            # 用于测试
+                            # print("index < opt_step")
+                            # print(index, opt_step, row)
                             continue
                         i = index - opt_step
                         # 这段有问题
@@ -96,11 +98,11 @@ def feature(opt):
                                 for index in range(int(len(row) // 2))])
 
                         try:
-                            # 这段可能有问题
                             ior_feature_list = calculate_roi_freature_list(
                                 flow_x_y, landmarks, radius=5)
                             ior_feature_list_sequence.append(
                                 np.stack(ior_feature_list, axis=0))
+                            tq.update()
                         except Exception as exp:
                             ior_feature_list_sequence = []
                             print("ior_feature_list 有问题")
@@ -108,7 +110,6 @@ def feature(opt):
                             # 打印异常信息
                             print(str(exp))
                             break
-                        tq.update()
                         # LEFT_EYE_CONER_INDEX = 39
                         # RIGHT_EYE_CONER_INDEX = 42
                         # left_eye_coner = landmarks[LEFT_EYE_CONER_INDEX]
@@ -128,9 +129,6 @@ def feature(opt):
                         # imshow_for_test(
                         #     "test", flow_x,
                         #     face_boundarys=show_boundary_list)
-                    # 测试
-                    print("测试111111111")
-                    print(len(ior_feature_list_sequence))
                     if len(ior_feature_list_sequence) > 0:
                         new_type_dir_path = os.path.join(
                             feature_root_path, sub_item.name)
