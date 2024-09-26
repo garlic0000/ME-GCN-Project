@@ -77,6 +77,7 @@ def feature(opt):
                     for index, row in enumerate(csv_r):
                         if index < opt_step:
                             print("index < opt_step")
+                            print(index, opt_step, row)
                             continue
                         i = index - opt_step
                         # 这段有问题
