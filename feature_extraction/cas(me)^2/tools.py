@@ -268,15 +268,9 @@ ROI boundaries: top=139, bottom=153, left=34, right=27
         nose_roi_right = np.min([nose_roi_right, flows.shape[1] - 1])
         nose_roi_bottom = np.min([nose_roi_bottom, flows.shape[0] - 1])
         # 根据修正后的边界提取ROI
-        flow_nose_roi = np.array([])
-        if nose_roi_left <= nose_roi_right and nose_roi_top <= nose_roi_bottom:
-            flow_nose_roi = flows[nose_roi_top:nose_roi_bottom + 1, nose_roi_left:nose_roi_right + 1]
-        # 检查 flow_nose_roi 是否为空数组
-        if flow_nose_roi.size > 0:
-            # 如果不是空的，进行 reshape 操作
-            flow_nose_roi = flow_nose_roi.reshape(-1, 2)
-        else:
-            print("提取的鼻子区域光流 ROI 为空，无法进行 reshape 操作")
+        flow_nose_roi = flows[nose_roi_top:nose_roi_bottom + 1, nose_roi_left:nose_roi_right + 1]
+        flow_nose_roi = flow_nose_roi.reshape(-1, 2)
+
         # # 用于测试
         # # 使用 np.max 和 np.min 检查光流区域
         # # 光流值通常应该是较小的浮点数，通常在 -1 到 1 之间波动
