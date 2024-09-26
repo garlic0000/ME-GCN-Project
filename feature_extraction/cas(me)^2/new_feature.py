@@ -59,14 +59,18 @@ def feature(opt):
                     continue
                 with open(csv_landmark_path, 'r') as f:
                     ior_feature_list_sequence = []  # feature in whole video
-                    csv_r = csv.reader(f)
-                    # 用于调试
-                    row_count = 0
-                    for row in csv_r:
-                        row_count += 1
+                    csv_r = list(csv.reader(f))
+                    # # 用于调试
+                    # row_count = 0
+                    # for row in csv_r:
+                    #     # 遍历 csv_r 后，文件指针已经到达文件末尾
+                    #     # 需要重置 否则会出问题
+                    #     # 将 csv_r = csv.reader(f) 转换为list使用
+                    #     row_count += 1
                     # print(len(csv_r) == row_count)
                     # print(row_count)
                     # TypeError: object of type '_csv.reader' has no len()
+                    row_count = len(csv_r)
                     if row_count > len(flow_x_path_list):
                         print("row_count > flow_x_path_list")
                         print("video_name:", str(type_item))
