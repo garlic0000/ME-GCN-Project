@@ -258,6 +258,11 @@ def cal_global_optflow_vector(flows, landmarks):
             nose_roi_bottom) = get_rectangle_roi_boundary(
                 indices, landmarks,
                 horizontal_bound, vertical_bound)
+        # 使用np.max和np.min确保ROI边界不越界
+        nose_roi_left = np.max([nose_roi_left, 0])
+        nose_roi_top = np.max([nose_roi_top, 0])
+        nose_roi_right = np.min([nose_roi_right, flows.shape[1] - 1])
+        nose_roi_bottom = np.min([nose_roi_bottom, flows.shape[0] - 1])
         # 测试
         print("鼻子区域的roi")
         print("_cal_partial_opt_flow")
