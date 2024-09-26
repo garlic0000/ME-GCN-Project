@@ -75,6 +75,7 @@ def feature(opt):
                         if index < opt_step:
                             continue
                         i = index - opt_step
+                        # 这段有问题
                         flow_x = cv2.imread(flow_x_path_list[i],
                                             cv2.IMREAD_GRAYSCALE)
                         flow_y = cv2.imread(flow_y_path_list[i],
@@ -95,6 +96,7 @@ def feature(opt):
                             tq.update()
                         except Exception:
                             ior_feature_list_sequence = []
+                            print("ior_feature_list 有问题")
                             print(f"{sub_item.name}  {type_item.name}")
                             break
 
