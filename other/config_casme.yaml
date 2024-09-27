@@ -16,8 +16,10 @@ cas(me)^2:
   micro_max: 17  # 微表情最大持续长度 帧数
   micro_min: 9
   macro_max: 118
-  macro_min: 17  # 实际上计算的是4 第二小是17 但是为了与微表情有一个区别 使用17
+  macro_min: 17  # 宏表情最小持续长度 帧数
   # 为什么epoch_begin 的开始为15
+  # 从第15个epoch才开始重点观察和保存模型的表现
+  # 训练初期 模型还没有稳定
   epoch_begin: 15
   nms_top_K_micro: 5  # 微表情候选数量 每个类别筛选前5个
   nms_top_K_macro: 5
