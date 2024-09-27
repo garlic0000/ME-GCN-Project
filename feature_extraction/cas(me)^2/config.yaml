@@ -34,4 +34,8 @@ cas(me)^2:
   landmark_model_path: "/kaggle/input/checkpoint/pytorch/default/1/san_checkpoint_49.pth.tar"
 
 
-# 操作的目录必须可写
+ # 数据集中的各种地址
+  casme_2_cropped: "/kaggle/input/casme2/cropped/cropped"
+  casme_2_rawpic: "/kaggle/input/casme2/rawpic/rawpic"
+  casme_2_rawvideo: "/kaggle/input/casme2/rawvideo/rawvideo"
+  casme_2_selectpic: "/kaggle/input/casme2/selectedpic/selectedpic"

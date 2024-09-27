@@ -4,7 +4,7 @@ from torch.nn.parameter import Parameter
 import math
 from model import GraphConvolution
 
-               
+
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
 def configure_optimizers(model, learning_rate, weight_decay):
     """
@@ -12,6 +12,8 @@ def configure_optimizers(model, learning_rate, weight_decay):
     We are separating out all parameters of the model into two buckets: those that will experience
     weight decay for regularization and those that won't (biases, and layernorm/embedding weights).
     We are then returning the PyTorch optimizer object.
+    将模型参数划分为需要进行权重衰减的参数和不需要进行权重衰减的参数
+    使用AdamW优化器进行优化
     """
 
     # separate out all parameters to those that will and won't experience regularizing weight decay

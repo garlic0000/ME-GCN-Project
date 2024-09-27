@@ -1,6 +1,7 @@
 import torch
 from torch.autograd import Variable
 
+
 class MultiCEFocalLoss_New(torch.nn.Module):
     def __init__(self, class_num, gamma=2, alpha=None, lb_smooth=0,
                  reduction='mean'):
@@ -75,11 +76,11 @@ def _focal_loss(output, label, gamma, alpha, lb_smooth):
 
     c_1 = alpha
     c_0 = 1 - c_1
-    loss = ((c_1 * torch.abs(label - output)**gamma * mask_class
-            * torch.log(output + 0.00001))
-            + (c_0 * torch.abs(label + lb_smooth - output)**gamma
-            * (1.0 - mask_class)
-            * torch.log(1.0 - output + 0.00001)))
+    loss = ((c_1 * torch.abs(label - output) ** gamma * mask_class
+             * torch.log(output + 0.00001))
+            + (c_0 * torch.abs(label + lb_smooth - output) ** gamma
+               * (1.0 - mask_class)
+               * torch.log(1.0 - output + 0.00001)))
     loss = -torch.mean(loss)
     return loss
 
