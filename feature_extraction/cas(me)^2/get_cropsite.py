@@ -48,6 +48,7 @@ def get_site(opt) -> None:
 
             facebox_csv_path = os.path.join(new_dir_path, f"{type_item.name}.csv")
             img_path_list = glob.glob(os.path.join(str(type_item), "*.jpg"))
+            print(img_path_list)
             print("dgsdfgeger")
             if img_path_list:
 
