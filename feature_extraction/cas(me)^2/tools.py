@@ -7,6 +7,8 @@ import cv2
 import torch
 from SAN.san_api import SanLandmarkDetector
 from retinaface.api import Facedetecor as RetinaFaceDetector
+
+
 # from retinaface import RetinaFace
 # import os
 # import dlib
@@ -68,9 +70,6 @@ class LandmarkDetector:
             face_box = (0, 0, img.shape[1], img.shape[0])
         locs, _ = self.det.detect(img, face_box)
         print(locs)
-
-
-
 
 
 class FaceDetector:
@@ -141,8 +140,8 @@ def get_rectangle_roi_boundary(indices, landmarks,
     roi_landmarks = landmarks[indices]
     left_bound, top_bound = np.min(roi_landmarks, axis=0)
     right_bound, bottom_bound = np.max(roi_landmarks, axis=0)
-    return left_bound-horizontal_bound, top_bound-vertical_bound, \
-        right_bound+horizontal_bound, bottom_bound+vertical_bound
+    return left_bound - horizontal_bound, top_bound - vertical_bound, \
+           right_bound + horizontal_bound, bottom_bound + vertical_bound
 
 
 def get_rois(mat, landmarks, indices, horizontal_bound=3, vertical_bound=3):
@@ -172,7 +171,7 @@ def get_rois(mat, landmarks, indices, horizontal_bound=3, vertical_bound=3):
         x = landmark[0].item()
         y = landmark[1].item()
         roi_list.append(mat[y - vertical_bound: y + vertical_bound + 1,
-                            x - horizontal_bound: x + horizontal_bound + 1, :])
+                        x - horizontal_bound: x + horizontal_bound + 1, :])
     return np.stack(roi_list, axis=0)
 
 
@@ -241,15 +240,16 @@ def cal_global_optflow_vector(flows, landmarks):
     Returns:
         global optical flow vector.
     """
+
     # 这个函数没有任何处理？
     # 使用下面这个函数的处理？
     # python函数内嵌套函数？
     def _cal_partial_opt_flow(indices, horizontal_bound, vertical_bound):
 
         (nose_roi_left, nose_roi_top, nose_roi_right,
-            nose_roi_bottom) = get_rectangle_roi_boundary(
-                indices, landmarks,
-                horizontal_bound, vertical_bound)
+         nose_roi_bottom) = get_rectangle_roi_boundary(
+            indices, landmarks,
+            horizontal_bound, vertical_bound)
         """
         flow_nose_roi is empty after extraction, checking boundaries...
 ROI boundaries: top=139, bottom=153, left=34, right=27
@@ -321,9 +321,9 @@ def calculate_roi_freature_list(flow, landmarks, radius):
     ior_flows = get_rois(
         flow, landmarks,
         indices=[
-            18, 19, 20,     # left eyebrow
-            23, 24, 25,     # right eyebrow
-            28, 30,         # nose
+            18, 19, 20,  # left eyebrow
+            23, 24, 25,  # right eyebrow
+            28, 30,  # nose
             48, 51, 54, 57  # mouse
         ],
         horizontal_bound=radius,
@@ -334,7 +334,7 @@ def calculate_roi_freature_list(flow, landmarks, radius):
     global_optflow_vector = cal_global_optflow_vector(flow, landmarks)
 
     ior_flows_adjust = ior_flows - global_optflow_vector
-    ior_feature_list = []   # feature in face
+    ior_feature_list = []  # feature in face
     for ior_flow in ior_flows_adjust:
         ior_main_direction_flow = get_main_direction_flow(
             ior_flow,
@@ -363,27 +363,151 @@ def conver_flow_to_gbr(flow):
 
 
 def get_micro_expression_average_len(csv_path):
+    """
+    获取微表情的平均帧长度
+    13.578947368421053
+    用于设置滑动窗口
+    """
     df = pd.read_csv(csv_path)
     df = df[df["type_idx"] == 2]
-    df = df[df["end_frame"] != 0]
+    df = df[df["start_frame"] < df["end_frame"]]
+    df = df[df["start_frame"] < df["apex_frame"]]
+    df = df[df["apex_frame"] < df["end_frame"]]
     array_start_frame = df.start_frame.values
     array_end_frame = df.end_frame.values
     array_me_len = array_end_frame - array_start_frame + 1
     average_len = np.mean(array_me_len).item()
     return average_len
+
+
+def get_micro_expression_min_max_len(csv_path):
+    """
+    获取微表情的最少和最长帧长度
+    9
+    用于配置
+    17
+    用于配置
+    """
+    df = pd.read_csv(csv_path)
+    df = df[df["type_idx"] == 2]
+    df = df[df["start_frame"] < df["end_frame"]]
+    df = df[df["start_frame"] < df["apex_frame"]]
+    df = df[df["apex_frame"] < df["end_frame"]]
+    array_start_frame = df.start_frame.values
+    array_end_frame = df.end_frame.values
+    array_me_len = array_end_frame - array_start_frame + 1
+    # print(array_me_len)
+    min_len = np.min(array_me_len).item()
+    max_len = np.max(array_me_len).item()
+    return min_len, max_len
+
+
+def get_micro_expression_left_right_min_max_len(csv_path):
+    """
+    获取微表情的最少和最长帧长度
+    9
+    用于配置
+    17
+    用于配置
+    """
+    df = pd.read_csv(csv_path)
+    df = df[df["type_idx"] == 2]
+    df = df[df["start_frame"] < df["end_frame"]]
+    df = df[df["start_frame"] < df["apex_frame"]]
+    df = df[df["apex_frame"] < df["end_frame"]]
+    array_start_frame = df.start_frame.values
+    array_apex_frame = df.apex_frame.values
+    array_end_frame = df.end_frame.values
+    array_me_left_len = array_apex_frame - array_start_frame + 1
+    array_me_right_len = array_end_frame - array_apex_frame + 1
+    # print(array_me_len)
+    min_left_len = np.min(array_me_left_len).item()
+    max_left_len = np.max(array_me_left_len).item()
+    min_right_len = np.min(array_me_right_len).item()
+    max_right_len = np.max(array_me_right_len).item()
+    return min_left_len, max_left_len, min_right_len, max_right_len
 
 
 def get_macro_expression_average_len(csv_path):
+    """
+    获取宏表情的平均帧长度
+    40.10546875
+    """
     df = pd.read_csv(csv_path)
     df = df[df["type_idx"] == 1]
-    df = df[df["end_frame"] != 0]
+    df = df[df["start_frame"] < df["end_frame"]]
+    df = df[df["start_frame"] < df["apex_frame"]]
+    df = df[df["apex_frame"] < df["end_frame"]]
     array_start_frame = df.start_frame.values
     array_end_frame = df.end_frame.values
-    array_me_len = array_end_frame - array_start_frame + 1
-    average_len = np.mean(array_me_len).item()
+    array_mae_len = array_end_frame - array_start_frame + 1
+    # print(array_mae_len)
+    average_len = np.mean(array_mae_len).item()
     return average_len
 
 
+def get_macro_expression_min_max_len(csv_path):
+    """
+    获取宏表情的最少帧长度
+    最小值是17
+    最长是118
+    """
+    df = pd.read_csv(csv_path)
+    df = df[df["type_idx"] == 1]
+    df = df[df["start_frame"] < df["end_frame"]]
+    df = df[df["start_frame"] < df["apex_frame"]]
+    df = df[df["apex_frame"] < df["end_frame"]]
+    array_start_frame = df.start_frame.values
+    array_end_frame = df.end_frame.values
+    array_mae_len = array_end_frame - array_start_frame + 1
+    # print(array_mae_len)
+    min_len = np.min(array_mae_len).item()
+    max_len = np.max(array_mae_len).item()
+    return min_len, max_len
+
+
+def get_macro_expression_left_right_min_max_len(csv_path):
+    """
+    获取微表情的左侧最少和最长帧长度 右侧 最少和最长帧长度
+    """
+    df = pd.read_csv(csv_path)
+    df = df[df["type_idx"] == 1]
+    # 有顶点为0的 干扰计算
+    df = df[df["start_frame"] < df["end_frame"]]
+    df = df[df["start_frame"] < df["apex_frame"]]
+    df = df[df["apex_frame"] < df["end_frame"]]
+    array_start_frame = df.start_frame.values
+    array_apex_frame = df.apex_frame.values
+    array_end_frame = df.end_frame.values
+    array_mae_left_len = array_apex_frame - array_start_frame + 1
+    array_mae_right_len = array_end_frame - array_apex_frame + 1
+    min_left_len = np.min(array_mae_left_len).item()
+    max_left_len = np.max(array_mae_left_len).item()
+    min_right_len = np.min(array_mae_right_len).item()
+    max_right_len = np.max(array_mae_right_len).item()
+    return min_left_len, max_left_len, min_right_len, max_right_len
+
+
 if __name__ == "__main__":
-    a = get_micro_expression_average_len("./samm_new_25.csv")
+    ave_marco_len = get_macro_expression_average_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+    min_marco_len, max_marco_len = get_macro_expression_min_max_len(
+        "D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+    min_left_marco_len, max_left_marco_len, min_right_marco_len, max_right_marco_len = \
+        get_macro_expression_left_right_min_max_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+
+    ave_mirco_len = get_micro_expression_average_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+    min_mirco_len, max_mirco_len = get_micro_expression_min_max_len(
+        "D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+    min_left_mirco_len, max_left_mirco_len, min_right_mirco_len, max_right_mirco_len = \
+        get_micro_expression_left_right_min_max_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+
+    print("宏表情最小长度:{0} 平均长度:{1} 最大长度:{2}".format(min_marco_len, ave_marco_len, max_marco_len))
+    print("左侧最小:{0} 左侧最大:{1} 右侧最小:{2} 右侧最大:{3}".format(min_left_marco_len, max_left_marco_len,
+                                                                       min_right_marco_len, max_right_marco_len))
+
+    print("\n")
+    print("微表情最小长度:{0} 平均长度:{1} 最大长度:{2}".format(min_mirco_len, ave_mirco_len, max_mirco_len))
+    print("左侧最小:{0} 左侧最大:{1} 右侧最小:{2} 右侧最大:{3}".format(min_left_mirco_len, max_left_mirco_len,
+                                                                    min_right_mirco_len, max_right_mirco_len))
+
     pass

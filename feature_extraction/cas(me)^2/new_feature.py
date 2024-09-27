@@ -26,12 +26,13 @@ def feature(opt):
     optflow_root_path = opt["optflow_root_path"]
     feature_root_path = opt["feature_root_path"]
     landmark_root_path = opt["cropped_root_path"]
-    # anno_csv_path = opt["anno_csv_path"]
+    anno_csv_path = opt["anno_csv_path"]
     print(f'dataset: {opt["dataset"]}')
     sum_count = get_flow_count(optflow_root_path)
     print("flow count = ", sum_count)
 
-    opt_step = 1  # int(get_micro_expression_average_len(anno_csv_path) // 2)
+    # opt_step = 1  # int(get_micro_expression_average_len(anno_csv_path) // 2)
+    opt_step = int(get_micro_expression_average_len(anno_csv_path) // 2)
     print(f"opt_step: {opt_step}")
 
     # for debug use

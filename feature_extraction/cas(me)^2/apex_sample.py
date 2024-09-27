@@ -33,13 +33,11 @@ def apex_sampling(opt):
         # print(f"Dataset {dataset} does not need to be sampled")
         print("Dataset {} does not need to be sampled".format(opt["dataset"]))
         print("terminate")
-        # exit(1)
-        return
+        exit(1)
 
     if not os.path.exists(original_root_path):
         print(f"path {original_root_path} is not exist")
-        # exit(1)
-        return
+        exit(1)
 
     sum_count = get_img_sampling_count(original_root_path, SAMPLING_RATIO)
     print("img count = ", sum_count)

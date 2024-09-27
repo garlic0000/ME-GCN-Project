@@ -84,6 +84,7 @@ class GCN(nn.Module):
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
+        # 这个是？
         mat_path = os.path.join('/kaggle/working/ME-GCN-Project',
             'assets',
             '{}.npy'.format(opt['dataset'])

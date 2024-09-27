@@ -1,72 +1,84 @@
-# dataset: "samm" # "cas(me)^2"
-#dataset: "cas(me)^2"
 dataset: "cas(me)^2"
 
 cas(me)^2:
   dataset: "cas(me)^2"
-  # dataset statistics & training configuration
+
+  # 数据集统计和训练设置
   RATIO_SCALE: 1
-  SEGMENT_LENTH: 256
-  RECEPTIVE_FILED: 15
-  save_model: True
-  save_intervals: 1   # save ckpt for every epoch
-  micro_average_len: 15
-  macro_average_len: 59
-  micro_max: 30
-  micro_min: 5
-  macro_max: 90
-  macro_min: 15
+  SEGMENT_LENTH: 256  # 视频片段的长度 每个片段被分割成256帧
+  RECEPTIVE_FILED: 15  # 感受野 模型一次输入的感受范围
+  save_model: True  # 是否保存训练好的模型
+  save_intervals: 1   # 模型保存的间隔 每个epoch都保存
+
+  # 微表情和宏表情统计信息
+  micro_average_len: 13  # 微表情平均持续长度 帧数
+  macro_average_len: 40
+  micro_max: 17  # 微表情最大持续长度 帧数
+  micro_min: 9
+  macro_max: 118
+  macro_min: 17  # 实际上计算的是4 第二小是17 但是为了与微表情有一个区别 使用17
   # 为什么epoch_begin 的开始为15
   epoch_begin: 15
-  nms_top_K_micro: 5
+  nms_top_K_micro: 5  # 微表情候选数量 每个类别筛选前5个
   nms_top_K_macro: 5
 
-  micro_left_min_dis: 2   # micro_min // 2
-  micro_left_max_dis: 7
-  micro_right_min_dis: 2 
-  micro_right_max_dis: 7
+  micro_left_min_dis: 4   # 微表情左侧最小帧数
+  micro_left_max_dis: 10  # 微表情左侧最大帧数
+  micro_right_min_dis: 4
+  micro_right_max_dis: 12
 
-  macro_left_min_dis: 7
-  macro_left_max_dis: 29
-  macro_right_min_dis: 7  # macro_min // 2
-  macro_right_max_dis: 29
+  macro_left_min_dis: 4
+  macro_left_max_dis: 63
+  macro_right_min_dis: 5  # 宏表情右侧最小帧数
+  macro_right_max_dis: 94  # 宏表情右侧最大帧数
 
+  # 路径设置
   project_root: "/kaggle/working/ME-GCN-Project"
   feature_root: ~
-#  segment_feat_root: "/kaggle/working/ME-GCN-Project/features/cas(me)^2/feature_segment"
-  # 使用提取的特征进行训练
-  segment_feat_root: "/kaggle/input/output/data/casme_2/feature_segment_apex"
+  # 源项目特征
+  # segment_feat_root: "/kaggle/working/ME-GCN-Project/features/cas(me)^2/feature_segment"
+  # 提取完特征不直接开始训练
+  # segment_feat_root: "/kaggle/input/output/data/casme_2/feature_segment_apex"
+  # 提取完特征 直接开始训练
+  segment_feat_root: "/kaggle/working/data/casme_2/feature_segment_apex"
   model_save_root: ~
   output_dir_name: ~
   anno_csv: "/kaggle/working/ME-GCN-Project/info_csv/cas(me)_new.csv"
-  num_workers: 2
+
+  # 训练配置
+  num_workers: 2  # dataloader 使用的工作线程数
   device: 'cuda:0'
 
-  abfcm_training_lr: 0.01
-  abfcm_weight_decay: 0.1
-  abfcm_lr_scheduler: 0.96
-  abfcm_apex_gamma: 1
+  # ABFCM模型的超参数
+  abfcm_training_lr: 0.01  # 学习率
+  abfcm_weight_decay: 0.1  # 权重衰减 防止过拟合
+  abfcm_lr_scheduler: 0.96  # 学习率调度参数 每个epoch后学习率*0.96
+  abfcm_apex_gamma: 1  # 控制apex损失函数相关的参数
   abfcm_apex_alpha: 0.90
-  abfcm_action_gamma: 1
+  abfcm_action_gamma: 1  # 控制动作相关的损失函数参数
   abfcm_action_alpha: 0.80
-  abfcm_start_end_gama: 1
+  abfcm_start_end_gama: 1  # 控制开始帧和结束帧的损失函数参数
   abfcm_start_end_alpha: 0.90
-  abfcm_label_smooth: 0.16
-  abfcm_best_epoch: 47
+  abfcm_label_smooth: 0.16  # 标签平滑系数 防止过拟合
+  # 为什么是第47个
+  abfcm_best_epoch: 47  # 最佳模型在第47个epoch得到 为什么？
 
-  micro_apex_score_threshold: 0.5
+  # 分类阈值
+  micro_apex_score_threshold: 0.5  # 微表情分类阈值 只有超过0.5才认为该微表情是有效的
   macro_apex_score_threshold: 0.5
 
+  # 训练epoch和批次大小
   epochs: 100
   batch_size: 128
 
   verbose: False
 
 
-  macro_ration: 0.5 # balance micro and macro
-  micro_normal_range: 1
+  macro_ration: 0.5 # 平衡微表情和宏表情的比率 为什么设置成0.5
+  micro_normal_range: 1  # 微表情的标准范围 在后处理时的正常偏移量 为什么设置成1
   macro_normal_range: 3
 
+  # 视频数据
   subject_list: [
       "casme_016","casme_015","casme_019","casme_020","casme_021",
       "casme_022","casme_023","casme_024","casme_025","casme_026",

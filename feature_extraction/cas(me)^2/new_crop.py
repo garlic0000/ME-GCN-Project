@@ -21,10 +21,6 @@ def get_img_count(root_path, dataset):
         for type_item in sub_item.iterdir():
             if not type_item.is_dir():
                 continue
-            if (dataset == "samm_25"
-                    and (type_item.name == "032_3"
-                         or type_item.name == "032_6")):
-                continue
             # # 计算目录下所有 .jpg 文件的数量
             count += len(glob.glob(os.path.join(str(type_item), "*.jpg")))
     return count
