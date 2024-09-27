@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
-import math, os
+import math
+import os
 import numpy as np
+
 
 class GraphConvolution(nn.Module):
     """
@@ -28,19 +30,18 @@ class GraphConvolution(nn.Module):
 
         adj_mat = np.load(mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
-        
+
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
         self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
-        
 
     def forward(self, input):
         b, n, c = input.shape
         support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
-        #output = SparseMM(adj)(support)
+        # output = SparseMM(adj)(support)
         if self.bias is not None:
             return output + self.bias
         else:
@@ -48,14 +49,14 @@ class GraphConvolution(nn.Module):
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
-               + str(self.in_features) + ' -> ' \
-               + str(self.out_features) + ')'
+            + str(self.in_features) + ' -> ' \
+            + str(self.out_features) + ')'
 
 
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
         super(GCN, self).__init__()
-        
+
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         self.bn1 = nn.BatchNorm1d(nhid)
         # self.gc2 = GraphConvolution(nhid, nout, mat_path)
@@ -63,35 +64,39 @@ class GCN(nn.Module):
         # self.dropout = dropout
 
     def forward(self, x):
-        
         x = self.gc1(x)
         x = x.transpose(1, 2).contiguous()
         x = self.bn1(x).transpose(1, 2).contiguous()
         x = F.relu(x)
-        
+
         # x = F.dropout(x, self.dropout, training=self.training)
-        
+
         # x = self.gc2(x)
-        
+
         # x = x.transpose(1, 2).contiguous()
         # x = self.bn2(x).transpose(1, 2).contiguous()
         # x = F.relu(x)
-        
+
         # x = F.relu(self.gc2(x))
         # x = F.dropout(x, self.dropout, training=self.training)
         return x
-    
+
+
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
         # 这个是？
-        mat_path = os.path.join('/kaggle/working/ME-GCN-Project',
-            'assets',
-            '{}.npy'.format(opt['dataset'])
-        )
+        # 服务器测试路径
+        mat_dir = '/kaggle/working/ME-GCN-Project'
+        # # 本地测试路径
+        # mat_dir = 'D:/PycharmProjects/ME-GCN-Project'
+        mat_path = os.path.join(mat_dir,
+                                'assets',
+                                '{}.npy'.format(opt['dataset'])
+                                )
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
-        #self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path))
-        in_dim = 192#24
+        # self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path))
+        in_dim = 192  # 24
 
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0,
@@ -120,9 +125,9 @@ class AUwGCN(torch.nn.Module):
     def forward(self, x):
         b, t, n, c = x.shape
 
-        x = x.reshape(b*t, n, c)  # (b*t, n, c)
-        x = self.graph_embedding(x).reshape(b, t, -1).transpose(1, 2)   # (b, C=384=12*32, t)
-        #x = self.graph_embedding(x).reshape(b, t, n, 16)
+        x = x.reshape(b * t, n, c)  # (b*t, n, c)
+        x = self.graph_embedding(x).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        # x = self.graph_embedding(x).reshape(b, t, n, 16)
         x = self._sequential(x)
         x = self._classification(x)
         return x
@@ -137,15 +142,19 @@ class AUwGCN(torch.nn.Module):
 
 if __name__ == "__main__":
     import yaml
-    # load config & params.
-    with open("/kaggle/working/ME-GCN-Project/config.yaml", encoding="UTF-8") as f:
+
+    # # 服务器运行
+    # yaml_path = "/kaggle/working/ME-GCN-Project/config.yaml"
+    # 本地测试
+    yaml_path = "D:/PycharmProjects/ME-GCN-Project/other/config_casme.yaml"
+    with open(yaml_path, encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']
         opt = yaml_config[dataset]
-    
-    x = torch.randn((16, 64, 12, 2))        # (b, t, n, c)
-    model = PEM(opt)
-    
+
+    x = torch.randn((16, 64, 12, 2))  # (b, t, n, c)
+    # model = PEM(opt)
+    model = AUwGCN(opt)
+
     out = model(x)
     print(out.shape)
-    
