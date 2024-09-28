@@ -154,7 +154,8 @@ def get_original_site_from_cropped(cropped_image_path: str, original_image_path:
     Tuple[int, int, int, int]]:
     """
     将已裁剪的图片映射到原图上，获取裁剪的位置。
-
+    如果精度和鲁棒性是最关注的（例如图像匹配的准确性要求很高、复杂场景、光照变化较大），SIFT是更好的选择。
+    如果速度是主要考虑的因素（例如实时应用场景），SURF可能更合适。
     参数:
         cropped_image_path (str): 裁剪图像的文件路径。
         original_image_path (str): 原图的文件路径。
