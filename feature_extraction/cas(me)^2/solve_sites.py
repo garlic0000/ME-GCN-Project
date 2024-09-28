@@ -74,7 +74,7 @@ def merged_csv(csv_files_list, output_root_path):
     # csv_files = ['file1.csv', 'file2.csv']
 
     # 读取并合并 CSV 文件
-    df_list = [pd.read_csv(file) for file in csv_files_list]
+    df_list = [pd.read_csv(file, header=None) for file in csv_files_list]
     merged_df = pd.concat(df_list, ignore_index=True)
 
     # 将合并后的结果写入一个新的 CSV 文件
