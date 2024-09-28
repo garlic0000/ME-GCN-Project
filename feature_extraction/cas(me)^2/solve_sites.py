@@ -16,13 +16,19 @@ def remove_outliers(data, m=1.5):
     :param m: 异常值的判断因子，默认为1.5倍四分位数间距
     :return: 去除极端值后的列表
     """
-    data = np.array(data)
+    # data = np.array(data)
+    # q1, q3 = np.percentile(data, [25, 75])
+    # iqr = q3 - q1
+    # lower_bound = q1 - m * iqr
+    # upper_bound = q3 + m * iqr
+    # filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
+    # return filtered_data
+    # 假设简单去除离群点的方法：根据四分位距过滤
     q1, q3 = np.percentile(data, [25, 75])
     iqr = q3 - q1
     lower_bound = q1 - m * iqr
     upper_bound = q3 + m * iqr
-    filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
-    return filtered_data
+    return [x for x in data if lower_bound <= x <= upper_bound]
 
 
 def get_most_frequent_average(data):
@@ -31,14 +37,19 @@ def get_most_frequent_average(data):
     :param data: 输入列表
     :return: 出现频率最高的数的平均值
     """
+    # counter = Counter(data)
+    # # 找到出现频率最高的数
+    # most_common = counter.most_common()
+    # highest_frequency = most_common[0][1]
+    # # 过滤出频率最高的数值
+    # frequent_numbers = [item for item, freq in most_common if freq == highest_frequency]
+    # # 计算平均值
+    # return np.mean(frequent_numbers)
+    # 假设获取出现频率最高的数的平均值
+    from collections import Counter
     counter = Counter(data)
-    # 找到出现频率最高的数
-    most_common = counter.most_common()
-    highest_frequency = most_common[0][1]
-    # 过滤出频率最高的数值
-    frequent_numbers = [item for item, freq in most_common if freq == highest_frequency]
-    # 计算平均值
-    return np.mean(frequent_numbers)
+    most_common_values = [k for k, v in counter.items() if v == counter.most_common(1)[0][1]]
+    return sum(most_common_values) / len(most_common_values)
 
 
 def example():
