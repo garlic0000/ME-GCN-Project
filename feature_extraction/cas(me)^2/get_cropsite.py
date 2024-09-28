@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from typing import Optional, Tuple
 
+
 # 裁剪和表情帧文件夹命令 和 规范命名的转换
 ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "anger2": "0402",
                      "happy1": "0502", "happy2": "0503", "happy3": "0505", "happy4": "0507",
@@ -15,6 +16,8 @@ ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "
 # facebox_csv_root_path = "D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/faceboxcsv"
 facebox_csv_root_path = "/kaggle/working/data/casme_2/faceboxcsv"
 os.makedirs(facebox_csv_root_path, exist_ok=True)
+
+
 def record_csv(csv_path, rows):
     if os.path.exists(csv_path):
         os.remove(csv_path)
@@ -147,9 +150,6 @@ def example():
         plt.show()
 
 
-
-
-
 def get_original_site_from_cropped(cropped_image_path: str, original_image_path: str) -> Optional[
     Tuple[int, int, int, int]]:
     """
@@ -169,66 +169,74 @@ def get_original_site_from_cropped(cropped_image_path: str, original_image_path:
     if original_image is None or cropped_image is None:
         print("Error loading images.")
         return None
-    # # 初始化 ORB 特征检测器 (GPU 版本)
-    # orb = cv2.cuda_ORB.create()
-    #
-    # # 将图像上传到GPU
-    # gpu_original = cv2.cuda_GpuMat()
-    # gpu_cropped = cv2.cuda_GpuMat()
-    # gpu_original.upload(original_image)
-    # gpu_cropped.upload(cropped_image)
-    #
-    # # 检测并计算特征点
-    # keypoints1, descriptors1 = orb.detectAndComputeAsync(gpu_cropped, None)
-    # keypoints2, descriptors2 = orb.detectAndComputeAsync(gpu_original, None)
-    #
-    # # 将特征点和描述符下载到主内存
-    # keypoints1 = orb.convert(keypoints1)
-    # keypoints2 = orb.convert(keypoints2)
-    # descriptors1 = descriptors1.download()
-    # descriptors2 = descriptors2.download()
-    # 使用CPU
-    # 初始化 ORB 特征检测器
-    orb = cv2.ORB_create()
 
-    # 检测并计算特征点
-    keypoints1, descriptors1 = orb.detectAndCompute(cropped_image, None)
-    keypoints2, descriptors2 = orb.detectAndCompute(original_image, None)
+    # 使用 SIFT 特征检测器
+    try:
+        sift = cv2.SIFT_create()
+    except AttributeError:
+        print("SIFT is not available in this version of OpenCV, falling back to ORB.")
+        sift = cv2.ORB_create()
 
+    # 检测并计算特征点和描述符
+    keypoints1, descriptors1 = sift.detectAndCompute(cropped_image, None)
+    keypoints2, descriptors2 = sift.detectAndCompute(original_image, None)
 
-    # 使用 BFMatcher 进行特征点匹配
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(descriptors1, descriptors2)
-    matches = sorted(matches, key=lambda x: x.distance)
+    # 检查是否有足够的特征点进行匹配
+    if descriptors1 is None or descriptors2 is None:
+        print("No descriptors found in one of the images.")
+        return None
+    if len(keypoints1) < 4 or len(keypoints2) < 4:
+        print("Not enough keypoints found for reliable matching.")
+        return None
+
+    # 使用 FLANN 匹配器进行特征点匹配
+    index_params = dict(algorithm=1, trees=5)  # 使用 KD-Tree
+    search_params = dict(checks=50)  # 检查次数
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+    matches = flann.knnMatch(descriptors1, descriptors2, k=2)
+
+    # 只保留好的匹配
+    good_matches = []
+    for m, n in matches:
+        if m.distance < 0.7 * n.distance:  # Lowe's ratio test
+            good_matches.append(m)
+
+    if len(good_matches) < 4:
+        print("Not enough good matches found.")
+        return None
 
     # 获取匹配的特征点坐标
-    if len(matches) > 0:
-        src_pts = np.float32([keypoints1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
-        dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+    src_pts = np.float32([keypoints1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
-        # 估算变换矩阵
-        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    # 估算变换矩阵
+    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    if M is None:
+        print("Homography estimation failed.")
+        return None
 
-        # 裁剪图像的四个角点
-        h, w = cropped_image.shape
-        corners = np.array([[0, 0], [w - 1, 0], [w - 1, h - 1], [0, h - 1]], dtype='float32').reshape(-1, 1, 2)
+    # 裁剪图像的四个角点
+    h, w = cropped_image.shape
+    corners = np.array([[0, 0], [w - 1, 0], [w - 1, h - 1], [0, h - 1]], dtype='float32').reshape(-1, 1, 2)
 
-        # 使用变换矩阵将角点映射回原图
-        transformed_corners = cv2.perspectiveTransform(corners, M)
+    # 使用变换矩阵将角点映射回原图
+    transformed_corners = cv2.perspectiveTransform(corners, M)
 
-        # 计算裁剪区域的最小外接矩形
-        left, top, width, height = cv2.boundingRect(transformed_corners)
-        right = left + width
-        bottom = top + height
-        # 获取原图的尺寸
-        original_h, original_w = original_image.shape
+    # 计算裁剪区域的最小外接矩形
+    left, top, width, height = cv2.boundingRect(transformed_corners)
+    right = left + width
+    bottom = top + height
 
-        # 检查是否超出边界，如果超出则返回 None
-        if left < 0 or top < 0 or right > original_w or bottom > original_h:
-            return None
-        return left, top, right, bottom
+    # 获取原图的尺寸
+    original_h, original_w = original_image.shape
 
-    return None
+    # 检查是否超出边界，如果超出则返回 None
+    if left < 0 or top < 0 or right > original_w or bottom > original_h:
+        print("Transformed region exceeds original image bounds.")
+        return None
+
+    return left, top, right, bottom
 
 
 if __name__ == "__main__":
