@@ -91,6 +91,9 @@ def crop(opt):
                     os.makedirs(new_dir_path)
                 facebox_average_path = os.path.join(facebox_csv_root_path, sub_item.name,
                                                     v_name, "facebox_average.csv")
+                if not os.path.exists(facebox_average_path):
+                    print(f"{facebox_average_path}不存在")
+                    continue
                 # 获取目录下所有 .jpg 文件的路径，并将它们存储在一个列表中
                 img_path_list = glob.glob(
                     os.path.join(str(type_item), "*.jpg"))
