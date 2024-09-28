@@ -84,6 +84,7 @@ def crop(opt):
                 v_name = "casme_0{}".format(type_item.name[0:7])
                 new_dir_path = os.path.join(
                     cropped_root_path, s_name, v_name)
+                print(new_dir_path)
                 # new_dir_path = os.path.join(
                 #     cropped_root_path, sub_item.name, type_item.name)
                 if not os.path.exists(new_dir_path):
