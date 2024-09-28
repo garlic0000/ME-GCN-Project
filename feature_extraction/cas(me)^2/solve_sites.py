@@ -95,6 +95,7 @@ def get_facebox_average():
                 output_csv_path = merged_csv(csv_path_list, output_root_path)
             if output_csv_path and os.path.exists(output_csv_path):
                 df = pd.read_csv(output_csv_path, header=None)
+                print(df[0])
                 # 去掉极端值
                 filtered_data_left = remove_outliers(df[0])
                 # 计算剩余数据中频率最高的数的平均值
