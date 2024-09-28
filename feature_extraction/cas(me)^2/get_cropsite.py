@@ -42,14 +42,13 @@ def get_site(opt) -> None:
                 continue
 
             v_name = f"casme_0{sub_item.name[1:]}_{ch_file_name_dict.get(type_item.name.split('_')[0])}"
-            new_dir_path = os.path.join(facebox_csv_root_path, sub_item.name, v_name)
+            new_dir_path = os.path.join(facebox_csv_root_path, f"s{sub_item.name}", v_name)
 
             os.makedirs(new_dir_path, exist_ok=True)  # 更简洁的目录创建方式
 
             facebox_csv_path = os.path.join(new_dir_path, f"{type_item.name}.csv")
             img_path_list = glob.glob(os.path.join(str(type_item), "*.jpg"))
             print(img_path_list)
-            print("dgsdfgeger")
             if img_path_list:
 
                 facebox_list = []
@@ -57,7 +56,8 @@ def get_site(opt) -> None:
 
                 for img_path in img_path_list:
                     file_name = os.path.basename(img_path)
-                    original_image_path = os.path.join(casme_2_selectpic, sub_item.name, type_item.name,
+                    # selectpic 有s cropped 没有s
+                    original_image_path = os.path.join(casme_2_selectpic, f"s{sub_item.name}", type_item.name,
                                                        f"{file_name}.jpg")
 
                     if os.path.exists(original_image_path):
