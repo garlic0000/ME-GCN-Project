@@ -102,8 +102,6 @@ def merged_csv(csv_files_list, output_root_path):
         df_list[0].to_csv(output_csv_path, index=False)
         return output_csv_path
 
-    print(output_root_path)
-
     # 合并多个文件
     # 按行合并
     merged_df = pd.concat(df_list, ignore_index=True)
