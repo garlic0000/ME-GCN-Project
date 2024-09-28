@@ -48,7 +48,6 @@ def get_site(opt) -> None:
 
             facebox_csv_path = os.path.join(new_dir_path, f"{type_item.name}.csv")
             img_path_list = glob.glob(os.path.join(str(type_item), "*.jpg"))
-            print(img_path_list)
             if img_path_list:
 
                 facebox_list = []
@@ -59,7 +58,7 @@ def get_site(opt) -> None:
                     # selectpic 有s cropped 没有s
                     original_image_path = os.path.join(casme_2_selectpic, f"s{sub_item.name}", type_item.name,
                                                        f"{file_name}.jpg")
-
+                    print(original_image_path)
                     if os.path.exists(original_image_path):
                         facebox = get_original_site_from_cropped(img_path, original_image_path)
                         if facebox is not None:
