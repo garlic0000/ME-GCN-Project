@@ -51,7 +51,7 @@ def crop(opt):
         print("terminate")
         exit(1)
 
-    sum_count = get_img_count(simpled_root_path, dataset)
+    sum_count = get_img_count(simpled_root_path)
     print("img count = ", sum_count)
 
     if not os.path.exists(simpled_root_path):
