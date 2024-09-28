@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import os
 import glob
 from pathlib import Path
+import shutil
 import cv2
 import numpy as np
 from typing import Optional, Tuple
-
 
 # 裁剪和表情帧文件夹命令 和 规范命名的转换
 ch_file_name_dict = {"disgust1": "0101", "disgust2": "0102", "anger1": "0401", "anger2": "0402",
@@ -24,6 +24,71 @@ def record_csv(csv_path, rows):
     with open(csv_path, 'w') as f:
         csv_w = csv.writer(f)
         csv_w.writerows(rows)
+
+
+def check():
+    """
+    可能是croped 中的路径不存在 但 rawpic的路径存在
+    """
+    if os.path.exists("/kaggle/working/data/casme_2/faceboxcsv/s15/casme_015_0508/"):
+        print("/kaggle/working/data/casme_2/faceboxcsv/s15/casme_015_0508/ 存在")
+    else:
+        print("/kaggle/working/data/casme_2/faceboxcsv/s15/casme_015_0508/ 不存在")
+
+    if os.path.exists("/kaggle/working/data/casme_2/faceboxcsv/s24/casme_024_0507/"):
+        print("/kaggle/working/data/casme_2/faceboxcsv/s24/casme_024_0507/ 存在")
+    else:
+        print("/kaggle/working/data/casme_2/faceboxcsv/s24/casme_024_0507/ 不存在")
+    # 原数据集的问题
+    if os.path.exists("/kaggle/working/data/casme_2/faceboxcsv/s19/casme_023_0502/"):
+        print("/kaggle/working/data/casme_2/faceboxcsv/s19/casme_023_0502/ 存在")
+    else:
+        print("/kaggle/working/data/casme_2/faceboxcsv/s19/casme_023_0502/ 不存在")
+    # 正常的数据是否存在
+    if os.path.exists("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0502/"):
+        print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0502/ 存在")
+    else:
+        print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0502/ 不存在")
+
+    if os.path.exists("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0503/"):
+        print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0503/ 存在")
+    else:
+        print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0503/ 不存在")
+
+    if os.path.exists("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0507/"):
+        print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0507/ 存在")
+    else:
+        print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0507/ 不存在")
+
+
+def get_patch():
+    """
+    有一些有表情的图片帧 但是数据集没有进行裁剪
+    比如 对于015_0508 将s15目录所有的csv文件集合起来 复制到 没有的文件中
+    s19 这个另外处理
+    现在 目录下还没有 facebox_average.csv
+    /kaggle/working/data/casme_2/faceboxcsv/s15/casme_015_0508/facebox_average.csv不存在
+    /kaggle/working/data/casme_2/faceboxcsv/s24/casme_024_0507/facebox_average.csv不存在
+    /kaggle/working/data/casme_2/faceboxcsv/s19/casme_023_0502/facebox_average.csv不存在
+    /kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0503/facebox_average.csv不存在
+    /kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0507/facebox_average.csv不存在
+    """
+    s15_img_path = os.path.join(facebox_csv_root_path, "s15")
+    s23_img_path = os.path.join(facebox_csv_root_path, "s23")
+    s24_img_path = os.path.join(facebox_csv_root_path, "s24")
+    for sub_item in Path(s15_img_path).iterdir():
+        if not sub_item.is_dir() or sub_item.name == "casme_015_0508":
+            continue
+        shutil.copytree(str(sub_item), os.path.join(s15_img_path, "casme_015_0508"))
+    for sub_item in Path(s23_img_path).iterdir():
+        if not sub_item.is_dir() or sub_item.name in ["casme_023_0503", "casme_023_0507"]:
+            continue
+        shutil.copytree(str(sub_item), os.path.join(s23_img_path, "casme_023_0503"))
+        shutil.copytree(str(sub_item), os.path.join(s23_img_path, "casme_023_0507"))
+    for sub_item in Path(s24_img_path).iterdir():
+        if not sub_item.is_dir() or sub_item.name == "casme_024_0507":
+            continue
+        shutil.copytree(str(sub_item), os.path.join(s24_img_path, "casme_024_0507"))
 
 
 def get_site(opt) -> None:
@@ -50,6 +115,7 @@ def get_site(opt) -> None:
             os.makedirs(new_dir_path, exist_ok=True)  # 更简洁的目录创建方式
 
             facebox_csv_path = os.path.join(new_dir_path, f"{type_item.name}.csv")
+            # str(type_item) 是一个完整路径 type_item.name是路径最后一个文件或文件夹的名称
             img_path_list = glob.glob(os.path.join(str(type_item), "*.jpg"))
             facebox_list = []
             if img_path_list:
@@ -73,6 +139,8 @@ def get_site(opt) -> None:
                 print(v_name)
                 print(facebox_list)
                 print(f"{type_item.name}.csv")
+    # 有一些路径 cropped不存在 但rawpic存在
+    check()
 
 
 def example():

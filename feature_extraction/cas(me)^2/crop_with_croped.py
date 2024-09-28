@@ -72,6 +72,7 @@ def crop(opt):
             for type_item in sub_item.iterdir():
                 if not type_item.is_dir():
                     continue
+
                 # 在这里修改
                 # s15 15_0101
                 # casme_015,casme_015_0401
@@ -82,6 +83,11 @@ def crop(opt):
 
                 s_name = "casme_0{}".format(sub_item.name[1:])
                 v_name = "casme_0{}".format(type_item.name[0:7])
+                # /kaggle/input/casme2/rawpic/rawpic/s19/23_0502funnyerrors
+                # 特殊的
+                if sub_item.name == "s19" and type_item.name == "23_0502funnyerrors":
+                    s_name = "casme_023"
+                    v_name = "casme_023_0502"
                 new_dir_path = os.path.join(
                     cropped_root_path, s_name, v_name)
                 print(new_dir_path)
@@ -91,6 +97,11 @@ def crop(opt):
                     os.makedirs(new_dir_path)
                 facebox_average_path = os.path.join(facebox_csv_root_path, sub_item.name,
                                                     v_name, "facebox_average.csv")
+                # /kaggle/input/casme2/rawpic/rawpic/s19/23_0502funnyerrors
+                # 特殊的
+                if sub_item.name == "s19" and type_item.name == "23_0502funnyerrors":
+                    facebox_average_path = os.path.join(facebox_csv_root_path, "s23",
+                                                        v_name, "facebox_average.csv")
                 if not os.path.exists(facebox_average_path):
                     print(f"{facebox_average_path}不存在")
                     continue
