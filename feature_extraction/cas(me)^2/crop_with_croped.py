@@ -5,7 +5,7 @@ import cv2
 from tqdm import tqdm
 import yaml
 import shutil
-
+import pandas as pd
 from tools import FaceDetector
 
 """
@@ -30,11 +30,22 @@ def get_img_count(root_path):
     return count
 
 
+def csv_to_tuple(csv_path):
+    # 读取 CSV 文件
+    df = pd.read_csv(csv_path, header=None)
+
+    # 将 DataFrame 的第一行转换为一维列表
+    data_as_list = df.iloc[0].tolist()
+
+    return tuple(data_as_list)
+
+
 def crop(opt):
     try:
         simpled_root_path = opt["simpled_root_path"]
         cropped_root_path = opt["cropped_root_path"]
         dataset = opt["dataset"]
+        facebox_csv_root_path = "/kaggle/working/data/casme_2/faceboxcsv"
     except KeyError:
         print(f"Dataset {dataset} does not need to be cropped")
         print("terminate")
@@ -77,53 +88,19 @@ def crop(opt):
                 #     cropped_root_path, sub_item.name, type_item.name)
                 if not os.path.exists(new_dir_path):
                     os.makedirs(new_dir_path)
-                # there will be some problem when crop face from 032_3 032_6.
-                # These two directory should be copied to croped directory
-                # directly.
+                facebox_average_path = os.path.join(facebox_csv_root_path, sub_item.name,
+                                                    v_name, "facebox_average.csv")
                 # 获取目录下所有 .jpg 文件的路径，并将它们存储在一个列表中
                 img_path_list = glob.glob(
                     os.path.join(str(type_item), "*.jpg"))
                 if len(img_path_list) > 0:
                     img_path_list.sort()
+                    face_left, face_top, face_right, face_bottom = \
+                        csv_to_tuple(facebox_average_path)
+
                     for index, img_path in enumerate(img_path_list):
                         img = cv2.imread(img_path)
-                        # 为什么index == 0
-                        # 对第一个图像进行剪切
-                        # 将之后的图像进行对齐
-                        if index == 0:
-                            # 测试用
-                            print(new_dir_path)
-                            # h, w, c = img.shape
-                            face_left, face_top, face_right, face_bottom = \
-                                face_detector.cal(img)
-                            # print("\n")
-                            # # 输出视频文件夹的名称
-                            # d_path = os.path.dirname(img_path)
-                            # print(d_path)
-                            # print(new_dir_path)
-                            # 对上 下 左 右 进行填充或裁剪
-                            # padding_top, padding_bottom, padding_left, padding_right = \
-                            #     solve_img_size(sub_item, type_item)
-                            # clip_top = face_top - padding_top
-                            # clip_bottom = face_bottom + padding_bottom
-                            # clip_left = face_left - padding_left
-                            # clip_right = face_right + padding_right
-                            # # 对s27的处理
-                            # if padding_top == -1:
-                            #     clip_top = 0
-                            clip_left = face_left
-                            clip_right = face_right
-                            clip_top = face_top
-                            clip_bottom = face_bottom
-                            # 之后所有的图片都按照这个尺寸进行剪切
-                        # 保证光流提取时 图片的尺寸一致
-                        # 在进行填充时可能会超过图片尺寸
-                        # 进行测试
-                        # if clip_top < 0 or clip_bottom < 0 or clip_left < 0 or clip_right < 0:
-                        #     print(clip_top, clip_bottom, clip_left, clip_right)
-                        #     continue
-                        img = img[clip_top:clip_bottom + 1,
-                              clip_left:clip_right + 1, :]
+                        img = img[face_top:face_bottom + 1, face_left:face_right + 1, :]
                         # # 用于调错
                         # # 检测裁剪后的图片是否能检测到人脸
                         # check_crop(img, img_path)
@@ -131,9 +108,6 @@ def crop(opt):
                         cv2.imwrite(os.path.join(
                             new_dir_path,
                             f"img_{str(index + 1).zfill(5)}.jpg"), img)
-                        # 有的路径下的图片为空 所以不是一张一张进行更新
-                        # 像是一个列表一个列表的更新
-                        # 但是统计到11409张还不是11409
                         tq.update()
 
 
