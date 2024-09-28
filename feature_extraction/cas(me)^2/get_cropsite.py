@@ -56,14 +56,15 @@ def get_site(opt) -> None:
                 for img_path in img_path_list:
                     file_name = os.path.basename(img_path)
                     # selectpic 有s cropped 没有s
+                    # /kaggle/input/casme2/selectedpic/selectedpic/s19/happy4_1/img2977.jpg.jpg
+                    # file_name 不需要.jpg
                     original_image_path = os.path.join(casme_2_selectpic, f"s{sub_item.name}", type_item.name,
-                                                       f"{file_name}.jpg")
-                    print(original_image_path)
+                                                       file_name)
                     if os.path.exists(original_image_path):
                         facebox = get_original_site_from_cropped(img_path, original_image_path)
                         if facebox is not None:
                             facebox_list.append(facebox)
-
+                print(facebox_list)
                 record_csv(facebox_csv_path, facebox_list)
 
 
