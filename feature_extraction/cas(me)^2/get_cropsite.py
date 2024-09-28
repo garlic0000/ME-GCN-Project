@@ -165,13 +165,32 @@ def get_original_site_from_cropped(cropped_image_path: str, original_image_path:
     if original_image is None or cropped_image is None:
         print("Error loading images.")
         return None
+    # 初始化 ORB 特征检测器 (GPU 版本)
+    orb = cv2.cuda_ORB.create()
 
-    # 初始化 ORB 特征检测器
-    orb = cv2.ORB_create()
+    # 将图像上传到GPU
+    gpu_original = cv2.cuda_GpuMat()
+    gpu_cropped = cv2.cuda_GpuMat()
+    gpu_original.upload(original_image)
+    gpu_cropped.upload(cropped_image)
 
     # 检测并计算特征点
-    keypoints1, descriptors1 = orb.detectAndCompute(cropped_image, None)
-    keypoints2, descriptors2 = orb.detectAndCompute(original_image, None)
+    keypoints1, descriptors1 = orb.detectAndComputeAsync(gpu_cropped, None)
+    keypoints2, descriptors2 = orb.detectAndComputeAsync(gpu_original, None)
+
+    # 将特征点和描述符下载到主内存
+    keypoints1 = orb.convert(keypoints1)
+    keypoints2 = orb.convert(keypoints2)
+    descriptors1 = descriptors1.download()
+    descriptors2 = descriptors2.download()
+    # 使用CPU
+    # # 初始化 ORB 特征检测器
+    # orb = cv2.ORB_create()
+    #
+    # # 检测并计算特征点
+    # keypoints1, descriptors1 = orb.detectAndCompute(cropped_image, None)
+    # keypoints2, descriptors2 = orb.detectAndCompute(original_image, None)
+
 
     # 使用 BFMatcher 进行特征点匹配
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
@@ -197,6 +216,12 @@ def get_original_site_from_cropped(cropped_image_path: str, original_image_path:
         left, top, width, height = cv2.boundingRect(transformed_corners)
         right = left + width
         bottom = top + height
+        # 获取原图的尺寸
+        original_h, original_w = original_image.shape
+
+        # 检查是否超出边界，如果超出则返回 None
+        if left < 0 or top < 0 or right > original_w or bottom > original_h:
+            return None
         return left, top, right, bottom
 
     return None
