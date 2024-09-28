@@ -137,19 +137,19 @@ def get_facebox_average():
                 # 去掉极端值
                 filtered_data_left = remove_outliers(df[0].tolist())
                 # 计算剩余数据中频率最高的数的平均值
-                average_value_left = get_most_frequent_average(filtered_data_left)
+                average_value_left = int(get_most_frequent_average(filtered_data_left))
                 # 去掉极端值
                 filtered_data_top = remove_outliers(df[1].tolist())
                 # 计算剩余数据中频率最高的数的平均值
-                average_value_top = get_most_frequent_average(filtered_data_top)
+                average_value_top = int(get_most_frequent_average(filtered_data_top))
                 # 去掉极端值
                 filtered_data_right = remove_outliers(df[2].tolist())
                 # 计算剩余数据中频率最高的数的平均值
-                average_value_right = get_most_frequent_average(filtered_data_right)
+                average_value_right = int(get_most_frequent_average(filtered_data_right))
                 # 去掉极端值
                 filtered_data_bottom = remove_outliers(df[3].tolist())
                 # 计算剩余数据中频率最高的数的平均值
-                average_value_bottom = get_most_frequent_average(filtered_data_bottom)
+                average_value_bottom = int(get_most_frequent_average(filtered_data_bottom))
 
                 facebox_average = [(average_value_left, average_value_top, average_value_right, average_value_bottom)]
 
