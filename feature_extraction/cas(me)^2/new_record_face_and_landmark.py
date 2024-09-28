@@ -93,7 +93,9 @@ def record_face_and_landmarks(opt):
                         img = cv2.imread(img_path)
                         try:
                             # 对已经进行人脸裁剪的图像进行检测
-                            left, top, right, bottom = face_detector.cal(img)
+                            # left, top, right, bottom = face_detector.cal(img)
+                            # 已经裁剪过所以不再进行人脸检测
+                            left, top, right, bottom = 0, 0, img.shape[1], img.shape[0]
                             # 已经进行人脸裁剪的图像没法进行人脸检测
                             # 或者不用再进行人脸检测
                             x_list, y_list = landmark_detector.cal(img, face_box=(left, top, right, bottom))
