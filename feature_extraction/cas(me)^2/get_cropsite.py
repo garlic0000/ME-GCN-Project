@@ -40,8 +40,8 @@ def get_site(opt) -> None:
         for type_item in sub_item.iterdir():
             if not type_item.is_dir():
                 continue
-
-            v_name = f"casme_0{sub_item.name[1:]}_{ch_file_name_dict.get(type_item.name.split('_')[0])}"
+            # sub_item.name 不带s
+            v_name = f"casme_0{sub_item.name}_{ch_file_name_dict.get(type_item.name.split('_')[0])}"
             new_dir_path = os.path.join(facebox_csv_root_path, f"s{sub_item.name}", v_name)
 
             os.makedirs(new_dir_path, exist_ok=True)  # 更简洁的目录创建方式
