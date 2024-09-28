@@ -72,7 +72,13 @@ def example():
 def merged_csv(csv_files_list, output_root_path):
     # 需要合并的 CSV 文件路径列表
     # csv_files = ['file1.csv', 'file2.csv']
-
+    # 如果只有一个 CSV 文件，直接复制该文件内容
+    print(output_root_path)
+    if len(csv_files_list) == 1:
+        df = pd.read_csv(csv_files_list[0], header=None)
+        output_csv_path = os.path.join(output_root_path, 'merged_output.csv')
+        df.to_csv(output_csv_path, index=False)
+        return output_csv_path
     # 读取并合并 CSV 文件
     df_list = [pd.read_csv(file, header=None) for file in csv_files_list]
     merged_df = pd.concat(df_list, ignore_index=True)
