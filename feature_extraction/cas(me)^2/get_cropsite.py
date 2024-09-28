@@ -61,6 +61,16 @@ def check():
         print("/kaggle/working/data/casme_2/faceboxcsv/s23/casme_023_0507/ 不存在")
 
 
+def copy_contents(src_dir, dst_dir):
+    # 确保目标目录存在
+    os.makedirs(dst_dir, exist_ok=True)
+
+    # 遍历 src_dir 中的所有内容
+    for item in os.listdir(src_dir):
+        src_item = os.path.join(src_dir, item)
+        dst_item = os.path.join(dst_dir, item)
+        shutil.copy2(src_item, dst_item)
+
 def get_patch():
     """
     有一些有表情的图片帧 但是数据集没有进行裁剪
@@ -79,16 +89,16 @@ def get_patch():
     for sub_item in Path(s15_img_path).iterdir():
         if not sub_item.is_dir() or sub_item.name == "casme_015_0508":
             continue
-        shutil.copytree(str(sub_item), os.path.join(s15_img_path, "casme_015_0508"))
+        copy_contents(str(sub_item), os.path.join(s15_img_path, "casme_015_0508"))
     for sub_item in Path(s23_img_path).iterdir():
         if not sub_item.is_dir() or sub_item.name in ["casme_023_0503", "casme_023_0507"]:
             continue
-        shutil.copytree(str(sub_item), os.path.join(s23_img_path, "casme_023_0503"))
-        shutil.copytree(str(sub_item), os.path.join(s23_img_path, "casme_023_0507"))
+        copy_contents(str(sub_item), os.path.join(s23_img_path, "casme_023_0503"))
+        copy_contents(str(sub_item), os.path.join(s23_img_path, "casme_023_0507"))
     for sub_item in Path(s24_img_path).iterdir():
         if not sub_item.is_dir() or sub_item.name == "casme_024_0507":
             continue
-        shutil.copytree(str(sub_item), os.path.join(s24_img_path, "casme_024_0507"))
+        copy_contents(str(sub_item), os.path.join(s24_img_path, "casme_024_0507"))
 
 
 def get_site(opt) -> None:
@@ -140,6 +150,8 @@ def get_site(opt) -> None:
                 print(facebox_list)
                 print(f"{type_item.name}.csv")
     # 有一些路径 cropped不存在 但rawpic存在
+    print("打补丁")
+    get_patch()
     check()
 
 
