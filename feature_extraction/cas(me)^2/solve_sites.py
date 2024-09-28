@@ -97,19 +97,19 @@ def get_facebox_average():
                 df = pd.read_csv(output_csv_path, header=None)
                 print(df[0])
                 # 去掉极端值
-                filtered_data_left = remove_outliers(df[0])
+                filtered_data_left = remove_outliers(df[0].tolist())
                 # 计算剩余数据中频率最高的数的平均值
                 average_value_left = get_most_frequent_average(filtered_data_left)
                 # 去掉极端值
-                filtered_data_top = remove_outliers(df[1])
+                filtered_data_top = remove_outliers(df[1].tolist())
                 # 计算剩余数据中频率最高的数的平均值
                 average_value_top = get_most_frequent_average(filtered_data_top)
                 # 去掉极端值
-                filtered_data_right = remove_outliers(df[2])
+                filtered_data_right = remove_outliers(df[2].tolist())
                 # 计算剩余数据中频率最高的数的平均值
                 average_value_right = get_most_frequent_average(filtered_data_right)
                 # 去掉极端值
-                filtered_data_bottom = remove_outliers(df[3])
+                filtered_data_bottom = remove_outliers(df[3].tolist())
                 # 计算剩余数据中频率最高的数的平均值
                 average_value_bottom = get_most_frequent_average(filtered_data_bottom)
 
