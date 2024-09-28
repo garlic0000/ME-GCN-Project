@@ -70,19 +70,43 @@ def example():
 
 
 def merged_csv(csv_files_list, output_root_path):
-    # 需要合并的 CSV 文件路径列表
-    # csv_files = ['file1.csv', 'file2.csv']
-    # 如果只有一个 CSV 文件，直接复制该文件内容
-    print(output_root_path)
-    if len(csv_files_list) == 1:
-        df = pd.read_csv(csv_files_list[0], header=None)
-        output_csv_path = os.path.join(output_root_path, 'merged_output.csv')
-        df.to_csv(output_csv_path, index=False)
-        return output_csv_path
-    # 读取并合并 CSV 文件
-    df_list = [pd.read_csv(file, header=None) for file in csv_files_list]
-    merged_df = pd.concat(df_list, ignore_index=True)
+    """
+        合并多个 CSV 文件，跳过空文件。如果列表中只有一个文件，且非空，直接处理该文件。
 
+        参数:
+            csv_files_list (list): 需要合并的 CSV 文件路径列表。
+            output_root_path (str): 合并后的 CSV 文件保存路径。
+
+        返回:
+            str: 合并后的 CSV 文件路径。
+        """
+    df_list = []
+
+    # 遍历 CSV 文件列表，读取非空文件
+    for file in csv_files_list:
+        try:
+            df = pd.read_csv(file, header=None)
+            # 仅在文件非空时添加到列表中
+            if not df.empty:
+                df_list.append(df)
+        except pd.errors.EmptyDataError:
+            print(f"文件 {file} 为空，已跳过。")
+
+    # 如果没有可合并的文件，返回 None
+    if not df_list:
+        print("所有文件都为空或无可用数据，无法进行合并。")
+        return None
+    # 如果只有一个非空文件，直接保存它
+    if len(df_list) == 1:
+        output_csv_path = os.path.join(output_root_path, 'merged_output.csv')
+        df_list[0].to_csv(output_csv_path, index=False)
+        return output_csv_path
+
+    print(output_root_path)
+
+    # 合并多个文件
+    # 按行合并
+    merged_df = pd.concat(df_list, ignore_index=True)
     # 将合并后的结果写入一个新的 CSV 文件
     output_csv_path = os.path.join(output_root_path, 'merged_output.csv')
     merged_df.to_csv(output_csv_path, index=False)
