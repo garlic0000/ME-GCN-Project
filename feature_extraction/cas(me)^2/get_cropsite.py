@@ -42,16 +42,14 @@ def get_site(opt) -> None:
                 continue
             # sub_item.name 不带s
             v_name = f"casme_0{sub_item.name}_{ch_file_name_dict.get(type_item.name.split('_')[0])}"
-            print(v_name)
             new_dir_path = os.path.join(facebox_csv_root_path, f"s{sub_item.name}", v_name)
 
             os.makedirs(new_dir_path, exist_ok=True)  # 更简洁的目录创建方式
 
             facebox_csv_path = os.path.join(new_dir_path, f"{type_item.name}.csv")
             img_path_list = glob.glob(os.path.join(str(type_item), "*.jpg"))
+            facebox_list = []
             if img_path_list:
-
-                facebox_list = []
                 img_path_list.sort()
 
                 for img_path in img_path_list:
@@ -65,8 +63,12 @@ def get_site(opt) -> None:
                         facebox = get_original_site_from_cropped(img_path, original_image_path)
                         if facebox is not None:
                             facebox_list.append(facebox)
-                print(facebox_list)
+
                 record_csv(facebox_csv_path, facebox_list)
+            # 测试
+            if len(facebox_list) == 0:
+                print(v_name)
+                print(facebox_list)
 
 
 def example():
