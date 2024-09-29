@@ -76,7 +76,7 @@ cas(me)^2:
   verbose: False
 
 
-  macro_ration: 0.87 # 平衡微表情和宏表情的比率 为什么设置成0.5
+  macro_ration: 0.84 # 平衡微表情和宏表情的比率 为什么设置成0.5
   micro_normal_range: 1  # 微表情的标准范围 在后处理时的正常偏移量 为什么设置成1
   macro_normal_range: 3
 
