@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import colormaps
 
+
 def load_npz_file(npz_file_path):
     data = np.load(npz_file_path)
     feature = data['feature']  # 提取特征矩阵
@@ -47,9 +48,10 @@ def visualize_label_distribution_with_markers(label):
     micro_action_indices = time_axis[label[:, 3] == 1]
 
     plt.plot(micro_start_indices, [1] * len(micro_start_indices), 'o', label="Micro Start", color=micro_color)  # 起始帧
-    plt.plot(micro_apex_indices, [1] * len(micro_apex_indices), 'o', label="Micro Apex", color=micro_color)   # 顶点帧
-    plt.plot(micro_end_indices, [1] * len(micro_end_indices), 'o', label="Micro End", color=micro_color)    # 结束帧
-    plt.plot(micro_action_indices, [1] * len(micro_action_indices), '-', label="Micro Action", color=micro_color) # 动作阶段
+    plt.plot(micro_apex_indices, [1] * len(micro_apex_indices), 'o', label="Micro Apex", color=micro_color)  # 顶点帧
+    plt.plot(micro_end_indices, [1] * len(micro_end_indices), 'o', label="Micro End", color=micro_color)  # 结束帧
+    plt.plot(micro_action_indices, [1] * len(micro_action_indices), '-', label="Micro Action",
+             color=micro_color)  # 动作阶段
 
     # 宏表情标记 (蓝色)
     macro_start_indices = time_axis[label[:, 4] == 1]
@@ -58,9 +60,10 @@ def visualize_label_distribution_with_markers(label):
     macro_action_indices = time_axis[label[:, 7] == 1]
 
     plt.plot(macro_start_indices, [1] * len(macro_start_indices), 'x', label="Macro Start", color=macro_color)  # 起始帧
-    plt.plot(macro_apex_indices, [1] * len(macro_apex_indices), 'x', label="Macro Apex", color=macro_color)   # 顶点帧
-    plt.plot(macro_end_indices, [1] * len(macro_end_indices), 'x', label="Macro End", color=macro_color)    # 结束帧
-    plt.plot(macro_action_indices, [1] * len(macro_action_indices), '-', label="Macro Action", color=macro_color) # 动作阶段
+    plt.plot(macro_apex_indices, [1] * len(macro_apex_indices), 'x', label="Macro Apex", color=macro_color)  # 顶点帧
+    plt.plot(macro_end_indices, [1] * len(macro_end_indices), 'x', label="Macro End", color=macro_color)  # 结束帧
+    plt.plot(macro_action_indices, [1] * len(macro_action_indices), '-', label="Macro Action",
+             color=macro_color)  # 动作阶段
 
     # 标记起始、顶点和结束帧的数值
     for idx in micro_start_indices:
