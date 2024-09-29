@@ -45,7 +45,7 @@ cas(me)^2:
   segment_feat_root: "/kaggle/working/ME-GCN-Project/feature_segment_apex"
   model_save_root: ~
   output_dir_name: ~
-  anno_csv: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2_original.csv"
+  anno_csv: "/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv"
 
   # 训练配置
   num_workers: 2  # dataloader 使用的工作线程数
