@@ -73,6 +73,7 @@ def segment_for_train(opt):
         #     if not type_item.is_dir():
         #         continue
         for feature_path in feature_path_list:
+            # 移除文件扩展名获得视频名称
             feature_name = os.path.split(feature_path)[-1]
             video_name = os.path.splitext(feature_name)[0]
             print("feature_name")
@@ -83,6 +84,7 @@ def segment_for_train(opt):
             tmp_df = anno_df[anno_df['video_name'] == video_name]
             print("tmp_tf")
             print(tmp_df)
+            # 这个要输出看看 具体的值
             video_feature = np.load(feature_path)  # (t, 12, 2)
             frame_count = video_feature.shape[0]
             print("frame_count")
@@ -91,23 +93,28 @@ def segment_for_train(opt):
             apex_array = tmp_df.apex_frame.values
             end_array = tmp_df.end_frame.values
             type_array = tmp_df.type_idx.values
+            # 计算特征被分割的个数
             segment_count = frame_count // SEGMENT_LENGTH
             if frame_count - segment_count * SEGMENT_LENGTH > 0:
                 segment_count += 1
+            # 计算每个片段的左右边界
+            # 每个片段会在原有的长度上加上感受野的一半进行扩展 以保留足够的上下文信息
             clip_boundary_list = [(i * SEGMENT_LENGTH - STEP,
-                                  (i + 1) * SEGMENT_LENGTH - 1 + STEP)
+                                   (i + 1) * SEGMENT_LENGTH - 1 + STEP)
                                   for i in range(segment_count)]
             feature_list = []
             labels_list = []
 
-            # labeling every frame
+            # 标记每一帧
+            # 初始化 frame_count * 8 的标签数组
             video_labels = np.zeros((frame_count, 8), dtype=int)
             for index in range(len(start_array)):
-                start = start_array[index].item()
-                apex = apex_array[index].item()
-                end = end_array[index].item()
-                ex_type = type_array[index].item()
+                start = start_array[index].item()  # 起始帧
+                apex = apex_array[index].item()  # 顶点帧
+                end = end_array[index].item()  # 结束帧
+                ex_type = type_array[index].item()  # 帧类型
 
+                # 对标注的无效值进行处理
                 zero_count = 0
                 if start == 0:
                     zero_count += 1
@@ -115,35 +122,42 @@ def segment_for_train(opt):
                     zero_count += 1
                 if end == 0:
                     zero_count += 1
+                # 0 值的总数 有2个及以上 不进行处理
                 if zero_count >= 2:
                     continue
-                # the count of optical flow might less than rgb
+                # 顶点帧不合理 顶点帧的编号 大于 所有帧数
                 if apex >= frame_count:
                     continue
 
+                # 通过计算 估算出结束帧
                 if end == 0:
                     end = (apex - start + 1) + apex - 1
+                # 顶点帧不合理 计算平均值
                 elif apex == 0:
                     apex = (end + start) // 2
-                # the count of optical flow might less than rgb
+                # 结束帧不合理 修改为合理的
+                # 是否需要放在前两个选择之前
                 if end >= frame_count:
                     end = frame_count - 1
 
-                # micro expression label
+                # 微表情 标记
                 if ex_type == 2:
-                    video_labels[start, 0] = 1
-                    video_labels[apex, 1] = 1
-                    video_labels[end, 2] = 1
+                    video_labels[start, 0] = 1  # 起始
+                    video_labels[apex, 1] = 1  # 顶点
+                    video_labels[end, 2] = 1  # 结束
                     for action_index in range(start, end + 1):
+                        # 起始帧和结束帧之间 动作阶段
                         video_labels[action_index, 3] = 1
-                # macro expression label
+                # 宏表情 标记
                 else:
-                    video_labels[start, 4] = 1
-                    video_labels[apex, 5] = 1
-                    video_labels[end, 6] = 1
+                    video_labels[start, 4] = 1  # 起始
+                    video_labels[apex, 5] = 1  # 顶点
+                    video_labels[end, 6] = 1  # 结束
                     for action_index in range(start, end + 1):
+                        # 起始帧 结束帧 之间 动作阶段
                         video_labels[action_index, 7] = 1
 
+            # 对每个片段 边界超出范围 用0进行填充
             for clip_left_boundary, clip_right_boundary in clip_boundary_list:
                 left_padding = None
                 right_padding = None
@@ -162,9 +176,9 @@ def segment_for_train(opt):
                         dtype=int)
                     clip_right_boundary = frame_count - 1
                 feature = video_feature[
-                    clip_left_boundary: clip_right_boundary + 1]
+                          clip_left_boundary: clip_right_boundary + 1]
                 labels = video_labels[
-                    clip_left_boundary: clip_right_boundary + 1]
+                         clip_left_boundary: clip_right_boundary + 1]
 
                 if left_padding is not None:
                     feature = np.concatenate((left_padding, feature), axis=0)
@@ -174,22 +188,26 @@ def segment_for_train(opt):
                     feature = np.concatenate((feature, right_padding), axis=0)
                     labels = np.concatenate(
                         (labels, right_padding_label), axis=0)
+                # 保证特征和标签的长度为 SEGMENT_LENGTH + STEP * 2
                 assert len(feature) == SEGMENT_LENGTH + STEP * 2, \
                     "time length of feature is incorrect"
                 assert len(labels) == SEGMENT_LENGTH + STEP * 2, \
                     "time length of labels is incorrect"
                 feature_list.append(feature)
                 labels_list.append(labels)
+            # 将每个片段的特征和标签保存为.npz文件
+            # 核实是否保存正确
             for index in range(len(feature_list)):
                 np.savez(
                     os.path.join(
                         out_dir,
-                        f"{video_name}_{str(index*SEGMENT_LENGTH).zfill(4)}"
+                        f"{video_name}_{str(index * SEGMENT_LENGTH).zfill(4)}"
                         f".npz"),
                     feature=feature_list[index],
                     label=labels_list[index],
                     video_name=video_name)
     print("segment for train Finished!")
+
 
 def segment_for_test(opt):
     feature_root_path = opt["feature_root_path"]

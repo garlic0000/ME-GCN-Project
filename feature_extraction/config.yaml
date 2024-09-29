@@ -26,8 +26,8 @@ cas(me)^2:
   optflow_root_path: "/kaggle/working/data/cas(me)^2/optflow_apex"
   feature_root_path: "/kaggle/working/data/cas(me)^2/feature_apex"
   feature_segment_root_path:  "/kaggle/working/data/cas(me)^2/feature_segment_apex"
-  # original_anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
-  anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2.csv"
+  # original_anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2_original.csv"
+  anno_csv_path: "/kaggle/working/ME-GCN-Project/feature_extraction/csv/cas(me)^2_original.csv"
   SAMPLING_RATIO: 8
   CROPPED_SIZE: 500
   SEGMENT_LENGTH: 256

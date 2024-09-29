@@ -18,7 +18,7 @@ def get_flow_count(root_path):
             for type_item in sub_item.iterdir():
                 if type_item.is_dir():
                     count += len(glob.glob(os.path.join(
-                                           str(type_item), "flow_x*.jpg")))
+                        str(type_item), "flow_x*.jpg")))
     return count
 
 
@@ -36,7 +36,7 @@ def feature(opt):
     print(f"opt_step: {opt_step}")
 
     # for debug use
-    #short_video_list = []
+    # short_video_list = []
     with tqdm(total=sum_count) as tq:
         for sub_item in Path(optflow_root_path).iterdir():
             if not sub_item.is_dir():
@@ -44,13 +44,16 @@ def feature(opt):
             for type_item in sub_item.iterdir():
                 if not type_item.is_dir():
                     continue
+                # 获取x方向光流文件
                 flow_x_path_list = glob.glob(
                     os.path.join(str(type_item), "flow_x*.jpg"))
+                # 获取y方向光流文件
                 flow_y_path_list = glob.glob(
                     os.path.join(str(type_item), "flow_y*.jpg"))
                 flow_x_path_list.sort()
                 flow_y_path_list.sort()
 
+                # 关键点文件路径
                 csv_landmark_path = os.path.join(
                     landmark_root_path,
                     sub_item.name, type_item.name, "landmarks.csv")
@@ -59,7 +62,7 @@ def feature(opt):
                     print(f"{csv_landmark_path} does not exist")
                     continue
                 with open(csv_landmark_path, 'r') as f:
-                    ior_feature_list_sequence = []  # feature in whole video
+                    ior_feature_list_sequence = []  # 存储整段视频的ROI特征序列
                     csv_r = list(csv.reader(f))
                     # # 用于调试
                     # row_count = 0
@@ -79,7 +82,11 @@ def feature(opt):
                     #     print("row_count:", row_count)
                     #     print("flow num:", len(flow_x_path_list))
                     #     continue
+
+                    # 遍历每一帧的的关键点
                     for index, row in enumerate(csv_r):
+                        # 帧的索引小于步长 跳过
+                        # 每opt_step帧进行一次光流处理
                         if index < opt_step:
                             # 用于测试
                             # print("index < opt_step")
@@ -91,50 +98,40 @@ def feature(opt):
                                             cv2.IMREAD_GRAYSCALE)
                         flow_y = cv2.imread(flow_y_path_list[i],
                                             cv2.IMREAD_GRAYSCALE)
+                        # 将x方向和y方向的光流堆叠在一起 形成光流特征图
                         flow_x_y = np.stack((flow_x, flow_y), axis=2)
-                        flow_x_y = flow_x_y / np.float32(255)
+                        flow_x_y = flow_x_y / np.float32(255)  # 归一化
+                        # 平移 使光流特征值范围为[-0.5, 0.5]
                         flow_x_y = flow_x_y - 0.5
+                        # 将每一帧的68个关键点转换为numpy数组
                         landmarks = np.array(
                             [(int(row[index]), int(row[index + 68]))
-                                for index in range(int(len(row) // 2))])
+                             for index in range(int(len(row) // 2))])
 
                         try:
+                            # 计算该帧的ROI特征序列
                             ior_feature_list = calculate_roi_freature_list(
                                 flow_x_y, landmarks, radius=5)
+                            # 将该帧的ROI特征堆叠并添加到序列中
                             ior_feature_list_sequence.append(
                                 np.stack(ior_feature_list, axis=0))
                             tq.update()
                         except Exception as exp:
+                            # 出现错误 清空特征
                             ior_feature_list_sequence = []
                             print("ior_feature_list 有问题")
                             print(f"{sub_item.name}  {type_item.name}")
                             # 打印异常信息
                             print(str(exp))
                             break
-                        # LEFT_EYE_CONER_INDEX = 39
-                        # RIGHT_EYE_CONER_INDEX = 42
-                        # left_eye_coner = landmarks[LEFT_EYE_CONER_INDEX]
-                        # right_eye_coner = landmarks[RIGHT_EYE_CONER_INDEX]
-                        # length_between_coners = (
-                        #     right_eye_coner[0] - left_eye_coner[0]) / 2
-                        # (nose_roi_left, nose_roi_top, nose_roi_right,
-                        #     nose_roi_bottom) = get_rectangle_roi_boundary(
-                        #     np.arange(29, 30+1),
-                        #     landmarks,
-                        #     horizontal_bound=int(length_between_coners * 0.35),
-                        #     vertical_bound=int(length_between_coners * 0.35))
-                        # show_boundary_list = []
-                        # show_boundary_list.append([
-                        #     nose_roi_left, nose_roi_top,
-                        #     nose_roi_right, nose_roi_bottom])
-                        # imshow_for_test(
-                        #     "test", flow_x,
-                        #     face_boundarys=show_boundary_list)
+
+                    # 序列中有特征
                     if len(ior_feature_list_sequence) > 0:
                         new_type_dir_path = os.path.join(
                             feature_root_path, sub_item.name)
                         if not os.path.exists(new_type_dir_path):
                             os.makedirs(new_type_dir_path)
+                        # 保存为npy文件
                         np.save(os.path.join(
                             new_type_dir_path, f"{type_item.name}.npy"),
                             np.stack(ior_feature_list_sequence, axis=0))
@@ -142,7 +139,8 @@ def feature(opt):
     # print("len of wrong video_list: {}".format(len(short_video_list)))
     # print("*" * 10, "wrong video list", "*" * 10)
     # print(short_video_list)
-    
+
+
 if __name__ == "__main__":
     with open("/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/config.yaml", encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
