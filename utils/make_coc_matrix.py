@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 
 '''
     11 ROI regions in total
@@ -67,65 +68,72 @@ def update_mat(mat, AU_list, AU_dict):
     return mat
 
 
-# 读入标签
-label_path = 'D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv'
-# label_path = '../info_csv/samm_new_25.csv'
-df = pd.read_csv(label_path, dtype={'au': 'string'})
-# # make expression-type specific
-# df = df[df['type'] == 'macro-expression']
-AU = df.au.values
+def get_coc_matrix(label_path, save_coc_matrix_path):
+    # # 读入标签
+    # label_path = 'D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv'
+    # label_path = '../info_csv/samm_new_25.csv'
+    df = pd.read_csv(label_path, dtype={'au': 'string'})
+    # # make expression-type specific
+    # df = df[df['type'] == 'macro-expression']
+    AU = df.au.values
 
-# AU1: 0, 1, 4, 5     outer brow raiser
-#     AU2: 2, 3           inner brow raiser
-#     AU12, 14: 8, 10
-#     AU25, 26: 9, 11
+    # AU1: 0, 1, 4, 5     outer brow raiser
+    #     AU2: 2, 3           inner brow raiser
+    #     AU12, 14: 8, 10
+    #     AU25, 26: 9, 11
 
-# AU_idx_dict = {
-#     '12': [0, 1],
-#     '4':   [2],
-#     '14': [3, 4],
-#     '6': [5, 6],
-#     '2': [7, 8],
-#     '1': [9, 10]
-# }
-# AU_idx_dict = {
-#     '12': [2],
-#     '14': [2],
-#     '2': [0, 1],
-#     '1': [0, 1]
-# }
+    # AU_idx_dict = {
+    #     '12': [0, 1],
+    #     '4':   [2],
+    #     '14': [3, 4],
+    #     '6': [5, 6],
+    #     '2': [7, 8],
+    #     '1': [9, 10]
+    # }
+    # AU_idx_dict = {
+    #     '12': [2],
+    #     '14': [2],
+    #     '2': [0, 1],
+    #     '1': [0, 1]
+    # }
 
-AU_idx_dict = {
-    '1': [0, 1, 4, 5],
-    '2': [2, 3],
-    '12': [8, 10],
-    '14': [8, 10],
-    '25': [9, 11],
-    '26': [9, 11]
-}
+    AU_idx_dict = {
+        '1': [0, 1, 4, 5],
+        '2': [2, 3],
+        '12': [8, 10],
+        '14': [8, 10],
+        '25': [9, 11],
+        '26': [9, 11]
+    }
 
-# #print(AU_idx_dict)
-AU_total = []
+    # #print(AU_idx_dict)
+    AU_total = []
 
-co_matrix = np.zeros((12, 12), dtype=np.float32)
-for row in AU:
-    if pd.isna(row):
-        continue
-    row_AU_list = row.split("+")
-    # filter out unwanted AUs
-    row_AU_list = [i for i in row_AU_list if i in AU_idx_dict.keys()]
-    co_matrix = update_mat(co_matrix, row_AU_list, AU_idx_dict)
+    co_matrix = np.zeros((12, 12), dtype=np.float32)
+    for row in AU:
+        if pd.isna(row):
+            continue
+        row_AU_list = row.split("+")
+        # filter out unwanted AUs
+        row_AU_list = [i for i in row_AU_list if i in AU_idx_dict.keys()]
+        co_matrix = update_mat(co_matrix, row_AU_list, AU_idx_dict)
 
-norm = np.linalg.norm(co_matrix, ord=1, axis=1, keepdims=True) + 1e-6
-co_matrix = np.divide(co_matrix, norm)
-# 保存npy文件
-# 保存的npy文件是什么？
-# 生成 路径下 D:\PycharmProjects\ME-GCN-Project\assets\cas(me)^2.npy  的npy文件
-print(co_matrix)
-np.save('D:/PycharmProjects/ME-GCN-Project/assets/cas(me)^2_original.npy', co_matrix)
-# np.save('./co_matrix_SAMM_12ROI.npy', co_matrix)
-# np.save('./co_matrix_CAS(ME)_2_12ROI.npy', co_matrix)
+    norm = np.linalg.norm(co_matrix, ord=1, axis=1, keepdims=True) + 1e-6
+    co_matrix = np.divide(co_matrix, norm)
+    # 保存npy文件
+    # 保存的npy文件是什么？
+    # 生成 路径下 D:\PycharmProjects\ME-GCN-Project\assets\cas(me)^2.npy  的npy文件
+    print("au共现矩阵")
+    print(co_matrix)
+    if os.path.exists(save_coc_matrix_path):
+        os.remove(save_coc_matrix_path)
+    np.save(save_coc_matrix_path, co_matrix)
+    # np.save('./co_matrix_SAMM_12ROI.npy', co_matrix)
+    # np.save('./co_matrix_CAS(ME)_2_12ROI.npy', co_matrix)
 
 
-# 可以绘制热力图
-
+if __name__ == "__main__":
+    # 读入标签
+    label_path = 'D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv'
+    save_coc_matrix_path = 'D:/PycharmProjects/ME-GCN-Project/assets/cas(me)^2_original.npy'
+    get_coc_matrix(label_path, save_coc_matrix_path)
