@@ -1,5 +1,5 @@
 import os
-import glob 
+import glob
 import random
 from random import shuffle
 
@@ -28,7 +28,7 @@ class LOSO_DATASET(data.Dataset):
 
     def __len__(self):
         return len(self._feat_file_path_list)
-    
+
     def __getitem__(self, index):
         feat_file_path = self._feat_file_path_list[index]
         data = np.load(feat_file_path)
@@ -37,7 +37,7 @@ class LOSO_DATASET(data.Dataset):
         # get meta info
         vid_name = data['video_name'].item()
         offset = int(os.path.splitext(os.path.basename(feat_file_path))[0].split('_')[-1])
-        
+
         STEP = self._step
         _macro_normal_range = self._macro_normal_range
         _micro_normal_range = self._micro_normal_range
@@ -94,11 +94,7 @@ class LOSO_DATASET(data.Dataset):
                         macro_start_end_label[index - j] = 1
                     if index + j < self._segment_len:
                         macro_start_end_label[index + j] = 1
-        
-        
-        
-        
-        
+
         # apex (micro)
         rv = norm(loc=0, scale=4)  # 8
         for index, apex_label in enumerate(micro_apex_labels):
@@ -197,14 +193,13 @@ class LOSO_DATASET(data.Dataset):
         self._feat_file_path_list = feat_file_path_list
 
 
-
 if __name__ == "__main__":
     dataset = "cas(me)^2"
-    with open("./config.yaml", encoding="UTF-8") as f:
+    with open("/kaggle/working/ME-GCN-Project/config.yaml", encoding="UTF-8") as f:
         opt = yaml.safe_load(f)[dataset]
     subject_list = opt['subject_list']
     set_seed(seed=42)
-    
+
     test_dataset = LOSO_DATASET(opt, 'test', subject_list[0])
     test_dataset[0]
     test_loader = torch.utils.data.DataLoader(

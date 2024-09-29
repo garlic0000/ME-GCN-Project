@@ -8,7 +8,7 @@ import multiprocessing
 import warnings
 
 from utils.eval_utils import eval_single_epoch, nms_single_epoch, calculate_epoch_metrics, \
-                             choose_best_epoch
+    choose_best_epoch
 
 if __name__ == '__main__':
     import opts
@@ -35,24 +35,24 @@ if __name__ == '__main__':
             dataset = yaml_config['dataset']
         opt = yaml_config[dataset]
         opt['dataset'] = dataset
-        
+
     subject = args.subject
-    
+
     # update opt. according to args.
-    opt['output_dir_name'] = os.path.join(args.output, subject) # ./debug/casme_016
+    opt['output_dir_name'] = os.path.join(args.output, subject)  # ./debug/casme_016
     opt['model_save_root'] = os.path.join(opt['output_dir_name'], 'models')  # ./debug/casme_016/models/
     opt['subject'] = subject
-    
+
     # define dataset & loader
     dataset = LOSO_DATASET(opt, 'test', subject)
     dataloader = torch.utils.data.DataLoader(dataset,
-                                             batch_size=opt['batch_size'], 
+                                             batch_size=opt['batch_size'],
                                              shuffle=False,
                                              # num_workers=8
                                              num_workers=4,
-                                             pin_memory=True, 
+                                             pin_memory=True,
                                              drop_last=False)
-    
+
     # define and load model
     device = opt['device'] if torch.cuda.is_available() else 'cpu'
     model = AUwGCN(opt)
@@ -60,19 +60,17 @@ if __name__ == '__main__':
     print("Starting evaluating...\n")
     print("Using GPU: {} \n".format(device))
 
-    
     # evaluate each ckpt's model and generate proposals
     # after generating proposals, NMS to reduce overlapped proposals
     epoch_begin = opt['epoch_begin']
     for epoch in range(opt['epochs']):
         if epoch >= epoch_begin:
             with torch.no_grad():
-                
                 weight_file = os.path.join(
-                    opt["model_save_root"], 
+                    opt["model_save_root"],
                     "checkpoint_epoch_" + str(epoch).zfill(3) + ".pth.tar")
                 # 这里为什么是cpu？
-                #如果你的训练模型是在 GPU 上训练的，但在运行时没有可用的 GPU，
+                # 如果你的训练模型是在 GPU 上训练的，但在运行时没有可用的 GPU，
                 # 或者你希望确保代码能够在没有 GPU 的环境中运行，那么将模型加载到 CPU 是一种合理的选择
                 # 有时将模型加载到 CPU 上可以节省 GPU 内存，尤其是在模型调试或推理时
                 # weights_only=True？

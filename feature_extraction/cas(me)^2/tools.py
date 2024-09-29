@@ -488,18 +488,40 @@ def get_macro_expression_left_right_min_max_len(csv_path):
     return min_left_len, max_left_len, min_right_len, max_right_len
 
 
-if __name__ == "__main__":
-    ave_marco_len = get_macro_expression_average_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
-    min_marco_len, max_marco_len = get_macro_expression_min_max_len(
-        "D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
-    min_left_marco_len, max_left_marco_len, min_right_marco_len, max_right_marco_len = \
-        get_macro_expression_left_right_min_max_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+def get_macro_micro_num(csv_path):
+    """
+    求微表情 宏表情的个数
+    """
+    df = pd.read_csv(csv_path)
+    df_macro = df[df["type_idx"] == 1]
+    df_micro = df[df["type_idx"] == 2]
+    return len(df_micro), len(df_macro)
 
-    ave_mirco_len = get_micro_expression_average_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
-    min_mirco_len, max_mirco_len = get_micro_expression_min_max_len(
-        "D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+
+def get_macro_ration(csv_path):
+    """
+    求微表情 宏表情的个数
+    """
+    df = pd.read_csv(csv_path)
+    df_macro = df[df["type_idx"] == 1]
+    macro_ration = len(df_macro) / len(df)
+    # 保留两位小数
+    return np.round(macro_ration, 2)
+
+
+if __name__ == "__main__":
+    anno_csv_path = "D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv"
+    ave_marco_len = get_macro_expression_average_len(anno_csv_path)
+    min_marco_len, max_marco_len = get_macro_expression_min_max_len(anno_csv_path)
+    min_left_marco_len, max_left_marco_len, min_right_marco_len, max_right_marco_len = \
+        get_macro_expression_left_right_min_max_len(anno_csv_path)
+
+    ave_mirco_len = get_micro_expression_average_len(anno_csv_path)
+    min_mirco_len, max_mirco_len = get_micro_expression_min_max_len(anno_csv_path)
     min_left_mirco_len, max_left_mirco_len, min_right_mirco_len, max_right_mirco_len = \
-        get_micro_expression_left_right_min_max_len("D:/PycharmProjects/ME-GCN-Project/info_csv/cas(me)_new.csv")
+        get_micro_expression_left_right_min_max_len(anno_csv_path)
+
+    macro_ration = get_macro_ration(anno_csv_path)
 
     print("宏表情最小长度:{0} 平均长度:{1} 最大长度:{2}".format(min_marco_len, ave_marco_len, max_marco_len))
     print("左侧最小:{0} 左侧最大:{1} 右侧最小:{2} 右侧最大:{3}".format(min_left_marco_len, max_left_marco_len,
@@ -508,6 +530,7 @@ if __name__ == "__main__":
     print("\n")
     print("微表情最小长度:{0} 平均长度:{1} 最大长度:{2}".format(min_mirco_len, ave_mirco_len, max_mirco_len))
     print("左侧最小:{0} 左侧最大:{1} 右侧最小:{2} 右侧最大:{3}".format(min_left_mirco_len, max_left_mirco_len,
-                                                                    min_right_mirco_len, max_right_mirco_len))
+                                                                       min_right_mirco_len, max_right_mirco_len))
 
+    print(f"宏表情比例{macro_ration}")
     pass
