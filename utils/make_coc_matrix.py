@@ -133,7 +133,16 @@ def get_coc_matrix(label_path, save_coc_matrix_path):
 
 
 if __name__ == "__main__":
+    # 本地测试
     # 读入标签
     label_path = 'D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv'
+    # 保存地址
     save_coc_matrix_path = 'D:/PycharmProjects/ME-GCN-Project/assets/cas(me)^2_original.npy'
+
+    # # 服务器测试
+    # # 读入标签
+    # label_path = '/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv'
+    # # 保存地址
+    # save_coc_matrix_path = '/kaggle/working/ME-GCN-Project/assets/cas(me)^2_original.npy'
+
     get_coc_matrix(label_path, save_coc_matrix_path)
