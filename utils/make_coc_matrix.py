@@ -68,7 +68,7 @@ def update_mat(mat, AU_list, AU_dict):
 
 
 # 读入标签
-label_path = '../info_csv/cas(me)_new.csv'
+label_path = 'D:/PycharmProjects/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv'
 # label_path = '../info_csv/samm_new_25.csv'
 df = pd.read_csv(label_path, dtype={'au': 'string'})
 # # make expression-type specific
@@ -122,6 +122,7 @@ co_matrix = np.divide(co_matrix, norm)
 # 保存的npy文件是什么？
 # 生成 路径下 D:\PycharmProjects\ME-GCN-Project\assets\cas(me)^2.npy  的npy文件
 print(co_matrix)
+np.save('D:/PycharmProjects/ME-GCN-Project/assets/cas(me)^2_original.npy', co_matrix)
 # np.save('./co_matrix_SAMM_12ROI.npy', co_matrix)
 # np.save('./co_matrix_CAS(ME)_2_12ROI.npy', co_matrix)
 
