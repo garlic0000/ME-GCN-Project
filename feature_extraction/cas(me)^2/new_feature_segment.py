@@ -48,7 +48,8 @@ def segment_for_train(opt):
     anno_csv_path = opt["anno_csv_path"]
     SEGMENT_LENGTH = opt["SEGMENT_LENGTH"]  # 256帧
     RECEPTIVE_FILED = opt["RECEPTIVE_FILED"]  # 感受野 15？ 用来决定每个片段的步长
-    STEP = int(RECEPTIVE_FILED // 2)
+    STEP = int(RECEPTIVE_FILED // 2)  # 15//2 = 7
+    #
 
     assert os.path.exists(feature_root_path), f"{feature_root_path} not exists"
     assert os.path.exists(anno_csv_path), f"{anno_csv_path} not exists"
@@ -85,6 +86,7 @@ def segment_for_train(opt):
             print("tmp_tf")
             print(tmp_df)
             # 这个要输出看看 具体的值
+            # Feature shape: (270, 12, 2) 减去256 前后填充7？
             video_feature = np.load(feature_path)  # (t, 12, 2)
             frame_count = video_feature.shape[0]
             print("frame_count")

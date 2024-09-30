@@ -446,12 +446,19 @@ def calculate_epoch_metrics(opt):
 
 
 def choose_best_epoch(opt, criterion='all_f1'):
+    """
+    根据指标
+    从训练epoch_metrics.csv 中选择表现最好的 epoch，并将结果保存到epoch_metrics.csv中
+    """
+    # 选择指标的范围
+    # 默认是 all_f1
     assert criterion in ['micro_precision', 'micro_recall', 'micro_f1',
                          'macro_precision', 'macro_recall', 'macro_f1',
                          'all_precision', 'all_recall', 'all_f1'], f"Unsupported criterion:{criterion}!"
     epoch_file = os.path.join(
         opt['output_dir_name'], 'epoch_metrics.csv'
     )
+    # 选择的列
     pick_columns = ['micro_tp', 'micro_n', 'micro_m', 'macro_tp', 'macro_n', 'macro_m',
                     'all_tp', 'all_n', 'all_m']
 
@@ -468,6 +475,7 @@ def choose_best_epoch(opt, criterion='all_f1'):
         df = df.loc[[0], pick_columns]
 
     else:
+        # 没有epoch_metrics.csv 则从注释文件中选择初始信息填入
         micro_tp, micro_n, micro_m = [0] * 3
         macro_tp, macro_n, macro_m = [0] * 3
         all_tp, all_n, all_m = [0] * 3

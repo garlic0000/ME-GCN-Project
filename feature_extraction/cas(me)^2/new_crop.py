@@ -83,6 +83,10 @@ def crop(opt):
 
                 s_name = "casme_0{}".format(sub_item.name[1:])
                 v_name = "casme_0{}".format(type_item.name[0:7])
+                # 特殊的
+                if sub_item.name == "s19" and type_item.name == "23_0502funnyerrors":
+                    s_name = "casme_023"
+                    v_name = "casme_023_0502"
                 new_dir_path = os.path.join(
                     cropped_root_path, s_name, v_name)
                 # new_dir_path = os.path.join(
