@@ -166,11 +166,11 @@ def print_all_label(not_all_same_micro_label_list, all_same_micro_label_list, no
     print("-----------------------------------------------------------------------------------------------------------")
 
 
-def check_all_label():
-    all_npz_root_path1 = "D:/PycharmProjects/ME-GCN-Project/features/cas(me)^2/feature_segment/train/"
+def check_all_label(all_npz_root_path1, all_npz_root_path2):
+    # all_npz_root_path1 = "D:/PycharmProjects/ME-GCN-Project/features/cas(me)^2/feature_segment/train/"
     all_micro_exp_apex_list1, all_macro_exp_apex_list1 = get_all_label_list(all_npz_root_path1)
     # print("-----------------------------------------------------------------------------------------------------------")
-    all_npz_root_path2 = "D:/PycharmProjects/ME-GCN-Project/feature_segment_apex/train"
+    # all_npz_root_path2 = "D:/PycharmProjects/ME-GCN-Project/feature_segment_apex/train"
     all_micro_exp_apex_list2, all_macro_exp_apex_list2 = get_all_label_list(all_npz_root_path2)
 
     not_all_same_micro_label_list, all_same_micro_label_list = compare_all_label_list(all_micro_exp_apex_list1,
@@ -233,9 +233,9 @@ def compare_all_feature_numpy(all_npz_path_list1, all_npz_path_list2):
     return all_not_same_npz_file_name_list, all_same_split_feature_name_list, all_not_same_split_feature_name_list
 
 
-def check_all_feature():
-    all_npz_root_path1 = "D:/PycharmProjects/ME-GCN-Project/features/cas(me)^2/feature_segment/train/"
-    all_npz_root_path2 = "D:/PycharmProjects/ME-GCN-Project/feature_segment_apex/train"
+def check_all_feature(all_npz_root_path1, all_npz_root_path2):
+    # all_npz_root_path1 = "D:/PycharmProjects/ME-GCN-Project/features/cas(me)^2/feature_segment/train/"
+    # all_npz_root_path2 = "D:/PycharmProjects/ME-GCN-Project/feature_segment_apex/train"
     all_npz_path_list1 = get_all_npz_path_list(all_npz_root_path1)
     all_npz_path_list2 = get_all_npz_path_list(all_npz_root_path2)
     all_not_same_npz_file_name_list, all_same_split_feature_name_list, all_not_same_split_feature_name_list = \
@@ -257,5 +257,7 @@ def check_all_feature():
 
 
 if __name__ == "__main__":
-    check_all_feature()
-    check_all_label()
+    all_npz_root_path1 = "D:/PycharmProjects/ME-GCN-Project/features/cas(me)^2/feature_segment/train/"
+    all_npz_root_path2 = "D:/PycharmProjects/ME-GCN-Project/feature_segment_apex/train"
+    check_all_feature(all_npz_root_path1, all_npz_root_path2)
+    check_all_label(all_npz_root_path1, all_npz_root_path2)
