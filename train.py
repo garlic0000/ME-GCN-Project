@@ -162,7 +162,7 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
     # save state_dict every x epochs to save memory
     if (epoch + 1) % opt['save_intervals'] == 0:
         torch.save(state, weight_file)
-    print("weight file save in {0}/checkpoint_epoch_{1}.pth.tar\n".format(ckpt_dir, str(epoch).zfill(3)))
+    # print("weight file save in {0}/checkpoint_epoch_{1}.pth.tar\n".format(ckpt_dir, str(epoch).zfill(3)))
 
 
 if __name__ == '__main__':

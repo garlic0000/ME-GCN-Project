@@ -157,4 +157,6 @@ if __name__ == "__main__":
     model = AUwGCN(opt)
 
     out = model(x)
+
     print(out.shape)
+    print(out)

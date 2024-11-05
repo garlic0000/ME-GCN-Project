@@ -89,14 +89,14 @@ if __name__ == '__main__':
 
                 nms_single_epoch(opt, epoch)
 
-    print("Calculate metrics of all the epochs\n")
+    # print("Calculate metrics of all the epochs\n")
     # calculate metrics of all the epochs
     calculate_epoch_metrics(opt)
-    print("epoch_metrics csv save in {0}/epoch_metrics.csv\n".format(opt['output_dir_name']))
+    # print("epoch_metrics csv save in {0}/epoch_metrics.csv\n".format(opt['output_dir_name']))
 
-    print("Choose the best epoch according to criterion\n")
+    # print("Choose the best epoch according to criterion\n")
     # choose the best epoch according to criterion
     choose_best_epoch(opt, criterion='all_f1')
-    print("best_res csv save in {0}/best_res.csv\n".format(opt['output_dir_name']))
+    # print("best_res csv save in {0}/best_res.csv\n".format(opt['output_dir_name']))
 
     print("Finish evaluating!\n")
