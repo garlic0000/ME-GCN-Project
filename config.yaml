@@ -18,8 +18,8 @@ cas(me)^2:
   macro_min: 15
   # 为什么epoch_begin 的开始为15
   epoch_begin: 15
-  nms_top_K_micro: 5
-  nms_top_K_macro: 5
+  nms_top_K_micro: 5 # 微表情最多保留5个框
+  nms_top_K_macro: 5 # 宏表情最多保留5个框
 
   micro_left_min_dis: 2   # micro_min // 2
   micro_left_max_dis: 7
