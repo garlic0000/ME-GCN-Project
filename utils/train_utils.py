@@ -30,6 +30,12 @@ def configure_optimizers(model, learning_rate, weight_decay):
         for pn, p in m.named_parameters():
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
 
+            # 针对model_1的修改
+            # parameters {'graph_embedding.0.gc1.parametrizations.weight.original1', 'graph_embedding.0.gc1.parametrizations.weight.original0'} were not separated into either decay/no_decay set!
+            # Check if it's a parameter added by weight_norm (e.g., .original0, .original1)
+            if 'parametrizations' in fpn:
+                continue  # Skip these parameters
+
             if pn.endswith('bias'):
                 # all biases will not be decayed
                 no_decay.add(fpn)
