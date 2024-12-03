@@ -124,10 +124,10 @@ class GraphAttentionLayer(nn.Module):
         # Reshape Wh from [B, N, F] to [B, F, N] so that we can apply bmm with attention [B, N, N]
         Wh_reshaped = Wh.transpose(1, 2)  # Shape: [B, F, N]
 
-        # Perform batch matrix multiplication: [B, N, N] * [B, N, F] -> [B, N, F]
-        h_prime = torch.bmm(attention, Wh_reshaped)  # Shape: [B, N, F]
+        # Perform matrix multiplication instead of bmm to avoid batch dimension confusion
+        # Shape of attention: [B, N, N] and Wh_reshaped: [B, F, N]
+        h_prime = torch.matmul(attention, Wh_reshaped.transpose(1, 2))  # Shape: [B, N, F]
 
-        # Optionally, transpose the result to match expected output shape
         return h_prime
 
 
