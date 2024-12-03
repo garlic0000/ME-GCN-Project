@@ -113,7 +113,7 @@ class GraphAttentionLayer(nn.Module):
 
     def forward(self, h, adj):
         Wh = torch.matmul(h, self.W)  # Linear transformation
-        # Shape of Wh: [B, N, F]
+        # Wh: [B, N, F]
 
         # Pairwise attention
         a_input = torch.cat([Wh.repeat(1, 1, Wh.size(1)).view(Wh.size(0), -1, Wh.size(2)),
@@ -121,9 +121,13 @@ class GraphAttentionLayer(nn.Module):
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # Attention scores
         attention = torch.nn.functional.softmax(e, dim=1)  # Shape of attention: [B, N, N]
 
-        # Weighted sum of neighbor features
-        h_prime = torch.bmm(attention, Wh)  # Use bmm to batch matrix multiply
-        return h_prime.squeeze(-1)
+        # Weighted sum of neighbor features using torch.bmm
+        # Reshape Wh from [B, N, F] to [B, F, N] so that we can apply bmm with attention [B, N, N]
+        Wh_reshaped = Wh.transpose(1, 2)  # Shape: [B, F, N]
+
+        # Perform batch matrix multiplication: [B, N, N] * [B, F, N] -> [B, N, F]
+        h_prime = torch.bmm(attention, Wh_reshaped)  # Shape: [B, N, F]
+        return h_prime.transpose(1, 2)  # Shape: [B, F, N] -> [B, N, F]
 
 
 class AUwGCN(torch.nn.Module):
