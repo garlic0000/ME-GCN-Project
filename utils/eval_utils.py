@@ -172,7 +172,9 @@ def eval_single_epoch(opt, model, dataloader, epoch, device):
             if os.path.exists(predict_file):
                 os.remove(predict_file)
             new_df.to_csv(predict_file, index=False)
-            # print("output_csv file save in {0}/proposals_epoch_{1}.csv\n".format(csv_dir, str(epoch).zfill(3)))
+            # 有的轮次没有输出
+            # 原因是？
+            print("output_csv file save in {0}/proposals_epoch_{1}.csv\n".format(csv_dir, str(epoch).zfill(3)))
 
 
 def nms_single_epoch(opt, epoch):
@@ -203,7 +205,8 @@ def nms_single_epoch(opt, epoch):
     if os.path.exists(nms_file):
         os.remove(nms_file)
     df.to_csv(nms_file, index=False)
-    # print("nms_csv file save in {0}/final_proposals_epoch_{1}.csv\n".format(nms_dir, str(epoch).zfill(3)))
+    # 有的没有输出
+    print("nms_csv file save in {0}/final_proposals_epoch_{1}.csv\n".format(nms_dir, str(epoch).zfill(3)))
 
 
 def iou_with_anchors(anchors_min, anchors_max, box_min, box_max):
