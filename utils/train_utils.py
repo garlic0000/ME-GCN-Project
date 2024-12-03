@@ -30,13 +30,6 @@ def configure_optimizers(model, learning_rate, weight_decay):
         for pn, p in m.named_parameters():
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
 
-            # 针对model_1的修改
-            # parameters {'graph_embedding.0.gc1.parametrizations.weight.original1', 'graph_embedding.0.gc1.parametrizations.weight.original0'} were not separated into either decay/no_decay set!
-            # Check if it's a parameter added by weight_norm (e.g., .original0, .original1)
-            if 'parametrizations' in fpn:
-                print(fpn)
-                continue  # Skip these parameters
-
             if pn.endswith('bias'):
                 # all biases will not be decayed
                 no_decay.add(fpn)
@@ -48,13 +41,6 @@ def configure_optimizers(model, learning_rate, weight_decay):
                 decay.add(fpn)
             elif pn.endswith('adj') and isinstance(m, whitelist_weight_modules):
                 # weights of whitelist modules will be weight decayed
-                decay.add(fpn)
-
-            # 针对model_1的修改
-            # AssertionError: parameters {'graph_embedding.0.gc1.weight_v', 'graph_embedding.0.gc1.weight_g'} were not separated into either decay/no_decay set!
-            # Check if the parameter is part of the weight_norm and classify it properly
-            if 'weight_v' in pn or 'weight_g' in pn:
-                # weight_v and weight_g should be part of the decay parameters
                 decay.add(fpn)
 
     # 获取模型所有参数
