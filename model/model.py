@@ -91,7 +91,7 @@ class AUwGCN(torch.nn.Module):
         # # 本地测试路径
         # mat_dir = 'D:/PycharmProjects/ME-GCN-Project'
         mat_path = os.path.join(mat_dir,
-                                'assets',
+                                '../assets',
                                 '{}.npy'.format(opt['dataset'])
                                 )
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     # # 服务器运行
     # yaml_path = "/kaggle/working/ME-GCN-Project/config.yaml"
     # 本地测试
-    yaml_path = "D:/PycharmProjects/ME-GCN-Project/other/config_casme.yaml"
+    yaml_path = "/other/config_casme.yaml"
     with open(yaml_path, encoding="UTF-8") as f:
         yaml_config = yaml.safe_load(f)
         dataset = yaml_config['dataset']

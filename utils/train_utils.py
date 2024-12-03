@@ -1,8 +1,5 @@
 import torch
-import torch.nn as nn
-from torch.nn.parameter import Parameter
-import math
-from model import GraphConvolution
+from model.model import GraphConvolution
 
 
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136

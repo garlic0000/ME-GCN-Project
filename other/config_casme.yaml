@@ -38,10 +38,6 @@ cas(me)^2:
   project_root: "/kaggle/working/ME-GCN-Project"
   feature_root: ~
   # 源项目特征
-  # segment_feat_root: "/kaggle/working/ME-GCN-Project/features/cas(me)^2/feature_segment"
-  # 提取完特征不直接开始训练
-  # segment_feat_root: "/kaggle/input/output/data/casme_2/feature_segment_apex"
-  # 源项目特征
   segment_feat_root: "/kaggle/input/features/features/cas(me)^2/feature_segment"
   model_save_root: ~
   output_dir_name: ~
