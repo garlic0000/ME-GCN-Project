@@ -93,7 +93,8 @@ class GCN(nn.Module):
 
         # x = F.relu(self.gc2(x))
         # x = F.dropout(x, self.dropout, training=self.training)
-        return x
+        # 根据model_1进行的修改
+        return x, self.gc1.adj  # 返回图的邻接矩阵 adj
 
 
 class GraphAttentionLayer(nn.Module):
@@ -166,10 +167,10 @@ class AUwGCN(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        x = self.graph_embedding(x).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        x, adj = self.graph_embedding(x)  # 获取图卷积的输出和邻接矩阵
+        x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
 
-        # Apply Attention Layer
-        x = self.attention(x, self.graph_embedding[0].adj)  # Pass through Attention
+        x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
 
         x = self._sequential(x)
         x = self._classification(x)
