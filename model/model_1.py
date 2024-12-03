@@ -129,7 +129,7 @@ class AUwGCN(torch.nn.Module):
         # 本地测试路径
         # mat_dir = 'D:/PycharmProjects/ME-GCN-Project'
         mat_path = os.path.join(mat_dir,
-                                '../assets',
+                                'assets',
                                 '{}.npy'.format(opt['dataset'])
                                 )
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
