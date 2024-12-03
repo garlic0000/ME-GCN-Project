@@ -137,30 +137,41 @@ class GraphAttentionLayer(nn.Module):
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
+        # 服务器测试路径
         mat_dir = '/kaggle/working/ME-GCN-Project'
-        mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
+        # 本地测试路径
+        # mat_dir = 'D:/PycharmProjects/ME-GCN-Project'
+        mat_path = os.path.join(mat_dir,
+                                'assets',
+                                '{}.npy'.format(opt['dataset'])
+                                )
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))  # 输出16通道
 
-        # Define the graph embedding layer
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
+        in_dim = 16  # 修改为GCN输出的通道数
 
-        # Define the attention layer
-        self.attention = GraphAttentionLayer(16, 16)  # In features: 16, Out features: 16
+        self.attention = GraphAttentionLayer(16, 16)  # Add attention mechanism
 
         self._sequential = torch.nn.Sequential(
-            torch.nn.Conv1d(16, 64, kernel_size=1, stride=1, padding=0, bias=False),
+            torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0,
+                            bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
+
+            # receptive field: 7
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1,
+                            bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
+
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2,
+                            bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
         )
 
         # Classification layer
-        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2,
-                                               bias=False)
+        self._classification = torch.nn.Conv1d(
+            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False)
 
         self._init_weight()
 
@@ -168,16 +179,13 @@ class AUwGCN(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        x, adj = self.graph_embedding(x)  # Get the graph convolution output and adjacency matrix
-        x = self.attention(x, adj)  # Pass through attention layer
+        x, adj = self.graph_embedding(x)  # 获取图卷积的输出和邻接矩阵
+        x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
 
-        # Reshape and transpose to match the input shape for Conv1d
-        x = x.reshape(b, t, -1).transpose(1, 2)  # (b, t, -1) -> (b, -1, t)
+        x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
 
-        # Apply sequential layers and classification
         x = self._sequential(x)
         x = self._classification(x)
-
         return x
 
     def _init_weight(self):
@@ -186,4 +194,5 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
+
 
