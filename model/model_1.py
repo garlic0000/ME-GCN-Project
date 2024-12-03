@@ -5,7 +5,10 @@ from torch.nn.parameter import Parameter
 import math
 import os
 import numpy as np
-from torch.nn.utils import weight_norm
+# 针对model_1的修改
+# FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+# from torch.nn.utils import weight_norm
+from torch.nn.utils.parametrizations import weight_norm
 
 """
 主要改动和优化说明：

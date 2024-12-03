@@ -11,13 +11,21 @@ def configure_optimizers(model, learning_rate, weight_decay):
     We are then returning the PyTorch optimizer object.
     将模型参数划分为需要进行权重衰减的参数和不需要进行权重衰减的参数
     使用AdamW优化器进行优化
+    model:需要优化的模型
+    learning_rate:学习率
+    weight_decay:权重衰减系数 用于正则化
     """
 
     # separate out all parameters to those that will and won't experience regularizing weight decay
-    decay = set()
-    no_decay = set()
+    decay = set()  # 需要正则化 进行权重衰减 比如weight
+    no_decay = set()  # 不需要正则化 不用权重衰减 比如bias和BatchNorm层的参数
+    # 需要进行权重衰减的模块
+    # 包括线性层 conv1d层 自定义图卷积层 Corv2d层
     whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, torch.nn.Conv2d)
+    # 不需要进行权重衰减的模块
+    # 包括BatchNorm1d batchNorm2d 批归一化层参数不需要进行衰减
     blacklist_weight_modules = (torch.nn.BatchNorm1d, torch.nn.BatchNorm2d)
+    # 遍历模型模块和参数 分配到衰减和非衰减参数集合中
     for mn, m in model.named_modules():
         for pn, p in m.named_parameters():
             fpn = '%s.%s' % (mn, pn) if mn else pn  # full param name
@@ -35,7 +43,14 @@ def configure_optimizers(model, learning_rate, weight_decay):
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
 
-    # validate that we considered every parameter
+            # 针对model_1的修改
+            # AssertionError: parameters {'graph_embedding.0.gc1.weight_v', 'graph_embedding.0.gc1.weight_g'} were not separated into either decay/no_decay set!
+            # Check if the parameter is part of the weight_norm and classify it properly
+            if 'weight_v' in pn or 'weight_g' in pn:
+                # weight_v and weight_g should be part of the decay parameters
+                decay.add(fpn)
+
+    # 获取模型所有参数
     param_dict = {pn: p for pn, p in model.named_parameters()}
     inter_params = decay & no_decay
     union_params = decay | no_decay
