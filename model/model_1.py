@@ -73,9 +73,6 @@ class GCN(nn.Module):
 
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         self.bn1 = nn.BatchNorm1d(nhid)
-        # self.gc2 = GraphConvolution(nhid, nout, mat_path)
-        # self.bn2 = nn.BatchNorm1d(nout)
-        # self.dropout = dropout
 
     def forward(self, x):
         x = self.gc1(x)
@@ -83,17 +80,6 @@ class GCN(nn.Module):
         x = self.bn1(x).transpose(1, 2).contiguous()
         x = F.relu(x)
 
-        # x = F.dropout(x, self.dropout, training=self.training)
-
-        # x = self.gc2(x)
-
-        # x = x.transpose(1, 2).contiguous()
-        # x = self.bn2(x).transpose(1, 2).contiguous()
-        # x = F.relu(x)
-
-        # x = F.relu(self.gc2(x))
-        # x = F.dropout(x, self.dropout, training=self.training)
-        # 根据model_1进行的修改
         return x, self.gc1.adj  # 返回图的邻接矩阵 adj
 
 
@@ -133,45 +119,35 @@ class GraphAttentionLayer(nn.Module):
         return h_prime
 
 
-
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
         # 服务器测试路径
         mat_dir = '/kaggle/working/ME-GCN-Project'
-        # 本地测试路径
-        # mat_dir = 'D:/PycharmProjects/ME-GCN-Project'
-        mat_path = os.path.join(mat_dir,
-                                'assets',
-                                '{}.npy'.format(opt['dataset'])
-                                )
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))  # 输出16通道
+        mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        in_dim = 16  # 修改为GCN输出的通道数
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
 
-        self.attention = GraphAttentionLayer(16, 16)  # Add attention mechanism
+        in_dim = 192  # 24，保留输入通道数为192
+
+        self.attention = GraphAttentionLayer(in_features=16, out_features=16)  # 调整 GraphAttentionLayer
 
         self._sequential = torch.nn.Sequential(
-            torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0,
-                            bias=False),
+            torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
 
-            # receptive field: 7
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1,
-                            bias=False),
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
 
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2,
-                            bias=False),
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
         )
 
-        # Classification layer
-        self._classification = torch.nn.Conv1d(
-            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False)
+        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2,
+                                               bias=False)
 
         self._init_weight()
 
@@ -183,9 +159,9 @@ class AUwGCN(torch.nn.Module):
         x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
 
         x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
-
         x = self._sequential(x)
         x = self._classification(x)
+
         return x
 
     def _init_weight(self):
