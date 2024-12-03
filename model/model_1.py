@@ -116,8 +116,11 @@ class GraphAttentionLayer(nn.Module):
         # Wh: [B, N, F]
 
         # Pairwise attention
-        a_input = torch.cat([Wh.repeat(1, 1, Wh.size(1)).view(Wh.size(0), Wh.size(1), -1),
-                             Wh.repeat(1, Wh.size(1), 1)], dim=-1)  # Shape of a_input: [B, N, N, 2F]
+        # Repeat Wh to match pairwise combinations
+        Wh_repeat_1 = Wh.unsqueeze(2).repeat(1, 1, Wh.size(1), 1)  # Shape: [B, N, N, F]
+        Wh_repeat_2 = Wh.unsqueeze(1).repeat(1, Wh.size(1), 1, 1)  # Shape: [B, N, N, F]
+        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, 2F]
+
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # Attention scores
         attention = torch.nn.functional.softmax(e, dim=1)  # Shape of attention: [B, N, N]
 
@@ -128,6 +131,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = torch.bmm(attention, Wh_reshaped)  # Shape: [B, N, F]
 
         return h_prime
+
 
 
 class AUwGCN(torch.nn.Module):
