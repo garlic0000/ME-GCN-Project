@@ -98,7 +98,8 @@ def calculate_proposal_with_score(opt, array_score_start, array_score_end,
 
 
 def eval_single_epoch(opt, model, dataloader, epoch, device):
-    print(f'Evaluating ckpt of [Epoch {epoch:03d}/{opt["epochs"]:03d}]\n')
+    # epoch从0开始，在显示改成epoch+1
+    print(f'Evaluating ckpt of [Epoch {epoch+1:03d}/{opt["epochs"]:03d}]\n')
     model.eval()
     # vid_name: 'casme_016_0505',...
     # offset : tensor([2048, 1024, 2048, 3072, 2560,    0, 1536, 1280]) etc.

@@ -142,8 +142,9 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
         loss_am.update(loss.detach())
         writer.add_scalar("Loss/train", loss, epoch)
     current_lr = optimizer.param_groups[0]['lr']
+    # epoch 从0开始 在显示时改成epoch+1
     results = "[Epoch {0:03d}/{1:03d}]\tLoss {2:.5f}(train)\tCurrent Learning rate {3:.5f}\n".format(
-        epoch, opt["epochs"], loss_am.avg(), current_lr)
+        epoch+1, opt["epochs"], loss_am.avg(), current_lr)
 
     print(results)
 
