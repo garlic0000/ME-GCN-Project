@@ -45,7 +45,6 @@ class GraphConvolution(nn.Module):
         self.register_buffer('adj', torch.from_numpy(adj_mat))
 
     def reset_parameters(self):
-        # Standard initialization instead of weight_norm
         stdv = 1. / math.sqrt(self.weight.size(1))
         self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
@@ -53,11 +52,12 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, c = input.shape
-        support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
+        # Apply weight to the input
+        support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))  # Shape: [B, N, F] x [F, O]
+        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
 
         if self.bias is not None:
-            return output + self.bias
+            return output + self.bias  # Shape: [B, N, O]
         else:
             return output
 
@@ -116,7 +116,7 @@ class GraphAttentionLayer(nn.Module):
         # Wh: [B, N, F]
 
         # Pairwise attention
-        a_input = torch.cat([Wh.repeat(1, 1, Wh.size(1)).view(Wh.size(0), -1, Wh.size(2)),
+        a_input = torch.cat([Wh.repeat(1, 1, Wh.size(1)).view(Wh.size(0), Wh.size(1), -1),
                              Wh.repeat(1, Wh.size(1), 1)], dim=-1)  # Shape of a_input: [B, N, N, 2F]
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # Attention scores
         attention = torch.nn.functional.softmax(e, dim=1)  # Shape of attention: [B, N, N]
@@ -133,41 +133,30 @@ class GraphAttentionLayer(nn.Module):
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
-        # 服务器测试路径
         mat_dir = '/kaggle/working/ME-GCN-Project'
-        # 本地测试路径
-        # mat_dir = 'D:/PycharmProjects/ME-GCN-Project'
-        mat_path = os.path.join(mat_dir,
-                                'assets',
-                                '{}.npy'.format(opt['dataset'])
-                                )
+        mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
+
+        # Define the graph embedding layer
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
 
-        in_dim = 192  # 24
-
-        self.attention = GraphAttentionLayer(16, 16)  # Add attention mechanism
+        # Define the attention layer
+        self.attention = GraphAttentionLayer(16, 16)  # In features: 16, Out features: 16
 
         self._sequential = torch.nn.Sequential(
-            torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0,
-                            bias=False),
+            torch.nn.Conv1d(16, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
-
-            # receptive filed: 7
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1,
-                            bias=False),
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
-
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2,
-                            bias=False),
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
         )
 
         # Classification layer
-        self._classification = torch.nn.Conv1d(
-            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False)
+        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2,
+                                               bias=False)
 
         self._init_weight()
 
@@ -175,13 +164,16 @@ class AUwGCN(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        x, adj = self.graph_embedding(x)  # 获取图卷积的输出和邻接矩阵
-        x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
+        x, adj = self.graph_embedding(x)  # Get the graph convolution output and adjacency matrix
+        x = self.attention(x, adj)  # Pass through attention layer
 
-        x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
+        # Reshape and transpose to match the input shape for Conv1d
+        x = x.reshape(b, t, -1).transpose(1, 2)  # (b, t, -1) -> (b, -1, t)
 
+        # Apply sequential layers and classification
         x = self._sequential(x)
         x = self._classification(x)
+
         return x
 
     def _init_weight(self):
@@ -190,3 +182,4 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
+
