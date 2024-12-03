@@ -41,11 +41,11 @@ cas(me)^2:
   # segment_feat_root: "/kaggle/working/ME-GCN-Project/features/cas(me)^2/feature_segment"
   # 提取完特征不直接开始训练
   # segment_feat_root: "/kaggle/input/output/data/casme_2/feature_segment_apex"
-  # 提取完特征 直接开始训练
-  segment_feat_root: "/kaggle/working/data/casme_2/feature_segment_apex"
+  # 源项目特征
+  segment_feat_root: "/kaggle/input/features/features/cas(me)^2/feature_segment"
   model_save_root: ~
   output_dir_name: ~
-  anno_csv: "/kaggle/working/ME-GCN-Project/feature_extraction/cas(me)^2/csv/cas(me)^2_original.csv"
+  anno_csv: "/kaggle/working/ME-GCN-Project/info_csv/cas(me)_new.csv"
 
   # 训练配置
   num_workers: 2  # dataloader 使用的工作线程数
