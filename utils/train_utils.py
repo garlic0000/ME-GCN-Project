@@ -34,6 +34,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
             # parameters {'graph_embedding.0.gc1.parametrizations.weight.original1', 'graph_embedding.0.gc1.parametrizations.weight.original0'} were not separated into either decay/no_decay set!
             # Check if it's a parameter added by weight_norm (e.g., .original0, .original1)
             if 'parametrizations' in fpn:
+                print(fpn)
                 continue  # Skip these parameters
 
             if pn.endswith('bias'):
