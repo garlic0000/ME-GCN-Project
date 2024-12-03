@@ -121,12 +121,11 @@ class GraphAttentionLayer(nn.Module):
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # Attention scores
         attention = torch.nn.functional.softmax(e, dim=1)  # Shape of attention: [B, N, N]
 
-        # Reshape Wh from [B, N, F] to [B, F, N] so that we can apply bmm with attention [B, N, N]
-        Wh_reshaped = Wh.transpose(1, 2)  # Shape: [B, F, N]
+        # Reshape Wh from [B, N, F] to [B, N, F] for compatibility with attention
+        Wh_reshaped = Wh  # Shape: [B, N, F]
 
-        # Perform matrix multiplication instead of bmm to avoid batch dimension confusion
-        # Shape of attention: [B, N, N] and Wh_reshaped: [B, F, N]
-        h_prime = torch.matmul(attention, Wh_reshaped.transpose(1, 2))  # Shape: [B, N, F]
+        # Perform batch matrix multiplication: [B, N, N] * [B, N, F] -> [B, N, F]
+        h_prime = torch.bmm(attention, Wh_reshaped)  # Shape: [B, N, F]
 
         return h_prime
 
