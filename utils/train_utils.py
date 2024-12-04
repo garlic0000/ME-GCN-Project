@@ -25,7 +25,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
     # whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, torch.nn.Conv2d)
     # 根据model_1的修改 加入GraphAttentionLayer
     whitelist_weight_modules = (
-    torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, SelfAttentionLayer, torch.nn.Conv2d)
+    torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, GraphAttentionLayer, torch.nn.Conv2d)
 
     # 不需要进行权重衰减的模块
     # 包括BatchNorm1d batchNorm2d 批归一化层参数不需要进行衰减
