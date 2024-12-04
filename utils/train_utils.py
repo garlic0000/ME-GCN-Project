@@ -1,6 +1,6 @@
 import torch
-from model.model_2 import GraphConvolution
-from model.model_2 import GraphAttentionLayer
+from model.model_3 import GraphConvolution
+from model.model_3 import SelfAttentionLayer
 
 
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
@@ -25,7 +25,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
     # whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, torch.nn.Conv2d)
     # 根据model_1的修改 加入GraphAttentionLayer
     whitelist_weight_modules = (
-    torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, GraphAttentionLayer, torch.nn.Conv2d)
+    torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, SelfAttentionLayer, torch.nn.Conv2d)
 
     # 不需要进行权重衰减的模块
     # 包括BatchNorm1d batchNorm2d 批归一化层参数不需要进行衰减
@@ -47,10 +47,10 @@ def configure_optimizers(model, learning_rate, weight_decay):
             elif pn.endswith('adj') and isinstance(m, whitelist_weight_modules):
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
-            # 根据model_1进行修改
-            # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
-            elif isinstance(m, GraphAttentionLayer) and (pn == 'a' or pn == 'W'):
-                decay.add(fpn)
+            # 根据model_3进行修改
+            # # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
+            # elif isinstance(m, SelfAttentionLayer) and (pn == 'a' or pn == 'W'):
+            #     decay.add(fpn)
 
     # 获取模型所有参数
     param_dict = {pn: p for pn, p in model.named_parameters()}
