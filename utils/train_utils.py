@@ -1,6 +1,6 @@
 import torch
-from model.model_3 import GraphConvolution
-from model.model_3 import SelfAttentionLayer
+from model.model_4 import GraphConvolution
+from model.model_4 import GraphAttentionLayer
 
 
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
@@ -47,9 +47,9 @@ def configure_optimizers(model, learning_rate, weight_decay):
             elif pn.endswith('adj') and isinstance(m, whitelist_weight_modules):
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
-            # 根据model_3进行修改
-            # For SelfAttentionLayer, also add W_q, W_k, W_v
-            elif isinstance(m, SelfAttentionLayer) and pn in {'W_q', 'W_k', 'W_v'}:
+            # 根据model_4进行修改
+            # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
+            elif isinstance(m, GraphAttentionLayer) and (pn == 'a' or pn == 'W'):
                 decay.add(fpn)
 
     # 获取模型所有参数

@@ -1,6 +1,6 @@
 import torch
 import opts
-from model.model_3 import AUwGCN
+from model.model_4 import AUwGCN
 from datasets import LOSO_DATASET
 import os
 import yaml
