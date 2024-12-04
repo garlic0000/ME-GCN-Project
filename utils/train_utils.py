@@ -48,9 +48,9 @@ def configure_optimizers(model, learning_rate, weight_decay):
                 # weights of whitelist modules will be weight decayed
                 decay.add(fpn)
             # 根据model_3进行修改
-            # # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
-            # elif isinstance(m, SelfAttentionLayer) and (pn == 'a' or pn == 'W'):
-            #     decay.add(fpn)
+            # For SelfAttentionLayer, also add W_q, W_k, W_v
+            elif isinstance(m, SelfAttentionLayer) and pn in {'W_q', 'W_k', 'W_v'}:
+                decay.add(fpn)
 
     # 获取模型所有参数
     param_dict = {pn: p for pn, p in model.named_parameters()}
