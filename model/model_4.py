@@ -8,21 +8,14 @@ import numpy as np
 
 """
 关键更改：
-在model_1的基础上
+在model_2的基础上
 通道数不变：
 
-in_features 和 out_features 保持一致，避免改变图卷积层后的通道数。
-使用 assert 保证这两个值一致。
-简化注意力计算：
+GCN 层堆叠：通过在 GCN 类中使用 ModuleList 添加多个 GraphConvolution 层，可以方便地增加或减少图卷积层的数量。
 
-Wh_repeat_1 和 Wh_repeat_2 不会重复计算和复制维度，简化了之前的操作。
-在注意力计算时，直接计算 Wh 和 a 的配对注意力，而不是扩展多维度，从而减少了计算的复杂度。
-减少内存开销：
+批量归一化和激活函数：在每个卷积层后面添加了批量归一化（BatchNorm1d）和 ReLU 激活函数，以确保每层的输出被标准化并进行非线性变换。
 
-通过 torch.bmm 计算注意力权重和节点特征之间的加权求和，避免了不必要的维度扩展。
-高效计算：
-
-通过 LeakyReLU 激活函数直接处理配对的节点特征，避免了不必要的中间步骤。
+调整模型参数：例如，通过设置 num_layers=3 来增加 3 层 GCN，可以根据需要增加更多层次。
 """
 
 class GraphConvolution(nn.Module):
