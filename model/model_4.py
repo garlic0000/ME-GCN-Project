@@ -6,6 +6,7 @@ import math
 import os
 import numpy as np
 
+
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -78,8 +79,8 @@ class GraphAttentionLayer(nn.Module):
         self.in_features = in_features
 
         # 线性变换
-        self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))  # 权重矩阵
-        self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # 注意力系数的权重
+        self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))
+        self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -88,22 +89,19 @@ class GraphAttentionLayer(nn.Module):
         self.a.data.uniform_(-stdv, stdv)
 
     def forward(self, h, adj):
-        b, n, f = h.shape  # b: batch size, n: nodes, f: features
+        b, n, f = h.shape  # b: batch size, n: number of nodes, f: feature dimension
 
         # 线性变换：Wh
-        Wh = torch.matmul(h, self.W)  # [B, N, heads * F]
+        Wh = torch.matmul(h, self.W)  # [B, N, heads * out_features]
         Wh = Wh.view(b, n, self.heads, self.out_features)  # [B, N, heads, out_features]
 
         # 计算注意力系数
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # [B, N, heads, N, out_features]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # [B, N, heads, N, out_features]
 
-        # 检查 Wh_repeat_1 和 Wh_repeat_2 的形状是否一致
-        assert Wh_repeat_1.shape[4] == Wh_repeat_2.shape[4], \
-            f"Feature dimension mismatch: {Wh_repeat_1.shape[4]} != {Wh_repeat_2.shape[4]}"
-
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # [B, N, heads, N, 2*out_features]
 
+        # 计算注意力系数
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # [B, N, heads, N]
 
         # Softmax to normalize attention
@@ -113,8 +111,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = torch.matmul(attention, Wh)  # [B, N, heads, out_features]
         h_prime = h_prime.view(b, n, -1)  # [B, N, heads * out_features]
 
-        return h_prime  # 返回的是 [B, N, heads * out_features]
-
+        return h_prime
 
 
 class AUwGCN(torch.nn.Module):
@@ -130,7 +127,7 @@ class AUwGCN(torch.nn.Module):
         in_dim = 128  # 修改 in_dim 为 128
 
         # Graph Attention 层
-        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # heads=8，输出128
+        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # heads=12，输出192
 
         # 处理图卷积后输出的特征
         self._sequential = torch.nn.Sequential(
