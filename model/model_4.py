@@ -73,41 +73,28 @@ class GraphAttentionLayer(nn.Module):
     def __init__(self, in_features, out_features, heads=8):
         super(GraphAttentionLayer, self).__init__()
 
-        # 输入输出通道数相同，保证不改变通道数
-        assert in_features == out_features, "in_features and out_features should be the same to preserve channel size"
-
-        # heads参数为多头注意力中的头数
-        self.heads = heads
+        self.heads = heads  # 设置多头注意力
         self.out_features = out_features
-        self.W = nn.Parameter(torch.Tensor(in_features, out_features))  # 权重矩阵
-        self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # 注意力参数
-        self.reset_parameters()
+        self.in_features = in_features
 
-    def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.W.size(1))
-        self.W.data.uniform_(-stdv, stdv)
-        self.a.data.uniform_(-stdv, stdv)
+        self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))  # 多头输出特征数
+        self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # 注意力系数
+        self.reset_parameters()
 
     def forward(self, h, adj):
         b, n, f = h.shape
-        print(f"Input h shape: {h.shape}")  # 打印输入的形状
+        print(f"Input h shape: {h.shape}")  # 打印输入形状
 
-        # 线性变换，将每个 head 的输入通过不同的权重矩阵映射
-        Wh = torch.matmul(h, self.W)  # [B, N, F]
+        # 线性变换
+        Wh = torch.matmul(h, self.W)  # [B, N, heads * F]
         print(f"Wh shape after linear transformation: {Wh.shape}")  # 打印 Wh 的形状
 
-        # 计算总元素数并确保目标形状符合
-        total_elements = Wh.numel()
-        expected_elements = b * n * self.heads * f
-        print(f"Wh total elements: {total_elements}, expected elements: {expected_elements}")
-
-        # 调整 Wh 形状
-        assert total_elements == expected_elements, f"Mismatch in element count: {total_elements} != {expected_elements}"
-
-        Wh = Wh.view(b, n, self.heads, f)  # 重塑为[B, N, heads, F]
+        # 确保特征数与头数兼容
+        f = self.out_features  # 每个头的特征数量
+        Wh = Wh.view(b, n, self.heads, f)  # 重新调整为 [B, N, heads, F]
         print(f"Wh shape after view: {Wh.shape}")  # 打印调整后的形状
 
-        # 计算 pairwise attention scores
+        # 计算注意力分数
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, heads, N, 2F]
@@ -125,6 +112,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = h_prime.view(b, n, -1)  # 拼接多个头的输出: [B, N, heads * F]
 
         return h_prime
+
 
 
 class AUwGCN(torch.nn.Module):
