@@ -98,6 +98,7 @@ class GraphAttentionLayer(nn.Module):
 
         # 对每个头进行注意力的参数初始化
         self.reset_parameters()
+        self.output_proj = nn.Linear(out_features * heads, in_features)  # 新增：调整输出回 in_features
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.W.size(1))
@@ -128,6 +129,8 @@ class GraphAttentionLayer(nn.Module):
 
         # 将多个头拼接
         h_prime = h_prime.view(h_prime.size(0), h_prime.size(1), -1)  # [B, N, F * heads]
+        # 新增线性投影，将输出调整为指定通道数
+        h_prime = self.output_proj(h_prime)  # [B, N, in_features]
 
         return h_prime
 
@@ -144,7 +147,8 @@ class AUwGCN(torch.nn.Module):
         in_dim = 192  # 24，保留输入通道数为192
 
         self.attention = GraphAttentionLayer(in_features=16, out_features=16)  # 调整 GraphAttentionLayer
-
+        # 这部分已经移到 __init__ 中
+        self.conv1d = torch.nn.Conv1d(in_channels=16, out_channels=in_dim, kernel_size=1, bias=False)
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
@@ -170,6 +174,11 @@ class AUwGCN(torch.nn.Module):
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
         x, adj = self.graph_embedding(x)  # 获取图卷积的输出和邻接矩阵
         x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
+
+        # 新增：适配 in_dim 的线性或卷积操作
+        x = x.permute(0, 2, 1)  # [B, N, F] -> [B, F, N]，适配 Conv1d
+        x = self.conv1d(x)  # 应用已定义的 Conv1d 层
+        x = x.permute(0, 2, 1)  # [B, F, N] -> [B, N, F]
 
         x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
         x = self._sequential(x)
