@@ -102,7 +102,13 @@ class GraphAttentionLayer(nn.Module):
         # 计算注意力分数
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
+
+        # 确保拼接前维度一致
+        print(f"Wh_repeat_1 shape: {Wh_repeat_1.shape}")
+        print(f"Wh_repeat_2 shape: {Wh_repeat_2.shape}")
+
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, heads, N, 2F]
+        print(f"a_input shape after concat: {a_input.shape}")  # 打印拼接后的形状
 
         # 计算注意力分数
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # e: [B, N, heads, N]
