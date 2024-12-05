@@ -81,6 +81,11 @@ class GraphAttentionLayer(nn.Module):
         self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # 注意力系数
         self.reset_parameters()
 
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.W.size(1))
+        self.W.data.uniform_(-stdv, stdv)
+        self.a.data.uniform_(-stdv, stdv)
+
     def forward(self, h, adj):
         b, n, f = h.shape
         print(f"Input h shape: {h.shape}")  # 打印输入形状
@@ -112,7 +117,6 @@ class GraphAttentionLayer(nn.Module):
         h_prime = h_prime.view(b, n, -1)  # 拼接多个头的输出: [B, N, heads * F]
 
         return h_prime
-
 
 
 class AUwGCN(torch.nn.Module):
@@ -166,6 +170,4 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
-
-
 
