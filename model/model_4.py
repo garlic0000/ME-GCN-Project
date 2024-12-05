@@ -95,10 +95,17 @@ class GraphAttentionLayer(nn.Module):
         self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))  # [in_features, out_features * heads]
         self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # [2 * out_features, 1]
 
+        # 调用 reset_parameters 来初始化权重
         self.reset_parameters()
 
-        # 输出投影，确保输出通道数符合要求
+        # 输出投影层
         self.output_proj = nn.Linear(out_features * heads, in_features)  # [F * heads, in_features]
+
+    def reset_parameters(self):
+        # 权重初始化
+        stdv = 1. / math.sqrt(self.W.size(1))
+        self.W.data.uniform_(-stdv, stdv)
+        self.a.data.uniform_(-stdv, stdv)
 
     def forward(self, h, adj):
         # h 的形状: [B, N, F]
