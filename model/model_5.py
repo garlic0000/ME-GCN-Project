@@ -10,12 +10,7 @@ import numpy as np
 关键更改：
 在model_4的基础上
 通道数不变：
-
-GCN 层堆叠：通过在 GCN 类中使用 ModuleList 添加多个 GraphConvolution 层，可以方便地增加或减少图卷积层的数量。
-
-批量归一化和激活函数：在每个卷积层后面添加了批量归一化（BatchNorm1d）和 ReLU 激活函数，以确保每层的输出被标准化并进行非线性变换。
-
-调整模型参数：例如，通过设置 num_layers=3 来增加 3 层 GCN，可以根据需要增加更多层次。
+调整模型参数：例如，通过设置 num_layers=2 来增加 2 层 GCN，可以根据需要增加更多层次。
 """
 
 class GraphConvolution(nn.Module):
