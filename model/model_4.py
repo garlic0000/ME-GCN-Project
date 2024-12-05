@@ -90,15 +90,24 @@ class GraphAttentionLayer(nn.Module):
 
     def forward(self, h, adj):
         b, n, f = h.shape
+        print(f"Input h shape: {h.shape}")  # 打印输入的形状
 
-        # 线性变换，将每个head的输入通过不同的权重矩阵映射
+        # 线性变换，将每个 head 的输入通过不同的权重矩阵映射
         Wh = torch.matmul(h, self.W)  # [B, N, F]
+        print(f"Wh shape after linear transformation: {Wh.shape}")  # 打印 Wh 的形状
+
+        # 计算总元素数并确保目标形状符合
+        total_elements = Wh.numel()
+        expected_elements = b * n * self.heads * f
+        print(f"Wh total elements: {total_elements}, expected elements: {expected_elements}")
+
+        # 调整 Wh 形状
+        assert total_elements == expected_elements, f"Mismatch in element count: {total_elements} != {expected_elements}"
+
         Wh = Wh.view(b, n, self.heads, f)  # 重塑为[B, N, heads, F]
+        print(f"Wh shape after view: {Wh.shape}")  # 打印调整后的形状
 
-        # 确保 Wh 的形状符合预期
-        assert Wh.shape == (b, n, self.heads, f), f"Expected shape: {[b, n, self.heads, f]}, but got: {Wh.shape}"
-
-        # 计算pairwise attention scores
+        # 计算 pairwise attention scores
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, heads, N, 2F]
