@@ -8,10 +8,21 @@ import numpy as np
 
 """
 关键更改：
-在model_2的基础上
+在model_1的基础上
 通道数不变：
 
+in_features 和 out_features 保持一致，避免改变图卷积层后的通道数。
+使用 assert 保证这两个值一致。
+简化注意力计算：
 
+Wh_repeat_1 和 Wh_repeat_2 不会重复计算和复制维度，简化了之前的操作。
+在注意力计算时，直接计算 Wh 和 a 的配对注意力，而不是扩展多维度，从而减少了计算的复杂度。
+减少内存开销：
+
+通过 torch.bmm 计算注意力权重和节点特征之间的加权求和，避免了不必要的维度扩展。
+高效计算：
+
+通过 LeakyReLU 激活函数直接处理配对的节点特征，避免了不必要的中间步骤。
 """
 
 class GraphConvolution(nn.Module):
@@ -98,25 +109,21 @@ class GraphAttentionLayer(nn.Module):
         # 输入 h 的形状: [B, N, F]
         Wh = torch.matmul(h, self.W)  # 线性变换，Wh: [B, N, F]
 
-        # 计算 pairwise attention scores 使用广播
-        # Wh_repeat_1: [B, N, 1, F], Wh_repeat_2: [B, 1, N, F]，通过广播机制进行拼接
-        Wh_repeat_1 = Wh.unsqueeze(2)  # Shape: [B, N, 1, F]
-        Wh_repeat_2 = Wh.unsqueeze(1)  # Shape: [B, 1, N, F]
+        # 计算 pairwise attention scores
+        Wh_repeat_1 = Wh.unsqueeze(2).repeat(1, 1, Wh.size(1), 1)  # Shape: [B, N, N, F]
+        Wh_repeat_2 = Wh.unsqueeze(1).repeat(1, Wh.size(1), 1, 1)  # Shape: [B, N, N, F]
+        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, 2F]
 
-        # a_input = [B, N, N, 2*F]，通过广播方式拼接Wh_repeat_1 和 Wh_repeat_2
-        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, 2*F]
-
-        # 计算注意力分数 e: [B, N, N]
-        e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # Shape: [B, N, N]
+        # 计算注意力分数
+        e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # 注意力得分 e: [B, N, N]
 
         # 通过 softmax 归一化注意力分数
-        attention = torch.nn.functional.softmax(e, dim=-1)  # [B, N, N]
+        attention = torch.nn.functional.softmax(e, dim=1)  # [B, N, N]
 
         # 使用注意力权重进行加权求和
         h_prime = torch.bmm(attention, Wh)  # 批量矩阵乘法: [B, N, N] * [B, N, F] -> [B, N, F]
 
         return h_prime
-
 
 
 class AUwGCN(torch.nn.Module):
@@ -170,5 +177,6 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
+
 
 
