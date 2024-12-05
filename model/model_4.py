@@ -127,10 +127,8 @@ class GraphAttentionLayer(nn.Module):
         h_prime = torch.bmm(attention.view(-1, attention.size(1), attention.size(2)),
                             Wh.view(-1, Wh.size(1), Wh.size(3)))  # [B, N, F * heads]
 
-        h_prime = h_prime.view(h_prime.size(0), h_prime.size(1), self.heads, -1)  # Reshape: [B, N, heads, F]
-
-        # 将多个头拼接
-        h_prime = h_prime.view(h_prime.size(0), h_prime.size(1), -1)  # [B, N, F * heads]
+        # 注意：此处不需要再次 reshape，因为已经有正确的形状
+        h_prime = h_prime.view(h_prime.size(0), h_prime.size(1), -1)  # [B, N, heads * F]
 
         # 调试输出 h_prime 的形状
         print("Shape of h_prime before output_proj:", h_prime.shape)
@@ -139,10 +137,6 @@ class GraphAttentionLayer(nn.Module):
         h_prime = self.output_proj(h_prime)  # [B, N, in_features]
 
         return h_prime
-
-
-
-
 
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
