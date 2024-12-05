@@ -73,19 +73,30 @@ class GraphConvolution(nn.Module):
 
 
 class GCN(nn.Module):
-    def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
+    def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_layers=3):
         super(GCN, self).__init__()
 
-        self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
-        self.bn1 = nn.BatchNorm1d(nhid)
+        self.num_layers = num_layers
+        self.gc_layers = nn.ModuleList()
+
+        # 添加多个图卷积层
+        for i in range(num_layers):
+            in_features = nfeat if i == 0 else nhid
+            out_features = nhid if i < num_layers - 1 else nout
+            self.gc_layers.append(GraphConvolution(in_features, out_features, mat_path))
+
+        self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
     def forward(self, x):
-        x = self.gc1(x)
-        x = x.transpose(1, 2).contiguous()
-        x = self.bn1(x).transpose(1, 2).contiguous()
-        x = F.relu(x)
+        # 按层逐步传递图卷积的输出
+        for i in range(self.num_layers):
+            x = self.gc_layers[i](x)
+            if i < self.num_layers - 1:
+                x = x.transpose(1, 2).contiguous()  # [B, N, F] -> [B, F, N]
+                x = self.bn_layers[i](x).transpose(1, 2).contiguous()
+                x = F.relu(x)
 
-        return x, self.gc1.adj  # 返回图的邻接矩阵 adj
+        return x, self.gc_layers[-1].adj  # 返回最后一层的图卷积结果和邻接矩阵
 
 
 class GraphAttentionLayer(nn.Module):
@@ -133,9 +144,10 @@ class AUwGCN(torch.nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
+        # 这里增加了更多的GCN层
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path, num_layers=3))
 
-        in_dim = 192  # 24，保留输入通道数为192
+        in_dim = 192  # 保留输入通道数为192
 
         self.attention = GraphAttentionLayer(in_features=16, out_features=16)  # 调整 GraphAttentionLayer
 
