@@ -73,12 +73,13 @@ class GraphAttentionLayer(nn.Module):
     def __init__(self, in_features, out_features, heads=8):
         super(GraphAttentionLayer, self).__init__()
 
-        self.heads = heads  # 设置多头注意力
+        self.heads = heads
         self.out_features = out_features
         self.in_features = in_features
 
-        self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))  # 多头输出特征数
-        self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # 注意力系数
+        # 线性变换
+        self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))
+        self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -88,53 +89,27 @@ class GraphAttentionLayer(nn.Module):
 
     def forward(self, h, adj):
         b, n, f = h.shape
-        print(f"Input h shape: {h.shape}")  # 打印输入形状
 
-        # 线性变换
+        # 线性变换：Wh
         Wh = torch.matmul(h, self.W)  # [B, N, heads * F]
-        print(f"Wh shape after linear transformation: {Wh.shape}")  # 打印 Wh 的形状
+        Wh = Wh.view(b, n, self.heads, self.out_features)  # [B, N, heads, F]
 
-        # 确保特征数与头数兼容
-        f = self.out_features  # 每个头的特征数量
-        Wh = Wh.view(b, n, self.heads, f)  # 重新调整为 [B, N, heads, F]
-        print(f"Wh shape after view: {Wh.shape}")  # 打印调整后的形状
+        # 计算注意力系数
+        Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # [B, N, heads, N, F]
+        Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # [B, N, heads, N, F]
 
-        # 计算注意力分数
-        Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
-        Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
+        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # [B, N, N, heads, 2F]
 
-        print(f"Wh_repeat_1 shape: {Wh_repeat_1.shape}")  # 打印 Wh_repeat_1 的形状
-        print(f"Wh_repeat_2 shape: {Wh_repeat_2.shape}")  # 打印 Wh_repeat_2 的形状
+        e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # [B, N, heads, N]
 
-        # 确保拼接前维度匹配
-        # 调整维度，确保拼接时匹配
-        Wh_repeat_1 = Wh_repeat_1.permute(0, 1, 3, 2, 4)  # [B, N, N, heads, F]
-        Wh_repeat_2 = Wh_repeat_2.permute(0, 1, 3, 2, 4)  # [B, N, N, heads, F]
-
-        print(f"Wh_repeat_1 permuted shape: {Wh_repeat_1.shape}")
-        print(f"Wh_repeat_2 permuted shape: {Wh_repeat_2.shape}")
-
-        # 确保拼接时，所有维度都匹配
-        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, heads, 2F]
-        print(f"a_input shape after concat: {a_input.shape}")  # 打印拼接后的形状
-
-        # 计算注意力分数
-        e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # e: [B, N, heads, N]
-
-        # 通过 softmax 归一化注意力分数
+        # Softmax to normalize attention
         attention = torch.nn.functional.softmax(e, dim=-1)  # [B, N, heads, N]
 
-        # 使用注意力权重进行加权求和
-        h_prime = torch.matmul(attention, Wh)  # 批量矩阵乘法: [B, N, heads, N] * [B, N, heads, F] -> [B, N, heads, F]
-
-        # 拼接多个头的输出
-        h_prime = h_prime.view(b, n, -1)  # 拼接多个头的输出: [B, N, heads * F]
+        # 计算每个节点的新表示
+        h_prime = torch.matmul(attention, Wh)  # [B, N, heads, F]
+        h_prime = h_prime.view(b, n, -1)  # [B, N, heads * F]
 
         return h_prime
-
-
-
-
 
 
 class AUwGCN(torch.nn.Module):
