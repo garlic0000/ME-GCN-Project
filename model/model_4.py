@@ -6,6 +6,7 @@ import math
 import os
 import numpy as np
 
+
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -70,7 +71,7 @@ class GCN(nn.Module):
 
 
 class GraphAttentionLayer(nn.Module):
-    def __init__(self, in_features, out_features, heads=8):
+    def __init__(self, in_features, out_features, heads=12):
         super(GraphAttentionLayer, self).__init__()
 
         self.heads = heads
@@ -119,12 +120,15 @@ class AUwGCN(torch.nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
+        # Graph Convolution 层
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
 
-        in_dim = 192  # 保持输入通道数为192
+        in_dim = 192  # 更新为192，匹配图注意力层的输出维度
 
-        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # 调整 GraphAttentionLayer
+        # Graph Attention 层
+        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=12)  # heads=12，输出192
 
+        # 处理图卷积后输出的特征
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
@@ -139,21 +143,22 @@ class AUwGCN(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
         )
 
-        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2,
-                                               bias=False)
+        # 分类层
+        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False)
 
+        # 权重初始化
         self._init_weight()
 
     def forward(self, x):
         b, t, n, c = x.shape
 
-        x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        x, adj = self.graph_embedding(x)  # 获取图卷积的输出和邻接矩阵
-        x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
+        x = x.reshape(b * t, n, c)  # 将输入形状调整为 (b*t, n, c)
+        x, adj = self.graph_embedding(x)  # 获取图卷积输出和邻接矩阵
+        x = self.attention(x, adj)  # 通过图注意力层
 
-        x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
-        x = self._sequential(x)
-        x = self._classification(x)
+        x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度为 (b, t, -1) 然后转置
+        x = self._sequential(x)  # 通过卷积层处理
+        x = self._classification(x)  # 最终的分类层
 
         return x
 
@@ -163,4 +168,3 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
-
