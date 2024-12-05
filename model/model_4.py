@@ -123,7 +123,7 @@ class AUwGCN(torch.nn.Module):
         # Graph Convolution 层
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
 
-        in_dim = 192  # 更新为192，匹配图注意力层的输出维度
+        in_dim = 128  # 修改 in_dim 为 128
 
         # Graph Attention 层
         self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=12)  # heads=12，输出192
