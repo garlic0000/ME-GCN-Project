@@ -71,7 +71,7 @@ class GCN(nn.Module):
 
 
 class GraphAttentionLayer(nn.Module):
-    def __init__(self, in_features, out_features, heads=12):
+    def __init__(self, in_features, out_features, heads=8):
         super(GraphAttentionLayer, self).__init__()
 
         self.heads = heads
@@ -126,7 +126,7 @@ class AUwGCN(torch.nn.Module):
         in_dim = 128  # 修改 in_dim 为 128
 
         # Graph Attention 层
-        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=12)  # heads=12，输出192
+        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # heads=12，输出192
 
         # 处理图卷积后输出的特征
         self._sequential = torch.nn.Sequential(
