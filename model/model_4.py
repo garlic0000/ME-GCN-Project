@@ -103,9 +103,10 @@ class GraphAttentionLayer(nn.Module):
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
 
-        # 解决拼接时维度不匹配的问题
-        # 我们确保 Wh_repeat_1 和 Wh_repeat_2 在维度 3 和 4 上可以正确拼接
-        # 调整 Wh_repeat_1 和 Wh_repeat_2 的大小，以便在 dim=-1 上拼接
+        print(f"Wh_repeat_1 shape: {Wh_repeat_1.shape}")  # 打印 Wh_repeat_1 的形状
+        print(f"Wh_repeat_2 shape: {Wh_repeat_2.shape}")  # 打印 Wh_repeat_2 的形状
+
+        # 调整维度顺序，确保它们在拼接时没有冲突
         Wh_repeat_1 = Wh_repeat_1.permute(0, 1, 3, 2, 4)  # 调整为 [B, N, N, heads, F]
         Wh_repeat_2 = Wh_repeat_2.permute(0, 1, 3, 2, 4)  # 调整为 [B, N, N, heads, F]
 
@@ -126,6 +127,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = h_prime.view(b, n, -1)  # 拼接多个头的输出: [B, N, heads * F]
 
         return h_prime
+
 
 
 
