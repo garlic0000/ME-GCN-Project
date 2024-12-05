@@ -132,6 +132,9 @@ class GraphAttentionLayer(nn.Module):
         # 将多个头拼接
         h_prime = h_prime.view(h_prime.size(0), h_prime.size(1), -1)  # [B, N, F * heads]
 
+        # 调试输出 h_prime 的形状
+        print("Shape of h_prime before output_proj:", h_prime.shape)
+
         # 使用线性层进行通道调整
         h_prime = self.output_proj(h_prime)  # [B, N, in_features]
 
