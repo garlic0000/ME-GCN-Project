@@ -86,42 +86,37 @@ class GraphAttentionLayer(nn.Module):
     def __init__(self, in_features, out_features, heads=8, dropout=0.6):
         super(GraphAttentionLayer, self).__init__()
 
-        # 输入输出通道数相同，保证不改变通道数
         assert in_features == out_features, "in_features and out_features should be the same to preserve channel size"
 
         self.heads = heads
         self.dropout = dropout
 
-        # 为多头注意力准备多个权重矩阵 W
+        # 多头注意力的权重矩阵 W
         self.W = nn.Parameter(torch.Tensor(in_features, out_features * heads))  # [in_features, out_features * heads]
         self.a = nn.Parameter(torch.Tensor(2 * out_features, 1))  # [2 * out_features, 1]
 
-        # 对每个头进行注意力的参数初始化
         self.reset_parameters()
-        self.output_proj = nn.Linear(out_features * heads, in_features)  # 新增：调整输出回 in_features
 
-    def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.W.size(1))
-        self.W.data.uniform_(-stdv, stdv)
-        self.a.data.uniform_(-stdv, stdv)
+        # 输出投影，确保输出通道数符合要求
+        self.output_proj = nn.Linear(out_features * heads, in_features)  # [F * heads, in_features]
 
     def forward(self, h, adj):
-        # 输入 h 的形状: [B, N, F]
+        # h 的形状: [B, N, F]
         Wh = torch.matmul(h, self.W)  # Wh: [B, N, F * heads]
-        Wh = Wh.view(Wh.size(0), Wh.size(1), self.heads, -1)  # 重塑为 [B, N, heads, F]
+        Wh = Wh.view(Wh.size(0), Wh.size(1), self.heads, -1)  # [B, N, heads, F]
 
         # 计算 pairwise attention scores
-        Wh_repeat_1 = Wh.unsqueeze(2).repeat(1, 1, Wh.size(1), 1, 1)  # Shape: [B, N, N, heads, F]
-        Wh_repeat_2 = Wh.unsqueeze(1).repeat(1, Wh.size(1), 1, 1, 1)  # Shape: [B, N, N, heads, F]
-        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, heads, 2F]
+        Wh_repeat_1 = Wh.unsqueeze(2).repeat(1, 1, Wh.size(1), 1, 1)  # [B, N, N, heads, F]
+        Wh_repeat_2 = Wh.unsqueeze(1).repeat(1, Wh.size(1), 1, 1, 1)  # [B, N, N, heads, F]
+        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # [B, N, N, heads, 2F]
 
         # 计算注意力分数
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # e: [B, N, N, heads]
 
-        # 通过 softmax 归一化注意力分数
+        # 归一化注意力分数
         attention = torch.nn.functional.softmax(e, dim=1)  # attention: [B, N, N, heads]
 
-        # 使用注意力权重进行加权求和
+        # 使用注意力进行加权求和
         h_prime = torch.bmm(attention.view(-1, attention.size(1), attention.size(2)),
                             Wh.view(-1, Wh.size(1), Wh.size(3)))  # [B, N, F * heads]
 
@@ -129,7 +124,8 @@ class GraphAttentionLayer(nn.Module):
 
         # 将多个头拼接
         h_prime = h_prime.view(h_prime.size(0), h_prime.size(1), -1)  # [B, N, F * heads]
-        # 新增线性投影，将输出调整为指定通道数
+
+        # 使用线性层进行通道调整
         h_prime = self.output_proj(h_prime)  # [B, N, in_features]
 
         return h_prime
