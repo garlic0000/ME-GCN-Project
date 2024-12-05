@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import Parameter
-import numpy as np
+from torch.nn.parameter import Parameter
 import math
 import os
+import numpy as np
 
 class GraphConvolution(nn.Module):
     """
@@ -53,6 +53,22 @@ class GraphConvolution(nn.Module):
             + str(self.out_features) + ')'
 
 
+class GCN(nn.Module):
+    def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
+        super(GCN, self).__init__()
+
+        self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
+        self.bn1 = nn.BatchNorm1d(nhid)
+
+    def forward(self, x):
+        x = self.gc1(x)
+        x = x.transpose(1, 2).contiguous()
+        x = self.bn1(x).transpose(1, 2).contiguous()
+        x = F.relu(x)
+
+        return x, self.gc1.adj  # 返回图的邻接矩阵 adj
+
+
 class GraphAttentionLayer(nn.Module):
     def __init__(self, in_features, out_features, heads=8):
         super(GraphAttentionLayer, self).__init__()
@@ -79,6 +95,9 @@ class GraphAttentionLayer(nn.Module):
         Wh = torch.matmul(h, self.W)  # [B, N, F]
         Wh = Wh.view(b, n, self.heads, f)  # 重塑为[B, N, heads, F]
 
+        # 确保 Wh 的形状符合预期
+        assert Wh.shape == (b, n, self.heads, f), f"Expected shape: {[b, n, self.heads, f]}, but got: {Wh.shape}"
+
         # 计算pairwise attention scores
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
@@ -99,25 +118,10 @@ class GraphAttentionLayer(nn.Module):
         return h_prime
 
 
-class GCN(nn.Module):
-    def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
-        super(GCN, self).__init__()
-
-        self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
-        self.bn1 = nn.BatchNorm1d(nhid)
-
-    def forward(self, x):
-        x = self.gc1(x)
-        x = x.transpose(1, 2).contiguous()
-        x = self.bn1(x).transpose(1, 2).contiguous()
-        x = F.relu(x)
-
-        return x, self.gc1.adj  # 返回图的邻接矩阵 adj
-
-
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
+        # 服务器测试路径
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
@@ -125,7 +129,7 @@ class AUwGCN(torch.nn.Module):
 
         in_dim = 192  # 保持输入通道数为192
 
-        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # 使用多头注意力层
+        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # 调整 GraphAttentionLayer
 
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
@@ -165,5 +169,6 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
+
 
 
