@@ -8,21 +8,10 @@ import numpy as np
 
 """
 关键更改：
-在model_1的基础上
+在model_2的基础上
 通道数不变：
 
-in_features 和 out_features 保持一致，避免改变图卷积层后的通道数。
-使用 assert 保证这两个值一致。
-简化注意力计算：
 
-Wh_repeat_1 和 Wh_repeat_2 不会重复计算和复制维度，简化了之前的操作。
-在注意力计算时，直接计算 Wh 和 a 的配对注意力，而不是扩展多维度，从而减少了计算的复杂度。
-减少内存开销：
-
-通过 torch.bmm 计算注意力权重和节点特征之间的加权求和，避免了不必要的维度扩展。
-高效计算：
-
-通过 LeakyReLU 激活函数直接处理配对的节点特征，避免了不必要的中间步骤。
 """
 
 class GraphConvolution(nn.Module):
