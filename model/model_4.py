@@ -98,8 +98,9 @@ class GraphAttentionLayer(nn.Module):
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # [B, N, heads, N, out_features]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # [B, N, heads, N, out_features]
 
-        # 确保 Wh_repeat_1 和 Wh_repeat_2 在最后一个维度 (out_features) 上是对齐的
-        assert Wh_repeat_1.size(4) == Wh_repeat_2.size(4), "Features dimension mismatch"
+        # 检查 Wh_repeat_1 和 Wh_repeat_2 的形状是否一致
+        assert Wh_repeat_1.shape[4] == Wh_repeat_2.shape[4], \
+            f"Feature dimension mismatch: {Wh_repeat_1.shape[4]} != {Wh_repeat_2.shape[4]}"
 
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # [B, N, heads, N, 2*out_features]
 
@@ -113,6 +114,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = h_prime.view(b, n, -1)  # [B, N, heads * out_features]
 
         return h_prime  # 返回的是 [B, N, heads * out_features]
+
 
 
 class AUwGCN(torch.nn.Module):
