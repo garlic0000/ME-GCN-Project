@@ -103,11 +103,14 @@ class GraphAttentionLayer(nn.Module):
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # Shape: [B, N, heads, N, F]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # Shape: [B, N, heads, N, F]
 
-        # 确保拼接前维度一致
-        print(f"Wh_repeat_1 shape: {Wh_repeat_1.shape}")
-        print(f"Wh_repeat_2 shape: {Wh_repeat_2.shape}")
+        # 解决拼接时维度不匹配的问题
+        # 我们确保 Wh_repeat_1 和 Wh_repeat_2 在维度 3 和 4 上可以正确拼接
+        # 调整 Wh_repeat_1 和 Wh_repeat_2 的大小，以便在 dim=-1 上拼接
+        Wh_repeat_1 = Wh_repeat_1.permute(0, 1, 3, 2, 4)  # 调整为 [B, N, N, heads, F]
+        Wh_repeat_2 = Wh_repeat_2.permute(0, 1, 3, 2, 4)  # 调整为 [B, N, N, heads, F]
 
-        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, heads, N, 2F]
+        # 确保拼接时，所有维度都匹配
+        a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, heads, 2F]
         print(f"a_input shape after concat: {a_input.shape}")  # 打印拼接后的形状
 
         # 计算注意力分数
@@ -123,6 +126,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = h_prime.view(b, n, -1)  # 拼接多个头的输出: [B, N, heads * F]
 
         return h_prime
+
 
 
 class AUwGCN(torch.nn.Module):
