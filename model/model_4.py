@@ -106,9 +106,13 @@ class GraphAttentionLayer(nn.Module):
         print(f"Wh_repeat_1 shape: {Wh_repeat_1.shape}")  # 打印 Wh_repeat_1 的形状
         print(f"Wh_repeat_2 shape: {Wh_repeat_2.shape}")  # 打印 Wh_repeat_2 的形状
 
-        # 调整维度顺序，确保它们在拼接时没有冲突
+        # 确保拼接前维度匹配
+        # 维度调整：保持维度一致，保证拼接时匹配
         Wh_repeat_1 = Wh_repeat_1.permute(0, 1, 3, 2, 4)  # 调整为 [B, N, N, heads, F]
         Wh_repeat_2 = Wh_repeat_2.permute(0, 1, 3, 2, 4)  # 调整为 [B, N, N, heads, F]
+
+        print(f"Wh_repeat_1 permuted shape: {Wh_repeat_1.shape}")
+        print(f"Wh_repeat_2 permuted shape: {Wh_repeat_2.shape}")
 
         # 确保拼接时，所有维度都匹配
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # Shape: [B, N, N, heads, 2F]
@@ -127,6 +131,7 @@ class GraphAttentionLayer(nn.Module):
         h_prime = h_prime.view(b, n, -1)  # 拼接多个头的输出: [B, N, heads * F]
 
         return h_prime
+
 
 
 
