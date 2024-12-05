@@ -6,7 +6,6 @@ import math
 import os
 import numpy as np
 
-
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -99,6 +98,9 @@ class GraphAttentionLayer(nn.Module):
         Wh_repeat_1 = Wh.unsqueeze(3).repeat(1, 1, 1, n, 1)  # [B, N, heads, N, out_features]
         Wh_repeat_2 = Wh.unsqueeze(2).repeat(1, 1, n, 1, 1)  # [B, N, heads, N, out_features]
 
+        # 确保 Wh_repeat_1 和 Wh_repeat_2 在最后一个维度 (out_features) 上是对齐的
+        assert Wh_repeat_1.size(4) == Wh_repeat_2.size(4), "Features dimension mismatch"
+
         a_input = torch.cat([Wh_repeat_1, Wh_repeat_2], dim=-1)  # [B, N, heads, N, 2*out_features]
 
         e = F.leaky_relu(torch.matmul(a_input, self.a).squeeze(-1))  # [B, N, heads, N]
@@ -123,11 +125,10 @@ class AUwGCN(torch.nn.Module):
         # Graph Convolution 层
         self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path))
 
-        # 输入维度修改为128
-        in_dim = 128
+        in_dim = 128  # 修改 in_dim 为 128
 
         # Graph Attention 层
-        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # heads=8
+        self.attention = GraphAttentionLayer(in_features=16, out_features=16, heads=8)  # heads=8，输出128
 
         # 处理图卷积后输出的特征
         self._sequential = torch.nn.Sequential(
@@ -147,6 +148,7 @@ class AUwGCN(torch.nn.Module):
         # 分类层
         self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False)
 
+        # 权重初始化
         self._init_weight()
 
     def forward(self, x):
