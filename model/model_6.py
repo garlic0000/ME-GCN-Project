@@ -96,8 +96,8 @@ class GCN(nn.Module):
         print("After adjust_input:", x.shape)
 
         # 转换形状为适应 Conv1d
-        x = x.unsqueeze(2)  # 添加一个维度，以便与 Conv1d 适配，即 [batch_size, channels, length]
-        print("After unsqueeze:", x.shape)
+        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]
+        print("After permute:", x.shape)
 
         # 经过卷积层
         x = self.conv1d_layer(x)
