@@ -5,17 +5,6 @@ import math
 import numpy as np
 import os
 
-"""
-关键更改：
-在model_5的基础上
-通道数不变：
-残差连接：避免梯度消失，提升训练效果。
-多头注意力机制：增强了模型的稳定性和表达能力。
-邻接矩阵正则化：通过自连接和归一化提高了训练的稳定性。
-输入数据的形状调整：保证输入数据符合模型的要求 (B, T, N, C)。
-"""
-
-
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -25,7 +14,6 @@ class GraphConvolution(nn.Module):
         features: N x C (n = # nodes), C = in_features
         adj: adjacency matrix (N x N)
     """
-
     def __init__(self, in_features, out_features, mat_path, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
