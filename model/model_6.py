@@ -14,6 +14,7 @@ class GraphConvolution(nn.Module):
         features: N x C (n = # nodes), C = in_features
         adj: adjacency matrix (N x N)
     """
+
     def __init__(self, in_features, out_features, mat_path, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
@@ -36,9 +37,14 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
-        # Adjust weight shape to [B, F, O] where B is batch size
+        # 调整权重的形状为 [B, F, O]
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
+
         print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
+
+        # 如果需要调整输入的特征数，可以添加转换层
+        if f != self.in_features:  # 特征数不匹配时进行调整
+            input = input.view(b, n, self.in_features)
 
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
@@ -50,12 +56,6 @@ class GraphConvolution(nn.Module):
             return output + self.bias  # Shape: [B, N, O]
         else:
             return output
-
-    def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-            + str(self.in_features) + ' -> ' \
-            + str(self.out_features) + ')'
-
 
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_layers=2):
