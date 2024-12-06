@@ -102,6 +102,7 @@ class GCN(nn.Module):
         # 经过卷积层
         x = self.conv1d_layer(x)
 
+        # 进入图卷积层
         for i in range(self.num_layers):
             x = self.gc_layers[i](x)
 
@@ -121,6 +122,7 @@ class GCN(nn.Module):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
         linear = nn.Linear(residual.shape[-1], target_dim).to(device)
         return linear(residual)
+
 
 
 
