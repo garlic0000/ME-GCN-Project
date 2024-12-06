@@ -47,14 +47,14 @@ class GraphConvolution(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input):
-        b, n, c = input.shape
-        # 调整 weight 的形状，使其适应 batch size
+        b, n, f = input.shape  # B: batch size, N: nodes, F: features
+        # Adjust weight shape to [B, F, O] where B is batch size
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
 
-        # Apply weight to the input
+        # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
 
-        # 通过邻接矩阵计算卷积
+        # Apply adjacency matrix multiplication
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
 
         if self.bias is not None:
