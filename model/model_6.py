@@ -74,8 +74,8 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 修改：调整为正确的输入维度
-        self.adjust_input = nn.Linear(24, 192)  # 原来是 6480 -> 24
+        # 调整为正确的输入维度
+        self.adjust_input = nn.Linear(24, 192)  # 以前是 6480 -> 24
 
         # 用一个卷积层来处理调整后的输入
         self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
@@ -122,6 +122,7 @@ class GCN(nn.Module):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
         linear = nn.Linear(residual.shape[-1], target_dim).to(device)
         return linear(residual)
+
 
 
 
