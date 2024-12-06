@@ -86,7 +86,12 @@ class GCN(nn.Module):
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
+        # 确保输出的维度和输入维度一致
+        if residual.shape[-1] != x.shape[-1]:
+            residual = residual[:, :, :x.shape[-1]]  # 调整 residual 维度以匹配 x 的维度
+
         return x + residual, self.gc_layers[-1].adj  # 输出时添加残差连接
+
 
 
 class GraphAttentionLayer(nn.Module):
