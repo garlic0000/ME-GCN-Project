@@ -81,6 +81,8 @@ class GCN(nn.Module):
         residual = x  # 保存输入，用于残差连接
         for i in range(self.num_layers):
             x = self.gc_layers[i](x)
+
+            # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
             if i < self.num_layers - 1:
                 x = x.transpose(1, 2).contiguous()
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
@@ -88,10 +90,14 @@ class GCN(nn.Module):
 
         # 确保输出的维度和输入维度一致
         if residual.shape[-1] != x.shape[-1]:
-            residual = residual[:, :, :x.shape[-1]]  # 调整 residual 维度以匹配 x 的维度
+            residual = self._adjust_residual(residual, x.shape[-1])  # 调整 residual 维度以匹配 x 的维度
 
         return x + residual, self.gc_layers[-1].adj  # 输出时添加残差连接
 
+    def _adjust_residual(self, residual, target_dim):
+        # 使用线性层调整 residual 的维度以匹配 target_dim
+        linear = nn.Linear(residual.shape[-1], target_dim)
+        return linear(residual)
 
 
 class GraphAttentionLayer(nn.Module):
