@@ -38,14 +38,15 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
-        # 调整权重的形状为 [B, F, O]
+
+        # 修复输入形状，确保与图卷积层的输入特征匹配
+        if f != self.in_features:
+            # 修改 reshape 操作，以匹配正确的输入特征数
+            input = input.view(b, n, self.in_features)  # **修改点：确保输入特征数与in_features匹配**
+
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
 
         print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
-
-        # 如果需要调整输入的特征数，可以添加转换层
-        if f != self.in_features:  # 特征数不匹配时进行调整
-            input = input.view(b, n, self.in_features)  # 修改了这里，确保输入维度正确
 
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
@@ -57,6 +58,7 @@ class GraphConvolution(nn.Module):
             return output + self.bias  # Shape: [B, N, O]
         else:
             return output
+
 
 
 class GCN(nn.Module):
@@ -88,7 +90,7 @@ class GCN(nn.Module):
 
         # 处理 4D 输入 [batch_size, nodes, features, extra_dim]
         b, n, f, _ = x.shape  # 这里我们假设 extra_dim 是一个额外的维度
-        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]  # **修改点：这里修改了维度展开的方式**
+        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
 
         # 打印展开后的形状
         print("After flattening:", x.shape)  # 打印展平后的形状
@@ -97,9 +99,7 @@ class GCN(nn.Module):
         print("After adjust_input:", x.shape)  # 打印调整后的形状
 
         # 转换形状为适应 Conv1d
-        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]  # **修改点：permute 用来调整维度以适应卷积层**
-
-        # 打印 permute 后的形状
+        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]
         print("After permute:", x.shape)  # 打印 permute 后的形状
 
         # 经过卷积层
@@ -113,7 +113,7 @@ class GCN(nn.Module):
 
             # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
             if i < self.num_layers - 1:
-                x = x.transpose(1, 2).contiguous()  # **修改点：确保 BatchNorm 输入正确**
+                x = x.transpose(1, 2).contiguous()  # **确保 BatchNorm 输入正确**
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
@@ -125,6 +125,7 @@ class GCN(nn.Module):
             residual = self._adjust_residual(residual, x.shape[-1], x.device)
 
         return x + residual
+
 
     def _adjust_residual(self, residual, target_dim, device):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
