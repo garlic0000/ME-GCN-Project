@@ -42,6 +42,9 @@ class GraphConvolution(nn.Module):
         # 调试信息：打印邻接矩阵的形状
         print(f"Adjacency matrix shape: {self.adj.shape}")
 
+        # Ensure the input is in the correct shape for matrix multiplication
+        input = input.view(b, n, f)  # Ensure input is [B, N, F]
+
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
 
@@ -69,8 +72,7 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 修改：调整为正确的输入维度
-        self.adjust_input = nn.Linear(24, 192)  # 原来是 6480 -> 24
+        self.adjust_input = nn.Linear(24, 192)  # Adjust the input dimensions from 24 to 192
 
         # 用一个卷积层来处理调整后的输入
         self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
