@@ -77,8 +77,8 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 这里确保输入维度匹配
-        self.adjust_input = nn.Linear(768, 192)  # 这里的 768 要与输入的第二维匹配
+        # 调整输入层的线性层：根据 `x` 的实际维度来设置
+        self.adjust_input = nn.Linear(24, 192)  # 假设 `x` 的第二维是 24
 
         # 用一个卷积层来处理调整后的输入
         self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
