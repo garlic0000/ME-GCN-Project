@@ -7,20 +7,11 @@ import os
 
 
 class GraphConvolution(nn.Module):
-    """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    Param:
-        in_features, out_features, bias
-    Input:
-        features: N x C (n = # nodes), C = in_features
-        adj: adjacency matrix (N x N)
-    """
-
     def __init__(self, in_features, out_features, mat_path, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))  # no weight_norm
+        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))
         if bias:
             self.bias = nn.Parameter(torch.Tensor(out_features))
         else:
@@ -38,27 +29,34 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
+        # 检查输入的形状
+        print(f"Before reshape: input shape = {input.shape}")
 
-        # 修复输入形状，确保与图卷积层的输入特征匹配
+        # 你可以选择合适的方式进行调整：确保 input 的特征数与 self.in_features 一致
         if f != self.in_features:
-            # 修改 reshape 操作，以匹配正确的输入特征数
-            input = input.view(b, n, self.in_features)  # **修改点：确保输入特征数与in_features匹配**
+            print(f"Adjusting input shape from {f} to {self.in_features}")
+            # 假设我们将其 reshape 成一个兼容的形状
+            input = input.view(b, n, self.in_features)  # Modify this line to match correct shape
 
-        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
+        # 打印调整后的形状
+        print(f"After reshape: input shape = {input.shape}")
 
-        print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
+        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)
 
-        # Apply weight to the input: B x N x F * B x F x O
-        support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
+        # 打印权重形状
+        print(f"Weight shape: {weight.shape}")
 
-        # Apply adjacency matrix multiplication
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
+        support = torch.bmm(input, weight)
+
+        # 打印中间结果形状
+        print(f"Support shape: {support.shape}")
+
+        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
 
         if self.bias is not None:
-            return output + self.bias  # Shape: [B, N, O]
+            return output + self.bias
         else:
             return output
-
 
 
 class GCN(nn.Module):
@@ -68,7 +66,7 @@ class GCN(nn.Module):
         self.num_layers = num_layers
         self.gc_layers = nn.ModuleList()
 
-        # 添加多个图卷积层
+        # 添加图卷积层
         for i in range(num_layers):
             in_features = nfeat if i == 0 else nhid
             out_features = nhid if i < num_layers - 1 else nout
@@ -76,48 +74,47 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 调整为正确的输入维度
+        # 调整输入特征的维度
         self.adjust_input = nn.Linear(24, 192)  # 以前是 6480 -> 24
 
-        # 用一个卷积层来处理调整后的输入
+        # 使用卷积层来处理调整后的输入
         self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
 
     def forward(self, x):
-        residual = x  # 保存输入，用于残差连接
+        residual = x  # 保存输入用于残差连接
 
         # 打印输入的形状
-        print("Before adjust_input:", x.shape)  # 打印输入形状
+        print("Before adjust_input:", x.shape)
 
         # 处理 4D 输入 [batch_size, nodes, features, extra_dim]
-        b, n, f, _ = x.shape  # 这里我们假设 extra_dim 是一个额外的维度
+        b, n, f, _ = x.shape  # 假设 extra_dim 是额外的维度
         x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
 
-        # 打印展开后的形状
-        print("After flattening:", x.shape)  # 打印展平后的形状
+        # 打印展平后的形状
+        print("After flattening:", x.shape)
 
         x = self.adjust_input(x)  # 调整输入通道数为 192
-        print("After adjust_input:", x.shape)  # 打印调整后的形状
+        print("After adjust_input:", x.shape)
 
         # 转换形状为适应 Conv1d
-        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]
-        print("After permute:", x.shape)  # 打印 permute 后的形状
+        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length]
+        print("After permute:", x.shape)
 
         # 经过卷积层
         x = self.conv1d_layer(x)
-        print("After conv1d:", x.shape)  # 打印卷积后的形状
+        print("After conv1d:", x.shape)
 
         # 进入图卷积层
         for i in range(self.num_layers):
-            print(f"Before gc_layer {i}:", x.shape)  # 打印进入图卷积层前的形状
+            print(f"Before gc_layer {i}:", x.shape)
             x = self.gc_layers[i](x)
 
             # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
             if i < self.num_layers - 1:
-                x = x.transpose(1, 2).contiguous()  # **确保 BatchNorm 输入正确**
+                x = x.transpose(1, 2).contiguous()
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
-            # 打印每一层图卷积后的形状
             print(f"After gc_layer {i}:", x.shape)
 
         # 确保输出的维度和输入维度一致
@@ -125,7 +122,6 @@ class GCN(nn.Module):
             residual = self._adjust_residual(residual, x.shape[-1], x.device)
 
         return x + residual
-
 
     def _adjust_residual(self, residual, target_dim, device):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
