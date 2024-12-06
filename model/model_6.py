@@ -39,17 +39,17 @@ class GraphConvolution(nn.Module):
         # 调试信息：打印weight的形状
         print(f"Weight shape: {weight.shape}")
 
-        # 调试信息：打印邻接矩阵的形状
-        print(f"Adjacency matrix shape: {self.adj.shape}")
+        # 确保邻接矩阵维度为 [B, N, N]
+        adj = self.adj.unsqueeze(0).repeat(b, 1, 1)  # [B, N, N]
 
-        # Ensure the input is in the correct shape for matrix multiplication
-        input = input.view(b, n, f)  # Ensure input is [B, N, F]
+        # 调试信息：打印邻接矩阵的形状
+        print(f"Adjacency matrix shape: {adj.shape}")
 
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
 
         # Apply adjacency matrix multiplication
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
+        output = torch.bmm(adj, support)  # Shape: [B, N, N] x [B, N, O]
 
         if self.bias is not None:
             return output + self.bias  # Shape: [B, N, O]
@@ -208,3 +208,4 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
+
