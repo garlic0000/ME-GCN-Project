@@ -7,19 +7,11 @@ import os
 
 
 class GraphConvolution(nn.Module):
-    """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    Param:
-        in_features, out_features, bias
-    Input:
-        features: N x C (n = # nodes), C = in_features
-        adj: adjacency matrix (N x N)
-    """
     def __init__(self, in_features, out_features, mat_path, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))  # no weight_norm
+        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))  # [in_features, out_features]
         if bias:
             self.bias = nn.Parameter(torch.Tensor(out_features))
         else:
@@ -37,9 +29,18 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
+
+        # 调试信息：打印输入的形状
+        print(f"Input shape: {input.shape}")
+
         # Adjust weight shape to [B, F, O] where B is batch size
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
-        print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
+
+        # 调试信息：打印weight的形状
+        print(f"Weight shape: {weight.shape}")
+
+        # 调试信息：打印邻接矩阵的形状
+        print(f"Adjacency matrix shape: {self.adj.shape}")
 
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
