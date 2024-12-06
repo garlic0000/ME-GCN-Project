@@ -106,6 +106,7 @@ class GCN(nn.Module):
 
         # 进入图卷积层
         for i in range(self.num_layers):
+            print(f"Before gc_layer {i}:", x.shape)  # 打印进入图卷积层前的形状
             x = self.gc_layers[i](x)
 
             # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
