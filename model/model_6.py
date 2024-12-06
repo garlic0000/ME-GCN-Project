@@ -29,26 +29,18 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
-        # 检查输入的形状
         print(f"Before reshape: input shape = {input.shape}")
 
-        # 你可以选择合适的方式进行调整：确保 input 的特征数与 self.in_features 一致
         if f != self.in_features:
             print(f"Adjusting input shape from {f} to {self.in_features}")
-            # 假设我们将其 reshape 成一个兼容的形状
-            input = input.view(b, n, self.in_features)  # Modify this line to match correct shape
+            input = input.view(b, n, self.in_features)  # 根据实际输入调整
 
-        # 打印调整后的形状
         print(f"After reshape: input shape = {input.shape}")
 
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)
-
-        # 打印权重形状
         print(f"Weight shape: {weight.shape}")
 
         support = torch.bmm(input, weight)
-
-        # 打印中间结果形状
         print(f"Support shape: {support.shape}")
 
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
@@ -66,7 +58,6 @@ class GCN(nn.Module):
         self.num_layers = num_layers
         self.gc_layers = nn.ModuleList()
 
-        # 添加图卷积层
         for i in range(num_layers):
             in_features = nfeat if i == 0 else nhid
             out_features = nhid if i < num_layers - 1 else nout
@@ -74,7 +65,7 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 调整输入特征的维度
+        # 输入维度调整为192（根据实际需求）
         self.adjust_input = nn.Linear(24, 192)  # 以前是 6480 -> 24
 
         # 使用卷积层来处理调整后的输入
@@ -86,11 +77,9 @@ class GCN(nn.Module):
         # 打印输入的形状
         print("Before adjust_input:", x.shape)
 
-        # 处理 4D 输入 [batch_size, nodes, features, extra_dim]
         b, n, f, _ = x.shape  # 假设 extra_dim 是额外的维度
         x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
 
-        # 打印展平后的形状
         print("After flattening:", x.shape)
 
         x = self.adjust_input(x)  # 调整输入通道数为 192
@@ -109,7 +98,6 @@ class GCN(nn.Module):
             print(f"Before gc_layer {i}:", x.shape)
             x = self.gc_layers[i](x)
 
-            # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
             if i < self.num_layers - 1:
                 x = x.transpose(1, 2).contiguous()
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
@@ -117,16 +105,15 @@ class GCN(nn.Module):
 
             print(f"After gc_layer {i}:", x.shape)
 
-        # 确保输出的维度和输入维度一致
         if residual.shape[-1] != x.shape[-1]:
             residual = self._adjust_residual(residual, x.shape[-1], x.device)
 
         return x + residual
 
     def _adjust_residual(self, residual, target_dim, device):
-        # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
         linear = nn.Linear(residual.shape[-1], target_dim).to(device)
         return linear(residual)
+
 
 
 class GraphAttentionLayer(nn.Module):
