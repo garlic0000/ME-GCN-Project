@@ -77,10 +77,10 @@ class GCN(nn.Module):
         x = x.view(b, n, -1)  # 展开额外维度为 [batch_size, nodes, features * extra_dim]
         print(f"GCN: after flattening: {x.shape}")
 
-        # 确保输入的特征维度和目标维度一致
-        assert x.shape[-1] == 24, f"Input feature dimension {x.shape[-1]} does not match expected 24"
-        x = self.adjust_input(x)  # 将输入维度调整为192
-        print(f"GCN: after adjust_input: {x.shape}")
+        # 这里调整输入维度为192，原始维度为24（从错误日志来看）
+        if x.shape[-1] != 192:
+            x = self.adjust_input(x)  # 将输入维度调整为192
+            print(f"GCN: after adjust_input: {x.shape}")
 
         x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] 适应 Conv1d
         print(f"GCN: after permute: {x.shape}")
@@ -98,10 +98,6 @@ class GCN(nn.Module):
             print(f"GCN: after gc_layer {i}: {x.shape}")
 
         return x + residual
-
-    def _adjust_residual(self, residual, target_dim, device):
-        linear = nn.Linear(residual.shape[-1], target_dim).to(device)
-        return linear(residual)
 
 
 class GraphAttentionLayer(nn.Module):
