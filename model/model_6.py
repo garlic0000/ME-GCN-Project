@@ -15,6 +15,7 @@ import os
 输入数据的形状调整：保证输入数据符合模型的要求 (B, T, N, C)。
 """
 
+
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -47,8 +48,13 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, c = input.shape
+        # 调整 weight 的形状，使其适应 batch size
+        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
+
         # Apply weight to the input
-        support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))  # Shape: [B, N, F] x [F, O]
+        support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
+
+        # 通过邻接矩阵计算卷积
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
 
         if self.bias is not None:
