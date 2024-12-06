@@ -51,7 +51,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
             # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
             elif isinstance(m, GraphAttentionLayer) and (pn == 'a' or pn == 'W'):
                 decay.add(fpn)
-            # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
+            # Check if it's an attention parameter (e.g., 'W' in MultiHeadGraphAttentionLayer)
             elif isinstance(m, MultiHeadGraphAttentionLayer) and pn == 'W':
                 decay.add(fpn)
 
