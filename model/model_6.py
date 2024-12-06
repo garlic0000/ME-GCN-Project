@@ -50,6 +50,7 @@ class GraphConvolution(nn.Module):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
         # Adjust weight shape to [B, F, O] where B is batch size
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
+        print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
 
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
@@ -192,23 +193,17 @@ class AUwGCN(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
         )
 
-        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2,
-                                               bias=False)
+        self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2)
 
-        self._init_weight()
-
-    def forward(self, x):
-        b, t, n, c = x.shape
-
-        x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        x, adj = self.graph_embedding(x)  # 获取图卷积的输出和邻接矩阵
-        x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
-
-        x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
+    def forward(self, input_data):
+        residual = input_data
+        # 输入数据的处理和前馈网络计算
+        x = self.graph_embedding(input_data)
+        x = self.attention(x, self.graph_embedding[0].adj)  # 图注意力
         x = self._sequential(x)
         x = self._classification(x)
 
-        return x
+        return x + residual
 
     def _init_weight(self):
         for m in self.modules():
