@@ -64,9 +64,6 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 确保输入维度为192
-        self.adjust_input = nn.Linear(24, 192)  # 如果原始输入是24维，调整到192维
-
     def forward(self, x):
         residual = x  # 保存输入用于残差连接
 
