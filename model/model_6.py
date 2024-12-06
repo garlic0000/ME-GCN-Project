@@ -88,10 +88,13 @@ class GCN(nn.Module):
 
         # 调整输入形状
         x = x.view(x.size(0), -1)  # 将输入展平为 [batch_size, input_features]
+        print("Before adjust_input:", x.shape)
         x = self.adjust_input(x)  # 调整输入通道数为 192
+        print("After adjust_input:", x.shape)
 
         # 转换形状为适应 Conv1d
         x = x.unsqueeze(2)  # 添加一个维度，以便与 Conv1d 适配，即 [batch_size, channels, length]
+        print("After unsqueeze:", x.shape)
 
         # 经过卷积层
         x = self.conv1d_layer(x)
