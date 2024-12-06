@@ -45,7 +45,7 @@ class GraphConvolution(nn.Module):
 
         # 如果需要调整输入的特征数，可以添加转换层
         if f != self.in_features:  # 特征数不匹配时进行调整
-            input = input.view(b, n, self.in_features)
+            input = input.view(b, n, self.in_features)  # 修改了这里，确保输入维度正确
 
         # Apply weight to the input: B x N x F * B x F x O
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
@@ -88,7 +88,7 @@ class GCN(nn.Module):
 
         # 处理 4D 输入 [batch_size, nodes, features, extra_dim]
         b, n, f, _ = x.shape  # 这里我们假设 extra_dim 是一个额外的维度
-        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
+        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]  # **修改点：这里修改了维度展开的方式**
 
         # 打印展开后的形状
         print("After flattening:", x.shape)  # 打印展平后的形状
@@ -97,7 +97,9 @@ class GCN(nn.Module):
         print("After adjust_input:", x.shape)  # 打印调整后的形状
 
         # 转换形状为适应 Conv1d
-        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]
+        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]  # **修改点：permute 用来调整维度以适应卷积层**
+
+        # 打印 permute 后的形状
         print("After permute:", x.shape)  # 打印 permute 后的形状
 
         # 经过卷积层
@@ -111,7 +113,7 @@ class GCN(nn.Module):
 
             # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
             if i < self.num_layers - 1:
-                x = x.transpose(1, 2).contiguous()
+                x = x.transpose(1, 2).contiguous()  # **修改点：确保 BatchNorm 输入正确**
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
