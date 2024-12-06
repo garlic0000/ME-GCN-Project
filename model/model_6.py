@@ -163,8 +163,8 @@ class AUwGCN(torch.nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # 这里增加了更多的GCN层
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path, num_layers=3))  # 增加GCN层数
+        # 增加GCN层数
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path, num_layers=3))
 
         in_dim = 192  # 保留输入通道数为192
         self.attention = MultiHeadGraphAttentionLayer(in_features=32, out_features=32, heads=4, dropout=0.1)
@@ -195,6 +195,7 @@ class AUwGCN(torch.nn.Module):
         x = self.attention(x, adj)  # 将邻接矩阵传递给注意力层
 
         x = x.reshape(b, t, -1).transpose(1, 2)  # 调整维度
+        print(f"x shape before conv1d: {x.shape}")  # 打印出x的形状
         x = self._sequential(x)
         x = self._classification(x)
 
