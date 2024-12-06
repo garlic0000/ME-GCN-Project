@@ -77,8 +77,8 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 用来调整输入通道数的线性层
-        self.adjust_input = nn.Linear(768, 192)  # 将 768 通道数调整为 192
+        # 这里确保输入维度匹配
+        self.adjust_input = nn.Linear(768, 192)  # 这里的 768 要与输入的第二维匹配
 
         # 用一个卷积层来处理调整后的输入
         self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
@@ -86,9 +86,12 @@ class GCN(nn.Module):
     def forward(self, x):
         residual = x  # 保存输入，用于残差连接
 
-        # 调整输入通道数
+        # 调整输入形状
+        x = x.view(x.size(0), -1)  # 将输入展平为 [batch_size, input_features]
         x = self.adjust_input(x)  # 调整输入通道数为 192
-        x = x.transpose(1, 2).contiguous()  # 转换形状为 [batch_size, channels, length] 以适应 Conv1d
+
+        # 转换形状为适应 Conv1d
+        x = x.unsqueeze(2)  # 添加一个维度，以便与 Conv1d 适配，即 [batch_size, channels, length]
 
         # 经过卷积层
         x = self.conv1d_layer(x)
