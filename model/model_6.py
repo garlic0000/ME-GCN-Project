@@ -74,11 +74,8 @@ class GCN(nn.Module):
         x = x.view(b, n, -1)  # 展开额外维度为 [batch_size, nodes, features * extra_dim]
         print(f"GCN: after flattening: {x.shape}")
 
-        # 这里调整输入维度为192，原始维度为24（从错误日志来看）
-        if x.shape[-1] != 192:
-            x = self.adjust_input(x)  # 将输入维度调整为192
-            print(f"GCN: after adjust_input: {x.shape}")
-
+        # 确保输入维度是合适的，可以在外部传递调整过的输入
+        assert x.shape[-1] == 192, f"Input feature dimension {x.shape[-1]} does not match expected 192"
         x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] 适应 Conv1d
         print(f"GCN: after permute: {x.shape}")
 
@@ -166,6 +163,13 @@ class AUwGCN(torch.nn.Module):
         self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2)
 
     def forward(self, input_data):
+        # 调整输入维度为192
+        b, n, f, _ = input_data.shape
+        input_data = input_data.view(b, n, -1)  # 展开额外维度为 [batch_size, nodes, features * extra_dim]
+        assert input_data.shape[-1] == 24, f"Input feature dimension {input_data.shape[-1]} does not match expected 24"
+        input_data = self.adjust_input(input_data)  # 调整到192
+        input_data = input_data.permute(0, 2, 1)  # 转换维度 [batch_size, channels, length]
+
         residual = input_data
         # 输入数据的处理和前馈网络计算
         x = self.graph_embedding(input_data)
@@ -174,6 +178,9 @@ class AUwGCN(torch.nn.Module):
         x = self._classification(x)
 
         return x + residual
+
+    def adjust_input(self, x):
+        return nn.Linear(x.shape[-1], 192)(x)  # 使用线性层调整输入特征维度
 
     def _init_weight(self):
         for m in self.modules():
