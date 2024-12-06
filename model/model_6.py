@@ -5,6 +5,60 @@ import math
 import numpy as np
 import os
 
+
+class GraphConvolution(nn.Module):
+    """
+    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
+    Param:
+        in_features, out_features, bias
+    Input:
+        features: N x C (n = # nodes), C = in_features
+        adj: adjacency matrix (N x N)
+    """
+
+    def __init__(self, in_features, out_features, mat_path, bias=True):
+        super(GraphConvolution, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))  # no weight_norm
+        if bias:
+            self.bias = nn.Parameter(torch.Tensor(out_features))
+        else:
+            self.register_parameter('bias', None)
+        self.reset_parameters()
+
+        adj_mat = np.load(mat_path)
+        self.register_buffer('adj', torch.from_numpy(adj_mat))
+
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weight.size(1))
+        self.weight.data.uniform_(-stdv, stdv)
+        if self.bias is not None:
+            self.bias.data.uniform_(-stdv, stdv)
+
+    def forward(self, input):
+        b, n, f = input.shape  # B: batch size, N: nodes, F: features
+        # 调整权重的形状为 [B, F, O]
+        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
+
+        print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
+
+        # 如果需要调整输入的特征数，可以添加转换层
+        if f != self.in_features:  # 特征数不匹配时进行调整
+            input = input.view(b, n, self.in_features)
+
+        # Apply weight to the input: B x N x F * B x F x O
+        support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
+
+        # Apply adjacency matrix multiplication
+        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
+
+        if self.bias is not None:
+            return output + self.bias  # Shape: [B, N, O]
+        else:
+            return output
+
+
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_layers=2):
         super(GCN, self).__init__()
@@ -69,7 +123,6 @@ class GCN(nn.Module):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
         linear = nn.Linear(residual.shape[-1], target_dim).to(device)
         return linear(residual)
-
 
 
 class GraphAttentionLayer(nn.Module):
