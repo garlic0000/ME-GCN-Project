@@ -7,11 +7,19 @@ import os
 
 
 class GraphConvolution(nn.Module):
+    """
+    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
+    Param:
+        in_features, out_features, bias
+    Input:
+        features: N x C (n = # nodes), C = in_features
+        adj: adjacency matrix (N x N)
+    """
     def __init__(self, in_features, out_features, mat_path, bias=True):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))
+        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))  # no weight_norm
         if bias:
             self.bias = nn.Parameter(torch.Tensor(out_features))
         else:
@@ -29,25 +37,25 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
+        # Adjust weight shape to [B, F, O] where B is batch size
+        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
+        print(f"Input shape: {input.shape}, Weight shape: {weight.shape}")
 
-        print(f"GraphConvolution: input shape = {input.shape}")
+        # Apply weight to the input: B x N x F * B x F x O
+        support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
 
-        # 确保输入的特征维度和in_features一致
-        assert f == self.in_features, f"Input feature dimension {f} does not match in_features {self.in_features}"
-
-        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)
-        print(f"GraphConvolution: weight shape = {weight.shape}")
-
-        support = torch.bmm(input, weight)
-        print(f"GraphConvolution: support shape = {support.shape}")
-
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
-        print(f"GraphConvolution: output shape = {output.shape}")
+        # Apply adjacency matrix multiplication
+        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # Shape: [B, N, N] x [B, N, O]
 
         if self.bias is not None:
-            return output + self.bias
+            return output + self.bias  # Shape: [B, N, O]
         else:
             return output
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+            + str(self.in_features) + ' -> ' \
+            + str(self.out_features) + ')'
 
 
 class GCN(nn.Module):
@@ -57,6 +65,7 @@ class GCN(nn.Module):
         self.num_layers = num_layers
         self.gc_layers = nn.ModuleList()
 
+        # 添加多个图卷积层
         for i in range(num_layers):
             in_features = nfeat if i == 0 else nhid
             out_features = nhid if i < num_layers - 1 else nout
@@ -64,34 +73,53 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
+        # 修改：调整为正确的输入维度
+        self.adjust_input = nn.Linear(24, 192)  # 原来是 6480 -> 24
+
+        # 用一个卷积层来处理调整后的输入
+        self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
+
     def forward(self, x):
-        residual = x  # 保存输入用于残差连接
+        residual = x  # 保存输入，用于残差连接
 
-        print(f"GCN: input shape = {x.shape}")
+        # 打印输入的形状
+        print("Before adjust_input:", x.shape)  # 打印输入形状
 
-        # 假设输入是 [batch_size, nodes, features]，我们确保它进入图卷积层之前形状匹配
-        b, n, f, _ = x.shape
-        x = x.view(b, n, -1)  # 展开额外维度为 [batch_size, nodes, features * extra_dim]
-        print(f"GCN: after flattening: {x.shape}")
+        # 处理 4D 输入 [batch_size, nodes, features, extra_dim]
+        b, n, f, _ = x.shape  # 这里我们假设 extra_dim 是一个额外的维度
+        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
 
-        # 确保输入维度是合适的，可以在外部传递调整过的输入
-        assert x.shape[-1] == 192, f"Input feature dimension {x.shape[-1]} does not match expected 192"
-        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] 适应 Conv1d
-        print(f"GCN: after permute: {x.shape}")
+        print("After adjust_input:", x.shape)
+
+        x = self.adjust_input(x)  # 调整输入通道数为 192
+        print("After adjust_input:", x.shape)
+
+        # 转换形状为适应 Conv1d
+        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]
+        print("After permute:", x.shape)
 
         # 经过卷积层
+        x = self.conv1d_layer(x)
+
         for i in range(self.num_layers):
-            print(f"GCN: before gc_layer {i}: {x.shape}")
             x = self.gc_layers[i](x)
 
+            # 如果我们不是最后一层，则进行 BatchNorm 和 ReLU
             if i < self.num_layers - 1:
                 x = x.transpose(1, 2).contiguous()
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
-            print(f"GCN: after gc_layer {i}: {x.shape}")
+        # 确保输出的维度和输入维度一致
+        if residual.shape[-1] != x.shape[-1]:
+            residual = self._adjust_residual(residual, x.shape[-1], x.device)
 
         return x + residual
+
+    def _adjust_residual(self, residual, target_dim, device):
+        # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
+        linear = nn.Linear(residual.shape[-1], target_dim).to(device)
+        return linear(residual)
 
 
 class GraphAttentionLayer(nn.Module):
@@ -140,7 +168,7 @@ class AUwGCN(torch.nn.Module):
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
         # 这里增加了更多的GCN层
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path, num_layers=2))
+        self.graph_embedding = GCN(2, 16, 16, mat_path, num_layers=2)
 
         in_dim = 192  # 保留输入通道数为192
 
@@ -163,24 +191,18 @@ class AUwGCN(torch.nn.Module):
         self._classification = torch.nn.Conv1d(64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2)
 
     def forward(self, input_data):
-        # 调整输入维度为192
-        b, n, f, _ = input_data.shape
-        input_data = input_data.view(b, n, -1)  # 展开额外维度为 [batch_size, nodes, features * extra_dim]
-        assert input_data.shape[-1] == 24, f"Input feature dimension {input_data.shape[-1]} does not match expected 24"
-        input_data = self.adjust_input(input_data)  # 调整到192
-        input_data = input_data.permute(0, 2, 1)  # 转换维度 [batch_size, channels, length]
-
         residual = input_data
         # 输入数据的处理和前馈网络计算
         x = self.graph_embedding(input_data)
-        x = self.attention(x, self.graph_embedding[0].adj)  # 图注意力
+        x = self.attention(x, self.graph_embedding.gc_layers[0].adj)  # 图注意力
         x = self._sequential(x)
         x = self._classification(x)
 
-        return x + residual
+        # 确保残差连接的维度匹配
+        if residual.shape[-1] != x.shape[-1]:
+            residual = self._adjust_residual(residual, x.shape[-1], x.device)
 
-    def adjust_input(self, x):
-        return nn.Linear(x.shape[-1], 192)(x)  # 使用线性层调整输入特征维度
+        return x + residual
 
     def _init_weight(self):
         for m in self.modules():
