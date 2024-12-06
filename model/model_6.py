@@ -90,17 +90,19 @@ class GCN(nn.Module):
         b, n, f, _ = x.shape  # 这里我们假设 extra_dim 是一个额外的维度
         x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
 
-        print("After adjust_input:", x.shape)
+        # 打印展开后的形状
+        print("After flattening:", x.shape)  # 打印展平后的形状
 
         x = self.adjust_input(x)  # 调整输入通道数为 192
-        print("After adjust_input:", x.shape)
+        print("After adjust_input:", x.shape)  # 打印调整后的形状
 
         # 转换形状为适应 Conv1d
         x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] -> [128, 192, 270]
-        print("After permute:", x.shape)
+        print("After permute:", x.shape)  # 打印 permute 后的形状
 
         # 经过卷积层
         x = self.conv1d_layer(x)
+        print("After conv1d:", x.shape)  # 打印卷积后的形状
 
         # 进入图卷积层
         for i in range(self.num_layers):
@@ -112,6 +114,9 @@ class GCN(nn.Module):
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
+            # 打印每一层图卷积后的形状
+            print(f"After gc_layer {i}:", x.shape)
+
         # 确保输出的维度和输入维度一致
         if residual.shape[-1] != x.shape[-1]:
             residual = self._adjust_residual(residual, x.shape[-1], x.device)
@@ -122,10 +127,6 @@ class GCN(nn.Module):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
         linear = nn.Linear(residual.shape[-1], target_dim).to(device)
         return linear(residual)
-
-
-
-
 
 
 class GraphAttentionLayer(nn.Module):
