@@ -18,9 +18,7 @@ class GraphConvolution(nn.Module):
             self.register_parameter('bias', None)
         self.reset_parameters()
 
-        # 加载邻接矩阵，并将其注册为缓冲区
         adj_mat = np.load(mat_path)
-        # 如果邻接矩阵是二维的（即：节点数 x 节点数），扩展它为一个批次处理的形式
         self.register_buffer('adj', torch.from_numpy(adj_mat).float())
 
     def reset_parameters(self):
@@ -33,25 +31,27 @@ class GraphConvolution(nn.Module):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
         print(f"Before reshape: input shape = {input.shape}")
 
-        # 输入特征数与期望的特征数不一致时进行调整
+        # 检查输入特征维度是否与预期的 in_features 一致
         if f != self.in_features:
             print(f"Adjusting input shape from {f} to {self.in_features}")
-            input = input.view(b, n, self.in_features)  # 根据实际输入调整特征维度
-            print(f"After reshape: input shape = {input.shape}")
+            if f > self.in_features:
+                # 如果输入特征数过多，进行切割，保留前 in_features 个特征
+                input = input[:, :, :self.in_features]
+            else:
+                # 如果输入特征数过少，通过填充补齐到 in_features 维度
+                padding = self.in_features - f
+                input = F.pad(input, (0, padding), "constant", 0)
 
-        # 权重矩阵需要扩展为批量大小的形状
-        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # 将权重扩展到批次大小
+        print(f"After reshape: input shape = {input.shape}")
+
+        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # 扩展到每个批次
         print(f"Weight shape: {weight.shape}")
 
-        # 图卷积操作：输入数据与权重相乘
-        support = torch.bmm(input, weight)  # bmm：批量矩阵乘法
+        support = torch.bmm(input, weight)  # 批量矩阵乘法
         print(f"Support shape: {support.shape}")
 
-        # 进行图卷积：将邻接矩阵与支持矩阵进行批量乘法
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
-        print(f"Output shape after adjacency multiplication: {output.shape}")
+        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # 与邻接矩阵乘法
 
-        # 如果有偏置项，添加偏置
         if self.bias is not None:
             return output + self.bias
         else:
