@@ -86,11 +86,9 @@ class GCN(nn.Module):
         # 打印输入的形状
         print("Before adjust_input:", x.shape)  # 打印输入形状
 
-        # x.view(...) 调整前，检查其形状
-        b, n, f = x.shape  # 获取 batch size, nodes 数量, 特征数
-
-        if x.dim() == 3:  # 确保是 [batch_size, num_nodes, num_features] 的形状
-            x = x.view(b, -1)  # 将 x 展开为 [batch_size, num_nodes * num_features]，在这里假设节点数和特征数是平展的
+        # 处理 4D 输入 [batch_size, nodes, features, extra_dim]
+        b, n, f, _ = x.shape  # 这里我们假设 extra_dim 是一个额外的维度
+        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
 
         print("After adjust_input:", x.shape)
 
@@ -123,6 +121,7 @@ class GCN(nn.Module):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
         linear = nn.Linear(residual.shape[-1], target_dim).to(device)
         return linear(residual)
+
 
 
 class GraphAttentionLayer(nn.Module):
