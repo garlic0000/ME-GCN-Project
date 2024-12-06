@@ -19,7 +19,7 @@ class GraphConvolution(nn.Module):
         self.reset_parameters()
 
         adj_mat = np.load(mat_path)
-        self.register_buffer('adj', torch.from_numpy(adj_mat).float())
+        self.register_buffer('adj', torch.from_numpy(adj_mat))
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -29,34 +29,25 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
-        print(f"Before reshape: input shape = {input.shape}")
 
-        # 检查输入特征维度是否与预期的 in_features 一致
-        if f != self.in_features:
-            print(f"Adjusting input shape from {f} to {self.in_features}")
-            if f > self.in_features:
-                # 如果输入特征数过多，进行切割，保留前 in_features 个特征
-                input = input[:, :, :self.in_features]
-            else:
-                # 如果输入特征数过少，通过填充补齐到 in_features 维度
-                padding = self.in_features - f
-                input = F.pad(input, (0, padding), "constant", 0)
+        print(f"GraphConvolution: input shape = {input.shape}")
 
-        print(f"After reshape: input shape = {input.shape}")
+        # 确保输入的特征维度和in_features一致，不进行填充或切割
+        assert f == self.in_features, f"Input feature dimension {f} does not match in_features {self.in_features}"
 
-        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # 扩展到每个批次
-        print(f"Weight shape: {weight.shape}")
+        weight = self.weight.unsqueeze(0).repeat(b, 1, 1)
+        print(f"GraphConvolution: weight shape = {weight.shape}")
 
-        support = torch.bmm(input, weight)  # 批量矩阵乘法
-        print(f"Support shape: {support.shape}")
+        support = torch.bmm(input, weight)
+        print(f"GraphConvolution: support shape = {support.shape}")
 
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)  # 与邻接矩阵乘法
+        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
+        print(f"GraphConvolution: output shape = {output.shape}")
 
         if self.bias is not None:
             return output + self.bias
         else:
             return output
-
 
 
 class GCN(nn.Module):
@@ -73,37 +64,30 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 输入维度调整为192（根据实际需求）
-        self.adjust_input = nn.Linear(24, 192)  # 以前是 6480 -> 24
-
-        # 使用卷积层来处理调整后的输入
-        self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
+        # 确保输入维度为192
+        self.adjust_input = nn.Linear(24, 192)  # 如果原始输入是24维，调整到192维
 
     def forward(self, x):
         residual = x  # 保存输入用于残差连接
 
-        # 打印输入的形状
-        print("Before adjust_input:", x.shape)
+        print(f"GCN: input shape = {x.shape}")
 
-        b, n, f, _ = x.shape  # 假设 extra_dim 是额外的维度
-        x = x.view(b, n, -1)  # 将 extra_dim 展开，变为 [batch_size, nodes, features * extra_dim]
+        # 假设输入是 [batch_size, nodes, features]，我们确保它进入图卷积层之前形状匹配
+        b, n, f, _ = x.shape
+        x = x.view(b, n, -1)  # 展开额外维度为 [batch_size, nodes, features * extra_dim]
+        print(f"GCN: after flattening: {x.shape}")
 
-        print("After flattening:", x.shape)
+        # 确保输入的特征维度和目标维度一致
+        assert x.shape[-1] == 24, f"Input feature dimension {x.shape[-1]} does not match expected 24"
+        x = self.adjust_input(x)  # 将输入维度调整为192
+        print(f"GCN: after adjust_input: {x.shape}")
 
-        x = self.adjust_input(x)  # 调整输入通道数为 192
-        print("After adjust_input:", x.shape)
-
-        # 转换形状为适应 Conv1d
-        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length]
-        print("After permute:", x.shape)
+        x = x.permute(0, 2, 1)  # 变为 [batch_size, channels, length] 适应 Conv1d
+        print(f"GCN: after permute: {x.shape}")
 
         # 经过卷积层
-        x = self.conv1d_layer(x)
-        print("After conv1d:", x.shape)
-
-        # 进入图卷积层
         for i in range(self.num_layers):
-            print(f"Before gc_layer {i}:", x.shape)
+            print(f"GCN: before gc_layer {i}: {x.shape}")
             x = self.gc_layers[i](x)
 
             if i < self.num_layers - 1:
@@ -111,10 +95,7 @@ class GCN(nn.Module):
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
 
-            print(f"After gc_layer {i}:", x.shape)
-
-        if residual.shape[-1] != x.shape[-1]:
-            residual = self._adjust_residual(residual, x.shape[-1], x.device)
+            print(f"GCN: after gc_layer {i}: {x.shape}")
 
         return x + residual
 
