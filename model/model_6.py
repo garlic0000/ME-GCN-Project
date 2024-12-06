@@ -90,13 +90,13 @@ class GCN(nn.Module):
 
         # 确保输出的维度和输入维度一致
         if residual.shape[-1] != x.shape[-1]:
-            residual = self._adjust_residual(residual, x.shape[-1])  # 调整 residual 维度以匹配 x 的维度
+            residual = self._adjust_residual(residual, x.shape[-1], x.device)  # 传递设备信息
 
         return x + residual, self.gc_layers[-1].adj  # 输出时添加残差连接
 
-    def _adjust_residual(self, residual, target_dim):
-        # 使用线性层调整 residual 的维度以匹配 target_dim
-        linear = nn.Linear(residual.shape[-1], target_dim)
+    def _adjust_residual(self, residual, target_dim, device):
+        # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
+        linear = nn.Linear(residual.shape[-1], target_dim).to(device)  # 将线性层放到同一设备上
         return linear(residual)
 
 
