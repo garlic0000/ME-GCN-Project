@@ -166,7 +166,7 @@ class AUwGCN(torch.nn.Module):
         # 增加GCN层数
         self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path, num_layers=3))
 
-        in_dim = 192  # 保留输入通道数为192
+        in_dim = 384  
         self.attention = MultiHeadGraphAttentionLayer(in_features=32, out_features=32, heads=4, dropout=0.1)
 
         self._sequential = torch.nn.Sequential(
