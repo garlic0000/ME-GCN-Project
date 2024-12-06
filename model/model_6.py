@@ -84,8 +84,8 @@ class GCN(nn.Module):
 
         self.bn_layers = nn.ModuleList([nn.BatchNorm1d(nhid) for _ in range(num_layers - 1)])
 
-        # 调整输入层的线性层：根据 `x` 的实际维度来设置
-        self.adjust_input = nn.Linear(24, 192)  # 假设 `x` 的第二维是 24
+        # 假设 x 的特征维度是 6480
+        self.adjust_input = nn.Linear(6480, 192)  # 调整为输入 6480 个特征
 
         # 用一个卷积层来处理调整后的输入
         self.conv1d_layer = nn.Conv1d(in_channels=192, out_channels=64, kernel_size=1)
@@ -94,7 +94,7 @@ class GCN(nn.Module):
         residual = x  # 保存输入，用于残差连接
 
         # 调整输入形状
-        x = x.view(x.size(0), -1)  # 将输入展平为 [batch_size, input_features]
+        x = x.view(x.size(0), 6480)  # 假设 x 的形状应该是 [batch_size, 6480]
         print("Before adjust_input:", x.shape)
         x = self.adjust_input(x)  # 调整输入通道数为 192
         print("After adjust_input:", x.shape)
@@ -119,7 +119,7 @@ class GCN(nn.Module):
         if residual.shape[-1] != x.shape[-1]:
             residual = self._adjust_residual(residual, x.shape[-1], x.device)
 
-        return x + residual, self.gc_layers[-1].adj
+        return x + residual
 
     def _adjust_residual(self, residual, target_dim, device):
         # 使用线性层调整 residual 的维度以匹配 target_dim，并确保它在正确的设备上
