@@ -19,7 +19,7 @@ class GraphConvolution(nn.Module):
         self.reset_parameters()
 
         adj_mat = np.load(mat_path)
-        self.register_buffer('adj', torch.from_numpy(adj_mat))
+        self.register_buffer('adj', torch.from_numpy(adj_mat).float())  # Ensure adj is float
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -30,22 +30,18 @@ class GraphConvolution(nn.Module):
     def forward(self, input):
         b, n, f = input.shape  # B: batch size, N: nodes, F: features
 
-        # 调试信息：打印输入的形状
+        # Print shapes for debugging
         print(f"Input shape: {input.shape}")
+        print(f"Weight shape: {self.weight.shape}")
+        print(f"Adjacency matrix shape: {self.adj.shape}")
 
         # Adjust weight shape to [B, F, O] where B is batch size
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, F, O]
 
-        # 调试信息：打印weight的形状
-        print(f"Weight shape: {weight.shape}")
+        # Adjust adjacency matrix shape to [B, N, N] where B is batch size
+        adj = self.adj.unsqueeze(0).repeat(b, 1, 1)  # Shape: [B, N, N]
 
-        # 确保邻接矩阵维度为 [B, N, N]
-        adj = self.adj.unsqueeze(0).repeat(b, 1, 1)  # [B, N, N]
-
-        # 调试信息：打印邻接矩阵的形状
-        print(f"Adjacency matrix shape: {adj.shape}")
-
-        # Apply weight to the input: B x N x F * B x F x O
+        # Apply weight to the input: [B, N, F] x [B, F, O]
         support = torch.bmm(input, weight)  # Shape: [B, N, F] x [B, F, O]
 
         # Apply adjacency matrix multiplication
@@ -55,6 +51,7 @@ class GraphConvolution(nn.Module):
             return output + self.bias  # Shape: [B, N, O]
         else:
             return output
+
 
 
 class GCN(nn.Module):
