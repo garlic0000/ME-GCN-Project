@@ -32,7 +32,7 @@ class GraphConvolution(nn.Module):
 
         print(f"GraphConvolution: input shape = {input.shape}")
 
-        # 确保输入的特征维度和in_features一致，不进行填充或切割
+        # 确保输入的特征维度和in_features一致
         assert f == self.in_features, f"Input feature dimension {f} does not match in_features {self.in_features}"
 
         weight = self.weight.unsqueeze(0).repeat(b, 1, 1)
