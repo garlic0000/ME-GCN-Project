@@ -14,6 +14,7 @@ import numpy as np
 Dropout增加到注意力层和特征提取模块中，防止过拟合。
 """
 
+
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -110,6 +111,9 @@ class GCN(nn.Module):
         self.num_layers = num_layers
         self.gc_layers = nn.ModuleList()
 
+        # 添加一个线性层来调整 residual 的维度
+        self.residual_transform = nn.Linear(nfeat, nhid)  # 用于调整残差的维度
+
         for i in range(num_layers):
             in_features = nfeat if i == 0 else nhid
             out_features = nhid if i < num_layers - 1 else nout
@@ -119,7 +123,7 @@ class GCN(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        residual = x
+        residual = self.residual_transform(x)  # 调整 residual 的维度
         for i in range(self.num_layers):
             x = self.gc_layers[i](x)
             if i < self.num_layers - 1:
@@ -127,7 +131,7 @@ class GCN(nn.Module):
                 x = self.bn_layers[i](x).transpose(1, 2).contiguous()
                 x = F.relu(x)
                 x = self.dropout(x)
-        x += residual
+        x += residual  # 现在 residual 和 x 的维度应该匹配
         return x, self.gc_layers[-1].adj
 
 
