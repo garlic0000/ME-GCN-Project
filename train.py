@@ -93,6 +93,8 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
 
         # 获取模型预测
         output_probability = model(feature)
+        # 调试
+        print("output_probability shape:", output_probability.shape)
         output_probability = output_probability[:, :, STEP:-STEP]
 
         output_micro_apex = output_probability[:, 6, :]
