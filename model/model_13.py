@@ -141,12 +141,13 @@ class AUwGCN(nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # 使用GCN来处理输入的节点特征
-        self.graph_embedding = GCN(2, 32, 32, mat_path, dropout=0.1, num_layers=2)
+        # 修改GCN层，增加输出通道数到384
+        self.graph_embedding = GCN(2, 384, 384, mat_path, dropout=0.1, num_layers=2)
 
-        # 多头注意力层
-        self.attention = MultiHeadGraphAttentionLayer(in_features=32, out_features=32, heads=4, dropout=0.1)
+        # 修改多头注意力层，增加输出通道数到384
+        self.attention = MultiHeadGraphAttentionLayer(in_features=384, out_features=384, heads=4, dropout=0.1)
 
+        # 调整卷积层的输入通道数以匹配384
         self._sequential = nn.Sequential(
             nn.Conv1d(384, 128, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm1d(128),
@@ -154,18 +155,14 @@ class AUwGCN(nn.Module):
             nn.Dropout(0.3),
         )
 
-        self._classification = nn.Sequential(
-            nn.AdaptiveAvgPool1d(1),
-            nn.Flatten(),
-            nn.Linear(128, 10),
+        # 分类层（修改）
+        self._classification = torch.nn.Conv1d(
+            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
         )
 
         self._init_weight()
 
     def forward(self, x):
-        # # 打印输入形状，调试用
-        # print(f"Input shape: {x.shape}")  # 输入形状： (batch_size, num_time_steps, num_nodes, num_features)
-
         # 获取输入的维度
         b, t, n, c = x.shape  # b=batch_size, t=num_time_steps, n=num_nodes, c=num_features
 
@@ -186,12 +183,13 @@ class AUwGCN(nn.Module):
         # 通过卷积层进行处理
         x = self._sequential(x)
 
-        # 分类层（假设我们只关心每个时间步的最后特征）
+        # 分类层
         x = self._classification(x)
 
         return x
 
     def _init_weight(self):
+        # 初始化卷积层权重
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.kaiming_normal_(m.weight)
