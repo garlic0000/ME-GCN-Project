@@ -141,21 +141,19 @@ class AUwGCN(nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # 减少图卷积输出通道数
-        self.graph_embedding = GCN(2, 128, 128, mat_path, dropout=0.1, num_layers=2)
+        # 使用GCN来处理输入的节点特征，调整输出通道为64
+        self.graph_embedding = GCN(2, 64, 64, mat_path, dropout=0.1, num_layers=2)
 
-        # 修改多头图注意力层输出通道数
-        self.attention = MultiHeadGraphAttentionLayer(in_features=128, out_features=128, heads=4, dropout=0.1)
+        # 多头注意力层，调整输出通道为64
+        self.attention = MultiHeadGraphAttentionLayer(in_features=64, out_features=64, heads=4, dropout=0.1)
 
-        # 调整卷积层输入通道数
         self._sequential = nn.Sequential(
-            nn.Conv1d(128, 128, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv1d(256, 128, kernel_size=1, stride=1, padding=0, bias=False),  # 修改输入通道数为256
             nn.BatchNorm1d(128),
             nn.ReLU(inplace=True),
             nn.Dropout(0.3),
         )
 
-        # 分类层，输出的类别数量保持不变
         self._classification = nn.Sequential(
             nn.AdaptiveAvgPool1d(1),
             nn.Flatten(),
@@ -165,26 +163,16 @@ class AUwGCN(nn.Module):
         self._init_weight()
 
     def forward(self, x):
-        # 获取输入的维度
         b, t, n, c = x.shape  # b=batch_size, t=num_time_steps, n=num_nodes, c=num_features
+        x = x.reshape(b * t, n, c)  # 将输入展平为 (batch_size * num_time_steps, num_nodes, num_features)
 
-        # 将输入展平为 (batch_size * num_time_steps, num_nodes, num_features)
-        x = x.reshape(b * t, n, c)
-
-        # 处理图卷积层和注意力层
         x, adj = self.graph_embedding(x)  # (batch_size * num_time_steps, num_nodes, feature_size)
         x = self.attention(x, adj)
 
-        # 处理完每个时间步后的输出，恢复形状为 (batch_size, num_time_steps, num_nodes, feature_size)
-        x = x.reshape(b, t, n, -1)  # (batch_size, num_time_steps, num_nodes, feature_size)
+        x = x.reshape(b, t, n, -1)  # 恢复形状为 (batch_size, num_time_steps, num_nodes, feature_size)
+        x = x.reshape(b * t, -1, n)  # 转换为 (batch_size * num_time_steps, feature_size, num_nodes)
 
-        # 将 x 转换为 (batch_size * num_time_steps, feature_size, num_nodes)
-        x = x.reshape(b * t, -1, n)
-
-        # 通过卷积层进行处理
         x = self._sequential(x)
-
-        # 分类层（假设我们只关心每个时间步的最后特征）
         x = self._classification(x)
 
         return x
@@ -193,5 +181,6 @@ class AUwGCN(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.kaiming_normal_(m.weight)
+
 
 
