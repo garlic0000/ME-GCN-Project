@@ -141,23 +141,25 @@ class AUwGCN(nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # 修改GCN层，增加输出通道数到384
-        self.graph_embedding = GCN(2, 384, 384, mat_path, dropout=0.1, num_layers=2)
+        # 减少图卷积输出通道数
+        self.graph_embedding = GCN(2, 128, 128, mat_path, dropout=0.1, num_layers=2)
 
-        # 修改多头注意力层，增加输出通道数到384
-        self.attention = MultiHeadGraphAttentionLayer(in_features=384, out_features=384, heads=4, dropout=0.1)
+        # 修改多头图注意力层输出通道数
+        self.attention = MultiHeadGraphAttentionLayer(in_features=128, out_features=128, heads=4, dropout=0.1)
 
-        # 调整卷积层的输入通道数以匹配384
+        # 调整卷积层输入通道数
         self._sequential = nn.Sequential(
-            nn.Conv1d(384, 128, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv1d(128, 128, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm1d(128),
             nn.ReLU(inplace=True),
             nn.Dropout(0.3),
         )
 
-        # 分类层（修改）
-        self._classification = torch.nn.Conv1d(
-            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
+        # 分类层，输出的类别数量保持不变
+        self._classification = nn.Sequential(
+            nn.AdaptiveAvgPool1d(1),
+            nn.Flatten(),
+            nn.Linear(128, 10),
         )
 
         self._init_weight()
@@ -176,21 +178,20 @@ class AUwGCN(nn.Module):
         # 处理完每个时间步后的输出，恢复形状为 (batch_size, num_time_steps, num_nodes, feature_size)
         x = x.reshape(b, t, n, -1)  # (batch_size, num_time_steps, num_nodes, feature_size)
 
-        # 对每个时间步进行处理，这里假设我们只关心最后的特征
         # 将 x 转换为 (batch_size * num_time_steps, feature_size, num_nodes)
         x = x.reshape(b * t, -1, n)
 
         # 通过卷积层进行处理
         x = self._sequential(x)
 
-        # 分类层
+        # 分类层（假设我们只关心每个时间步的最后特征）
         x = self._classification(x)
 
         return x
 
     def _init_weight(self):
-        # 初始化卷积层权重
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.kaiming_normal_(m.weight)
+
 
