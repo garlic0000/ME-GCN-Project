@@ -118,7 +118,9 @@ class AUwGCNWithGAT(torch.nn.Module):
 
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
-        self.graph_embedding = torch.nn.Sequential(GCNWithGAT(2, 16, 16, self.mat_path))
+        # 直接使用 GCNWithGAT，而不是包装在 Sequential 中
+        self.graph_embedding = GCNWithGAT(2, 16, 16, self.mat_path)
+        # self.graph_embedding = torch.nn.Sequential(GCNWithGAT(2, 16, 16, self.mat_path))
 
         in_dim = 192  # GCN 和 GAT 输出的维度
         self._sequential = torch.nn.Sequential(
@@ -147,7 +149,11 @@ class AUwGCNWithGAT(torch.nn.Module):
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
         # 获取邻接矩阵 adj
         adj = torch.from_numpy(np.load(self.mat_path))  # 加载并转换为 Tensor
-        x = self.graph_embedding(x, adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        # x = self.graph_embedding(x, adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        # 直接调用 GCNWithGAT 进行图卷积和图注意力
+        x = self.graph_embedding(x, adj)  # 传递 x 和 adj
+        # reshape 处理为适合卷积输入的维度
+        x = x.reshape(b, t, -1).transpose(1, 2)
         # 卷积操作
         x = self._sequential(x)
         # 分类层
