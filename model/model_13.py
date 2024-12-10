@@ -164,6 +164,8 @@ class AUwGCN(nn.Module):
 
     def forward(self, x):
         # 保持三个维度 (batch_size, num_nodes, num_features)
+        # 调试
+        print(f"Input shape: {x.shape}")  # 调试：输出x的形状
         b, n, c = x.shape  # batch_size, num_nodes, num_features
 
         # 处理每个时间步的图卷积和注意力层
