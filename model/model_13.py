@@ -141,7 +141,10 @@ class AUwGCN(nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
+        # 使用GCN来处理输入的节点特征
         self.graph_embedding = GCN(2, 32, 32, mat_path, dropout=0.1, num_layers=2)
+
+        # 多头注意力层
         self.attention = MultiHeadGraphAttentionLayer(in_features=32, out_features=32, heads=4, dropout=0.1)
 
         self._sequential = nn.Sequential(
@@ -150,6 +153,7 @@ class AUwGCN(nn.Module):
             nn.ReLU(inplace=True),
             nn.Dropout(0.3),
         )
+
         self._classification = nn.Sequential(
             nn.AdaptiveAvgPool1d(1),
             nn.Flatten(),
@@ -159,13 +163,21 @@ class AUwGCN(nn.Module):
         self._init_weight()
 
     def forward(self, x):
-        b, t, n, c = x.shape
-        x = x.reshape(b * t, n, c)
-        x, adj = self.graph_embedding(x)
+        # 保持三个维度 (batch_size, num_nodes, num_features)
+        b, n, c = x.shape  # batch_size, num_nodes, num_features
+
+        # 处理每个时间步的图卷积和注意力层
+        x, adj = self.graph_embedding(x)  # (batch_size, num_nodes, feature_size)
         x = self.attention(x, adj)
 
-        x = x.reshape(b, t, -1).transpose(1, 2)
+        # 如果你有多个时间步信息，可以在这里处理多个时间步
+        # 假设 x 是 (batch_size, num_nodes, feature_size)，我们只关心对每个时间步的处理
+
+        # 对 x 进行形状调整后，进入卷积层
+        x = x.transpose(1, 2)  # (batch_size, feature_size, num_nodes)
         x = self._sequential(x)
+
+        # 分类层
         x = self._classification(x)
 
         return x
@@ -174,3 +186,4 @@ class AUwGCN(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.kaiming_normal_(m.weight)
+
