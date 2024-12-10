@@ -163,23 +163,30 @@ class AUwGCN(nn.Module):
         self._init_weight()
 
     def forward(self, x):
-        # 保持三个维度 (batch_size, num_nodes, num_features)
-        # 调试
-        print(f"Input shape: {x.shape}")  # 调试：输出x的形状
-        b, n, c = x.shape  # batch_size, num_nodes, num_features
+        # # 打印输入形状，调试用
+        # print(f"Input shape: {x.shape}")  # 输入形状： (batch_size, num_time_steps, num_nodes, num_features)
 
-        # 处理每个时间步的图卷积和注意力层
-        x, adj = self.graph_embedding(x)  # (batch_size, num_nodes, feature_size)
+        # 获取输入的维度
+        b, t, n, c = x.shape  # b=batch_size, t=num_time_steps, n=num_nodes, c=num_features
+
+        # 将输入展平为 (batch_size * num_time_steps, num_nodes, num_features)
+        x = x.reshape(b * t, n, c)
+
+        # 处理图卷积层和注意力层
+        x, adj = self.graph_embedding(x)  # (batch_size * num_time_steps, num_nodes, feature_size)
         x = self.attention(x, adj)
 
-        # 如果你有多个时间步信息，可以在这里处理多个时间步
-        # 假设 x 是 (batch_size, num_nodes, feature_size)，我们只关心对每个时间步的处理
+        # 处理完每个时间步后的输出，恢复形状为 (batch_size, num_time_steps, num_nodes, feature_size)
+        x = x.reshape(b, t, n, -1)  # (batch_size, num_time_steps, num_nodes, feature_size)
 
-        # 对 x 进行形状调整后，进入卷积层
-        x = x.transpose(1, 2)  # (batch_size, feature_size, num_nodes)
+        # 对每个时间步进行处理，这里假设我们只关心最后的特征
+        # 将 x 转换为 (batch_size * num_time_steps, feature_size, num_nodes)
+        x = x.reshape(b * t, -1, n)
+
+        # 通过卷积层进行处理
         x = self._sequential(x)
 
-        # 分类层
+        # 分类层（假设我们只关心每个时间步的最后特征）
         x = self._classification(x)
 
         return x
