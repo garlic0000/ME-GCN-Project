@@ -148,7 +148,8 @@ class AUwGCN(nn.Module):
         self.attention = MultiHeadGraphAttentionLayer(in_features=64, out_features=64, heads=4, dropout=0.1)
 
         self._sequential = nn.Sequential(
-            nn.Conv1d(256, 128, kernel_size=1, stride=1, padding=0, bias=False),  # 修改输入通道数为256
+            # 修改输入通道数为64
+            nn.Conv1d(64, 128, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm1d(128),
             nn.ReLU(inplace=True),
             nn.Dropout(0.3),
@@ -181,6 +182,7 @@ class AUwGCN(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.kaiming_normal_(m.weight)
+
 
 
 
