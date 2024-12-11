@@ -55,7 +55,7 @@ class GraphConvolution(nn.Module):
 
 class GraphAttentionLayer(nn.Module):
     """
-    Graph Attention Layer (GAT Layer)
+    图注意力层 (GAT Layer)
     """
 
     def __init__(self, in_features, out_features, dropout=0.6, alpha=0.2):
@@ -68,90 +68,98 @@ class GraphAttentionLayer(nn.Module):
         self.alpha = alpha
 
         self.W = nn.Linear(in_features, out_features, bias=False)
-        self.a = nn.Parameter(torch.zeros(1, out_features * 2))  # Attention weights
+        self.a = nn.Parameter(torch.zeros(1, out_features * 2))  # 注意力权重
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.softmax = nn.Softmax(dim=1)  # Softmax over neighbors
+        self.softmax = nn.Softmax(dim=1)  # Softmax 是对每个节点的邻居节点计算的
 
     def forward(self, h, adj):
-        # h: [B, N, F'] -> Node features
+        # h: [B, N, F'] -> 节点特征
         B, N, F = h.size()
 
-        # Linear transformation
+        # 将输入特征进行线性变换
         h_prime = self.W(h)  # [B, N, F'']
 
-        # Compute attention coefficients (matrix multiplication to avoid redundant concatenation)
+        # 计算注意力系数（改为矩阵乘法，避免重复拼接）
         e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
         e = self.leakyrelu(e)  # [B, N, N]
-        attention = self.softmax(e)  # Softmax across rows [B, N, N]
+        attention = self.softmax(e)  # 对行进行 softmax [B, N, N]
 
-        # Apply attention
+        # 应用注意力机制
         h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F'']
         h_prime = h_prime * attention.unsqueeze(-1)  # [B, N, N, F'']
 
-        # Aggregate information from neighbors
+        # 聚合邻居信息
         output = torch.sum(h_prime, dim=2)  # [B, N, F'']
 
         return output
 
 
-class GCNWithGAT(nn.Module):
+class TCNBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
+        super(TCNBlock, self).__init__()
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size, stride=1, padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+        )
+        self.batch_norm = nn.BatchNorm1d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.batch_norm(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        return x
+
+
+class GCNWithGATAndTCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
-        super(GCNWithGAT, self).__init__()
+        super(GCNWithGATAndTCN, self).__init__()
 
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         self.gat1 = GraphAttentionLayer(nhid, nout, dropout)
-
+        self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
+        self.tcn2 = TCNBlock(nout, nout, kernel_size=3, dilation=2, dropout=0.2)
         self.bn1 = nn.BatchNorm1d(nhid)
 
     def forward(self, x, adj):
         x = self.gc1(x)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
-        # Pass adj to GAT layer
         x = self.gat1(x, adj)
+        x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)  # TCN Layer 1
+        x = self.tcn2(x.transpose(1, 2)).transpose(1, 2)  # TCN Layer 2
         return x
 
 
-class TemporalConvNet(nn.Module):
-    def __init__(self, input_size, num_channels, kernel_size=3, dropout=0.2):
-        super(TemporalConvNet, self).__init__()
-        layers = []
-        for i in range(len(num_channels)):
-            dilated_conv = nn.Conv1d(input_size if i == 0 else num_channels[i-1], num_channels[i],
-                                     kernel_size=kernel_size, stride=1, padding=kernel_size//2, dilation=2**i)
-            layers.append(dilated_conv)
-            layers.append(nn.BatchNorm1d(num_channels[i]))
-            layers.append(nn.ReLU())
-            layers.append(nn.Dropout(dropout))
-        self.network = nn.Sequential(*layers)
-
-    def forward(self, x):
-        return self.network(x)
-
-
-class AUwGCNWithGAT(torch.nn.Module):
+class AUwGCNWithGATAndTCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
 
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # Graph Embedding Module
-        self.graph_embedding = GCNWithGAT(2, 16, 16, self.mat_path)
+        # 使用修改后的 GCNWithGATAndTCN
+        self.graph_embedding = GCNWithGATAndTCN(2, 16, 16, self.mat_path)
 
-        in_dim = 192  # Output from GCN and GAT
-        # Temporal Convolutional Network
-        self.temporal_model = TemporalConvNet(input_size=in_dim, num_channels=[64, 64, 64], kernel_size=3, dropout=0.2)
+        in_dim = 192  # GCN 和 GAT 输出的维度
+        self._sequential = torch.nn.Sequential(
+            torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
+            torch.nn.BatchNorm1d(64),
+            torch.nn.ReLU(inplace=True),
 
-        # Global pooling
-        self.global_pooling = nn.AdaptiveAvgPool1d(1)
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
+            torch.nn.BatchNorm1d(64),
+            torch.nn.ReLU(inplace=True),
 
-        # Classification Head
-        self._classification = torch.nn.Sequential(
-            nn.Linear(64, 64),
-            nn.ReLU(),
-            nn.Linear(64, 10)  # Assume 10 classes, adjust accordingly
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
+            torch.nn.BatchNorm1d(64),
+            torch.nn.ReLU(inplace=True),
+        )
+
+        self._classification = torch.nn.Conv1d(
+            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
         )
 
         self._init_weight()
@@ -159,26 +167,18 @@ class AUwGCNWithGAT(torch.nn.Module):
     def forward(self, x):
         b, t, n, c = x.shape
 
-        x = x.reshape(b * t, n, c)  # Flatten time dimension (b*t, n, c)
+        x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
-        # Get adjacency matrix adj
-        adj = self.graph_embedding.gc1.adj  # Get adj from graph_embedding
-        # Perform GCN and GAT operations
+        # 获取邻接矩阵 adj
+        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
+        # 直接调用 GCNWithGATAndTCN 进行图卷积、图注意力和TCN操作
         x = self.graph_embedding(x, adj)
-
-        # Reshape for TCN input
-        x = x.reshape(b, t, -1).transpose(1, 2)  # [b, c, t]
-
-        # Apply TCN
-        x = self.temporal_model(x)  # [b, c, t]
-
-        # Global pooling
-        x = self.global_pooling(x)  # [b, c, 1]
-
-        # Flatten and classify
-        x = x.squeeze(-1)  # [b, c]
+        # reshape 处理为适合卷积输入的维度
+        x = x.reshape(b, t, -1).transpose(1, 2)
+        # 卷积操作
+        x = self._sequential(x)
+        # 分类层
         x = self._classification(x)
-
         return x
 
     def _init_weight(self):
@@ -188,4 +188,4 @@ class AUwGCNWithGAT(torch.nn.Module):
             elif isinstance(m, nn.Linear):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
-                m.data.uniform_(-0.1, 0.1)  # Adjust based on requirements
+                m.data.uniform_(-0.1, 0.1)  # 根据需求调整范围
