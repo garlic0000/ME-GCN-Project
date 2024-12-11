@@ -120,7 +120,6 @@ class GCNWithGATAndTCN(nn.Module):
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         self.gat1 = GraphAttentionLayer(nhid, nout, dropout)
         self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
-        self.tcn2 = TCNBlock(nout, nout, kernel_size=3, dilation=2, dropout=0.2)
         self.bn1 = nn.BatchNorm1d(nhid)
 
     def forward(self, x, adj):
@@ -129,7 +128,6 @@ class GCNWithGATAndTCN(nn.Module):
         x = F.relu(x)
         x = self.gat1(x, adj)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)  # TCN Layer 1
-        x = self.tcn2(x.transpose(1, 2)).transpose(1, 2)  # TCN Layer 2
         return x
 
 
