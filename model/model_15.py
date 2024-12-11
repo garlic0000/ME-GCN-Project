@@ -121,7 +121,9 @@ class GCNWithGATAndTCN(nn.Module):
         self.gat1 = GraphAttentionLayer(nhid, nout, dropout)
         self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
         self.bn1 = nn.BatchNorm1d(nhid)
-        self.residual = nn.Conv1d(nhid, nout, kernel_size=1, bias=False)  # 残差分支
+
+        # 修正残差分支的输入通道数
+        self.residual = nn.Conv1d(nfeat, nout, kernel_size=1, bias=False)
 
     def forward(self, x, adj):
         residual = self.residual(x.transpose(1, 2)).transpose(1, 2)  # 残差通道
