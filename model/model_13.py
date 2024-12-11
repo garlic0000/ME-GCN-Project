@@ -6,6 +6,7 @@ import math
 import os
 import numpy as np
 
+
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -27,6 +28,7 @@ class GraphConvolution(nn.Module):
             self.register_parameter('bias', None)
         self.reset_parameters()
 
+        # 直接在初始化时加载邻接矩阵
         adj_mat = np.load(mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
 
@@ -40,7 +42,6 @@ class GraphConvolution(nn.Module):
         b, n, c = input.shape
         support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
-        # output = SparseMM(adj)(support)
         if self.bias is not None:
             return output + self.bias
         else:
@@ -79,14 +80,14 @@ class GraphAttentionLayer(nn.Module):
         # 将输入特征进行线性变换
         h_prime = self.W(h)  # [B, N, F'']
 
-        # 计算注意力系数
-        attn_input = torch.cat([h_prime.repeat(1, 1, N, 1), h_prime.unsqueeze(2).repeat(1, 1, N, 1)], dim=-1)  # [B, N, N, 2F'']
-        e = self.leakyrelu(torch.matmul(attn_input, self.a.t().unsqueeze(0).repeat(B, 1, 1, 1)))  # [B, N, N, 1]
-        attention = self.softmax(e)  # 计算注意力权重 [B, N, N, 1]
+        # 计算注意力系数（改为矩阵乘法，避免重复拼接）
+        e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
+        e = self.leakyrelu(e)  # [B, N, N]
+        attention = self.softmax(e)  # 对行进行 softmax [B, N, N]
 
         # 应用注意力机制
         h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F'']
-        h_prime = h_prime * attention  # [B, N, N, F'']
+        h_prime = h_prime * attention.unsqueeze(-1)  # [B, N, N, F'']
 
         # 聚合邻居信息
         output = torch.sum(h_prime, dim=2)  # [B, N, F'']
@@ -118,9 +119,9 @@ class AUwGCNWithGAT(torch.nn.Module):
 
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
+
         # 直接使用 GCNWithGAT，而不是包装在 Sequential 中
         self.graph_embedding = GCNWithGAT(2, 16, 16, self.mat_path)
-        # self.graph_embedding = torch.nn.Sequential(GCNWithGAT(2, 16, 16, self.mat_path))
 
         in_dim = 192  # GCN 和 GAT 输出的维度
         self._sequential = torch.nn.Sequential(
@@ -148,8 +149,7 @@ class AUwGCNWithGAT(torch.nn.Module):
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
         # 获取邻接矩阵 adj
-        adj = torch.from_numpy(np.load(self.mat_path))  # 加载并转换为 Tensor
-        # x = self.graph_embedding(x, adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        adj = self.adj  # 使用缓冲区中的邻接矩阵
         # 直接调用 GCNWithGAT 进行图卷积和图注意力
         x = self.graph_embedding(x, adj)  # 传递 x 和 adj
         # reshape 处理为适合卷积输入的维度
@@ -164,8 +164,7 @@ class AUwGCNWithGAT(torch.nn.Module):
         for m in self.modules():
             if isinstance(m, torch.nn.Conv1d):
                 torch.nn.init.kaiming_normal_(m.weight)
-            if isinstance(m, torch.nn.Conv2d):
-                torch.nn.init.kaiming_normal_(m.weight)
-
-
-
+            elif isinstance(m, nn.Linear):
+                torch.nn.init.xavier_normal_(m.weight)
+            elif isinstance(m, nn.Parameter):
+                m.data.uniform_(-0.1, 0.1)  # 根据需求调整范围
