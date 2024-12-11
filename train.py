@@ -3,10 +3,10 @@ import torch.nn as nn
 import os
 import numpy as np
 from datasets import LOSO_DATASET
-from model.model_14 import AUwGCNWithGATAndTCN
+from model.model_15 import AUwGCNWithGATAndTCN
 from torch.utils.tensorboard import SummaryWriter
 from utils.train_utils import configure_optimizers
-from loss_func.loss_func_1 import _probability_loss, MultiCEFocalLoss_New
+from loss_func.loss_func_2 import _probability_loss, MultiCEFocalLoss_New
 from functools import partial
 import argparse
 import yaml
