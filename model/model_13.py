@@ -148,8 +148,9 @@ class AUwGCNWithGAT(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
+
         # 获取邻接矩阵 adj
-        adj = self.adj  # 使用缓冲区中的邻接矩阵
+        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
         # 直接调用 GCNWithGAT 进行图卷积和图注意力
         x = self.graph_embedding(x, adj)  # 传递 x 和 adj
         # reshape 处理为适合卷积输入的维度
@@ -168,3 +169,4 @@ class AUwGCNWithGAT(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)  # 根据需求调整范围
+
