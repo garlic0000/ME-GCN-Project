@@ -181,7 +181,7 @@ class AUwGCN(torch.nn.Module):
             torch.nn.Conv1d(128, 128, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
             torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(inplace=True),
-        )
+        ) 
 
         self._classification = torch.nn.Conv1d(128, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2,
                                                bias=False)
