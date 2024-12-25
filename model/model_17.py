@@ -43,6 +43,78 @@ class GraphConvolution(nn.Module):
         return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
 
 
+class GraphAttentionLayer(nn.Module):
+    """
+    单头的图注意力层 (GAT Layer)，基于 Velickovic 等人的论文: "Graph Attention Networks"
+    """
+
+    def __init__(self, in_features, out_features, dropout, alpha, concat=True):
+        """
+        Args:
+            in_features (int): 输入特征的维度
+            out_features (int): 输出特征的维度
+            dropout (float): Dropout 概率
+            alpha (float): LeakyReLU 中的负斜率
+            concat (bool): 是否在激活后进行拼接
+        """
+        super(GraphAttentionLayer, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.dropout = dropout
+        self.alpha = alpha
+        self.concat = concat
+
+        # 权重矩阵 W 和 注意力权重 a
+        self.W = nn.Parameter(torch.empty(size=(in_features, out_features)))
+        self.a = nn.Parameter(torch.empty(size=(2 * out_features, 1)))
+
+        # LeakyReLU 激活函数
+        self.leakyrelu = nn.LeakyReLU(self.alpha)
+
+        # 参数初始化
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        """初始化权重参数"""
+        nn.init.xavier_uniform_(self.W.data, gain=1.414)
+        nn.init.xavier_uniform_(self.a.data, gain=1.414)
+
+    def forward(self, h, adj):
+        """
+        前向传播
+        Args:
+            h (torch.Tensor): 输入特征矩阵，形状为 [N, in_features]
+            adj (torch.Tensor): 邻接矩阵，形状为 [N, N]
+
+        Returns:
+            h_prime (torch.Tensor): 输出特征矩阵，形状为 [N, out_features]
+        """
+        Wh = torch.mm(h, self.W)  # 线性变换: [N, in_features] -> [N, out_features]
+        N = Wh.size(0)
+
+        # 计算注意力系数 e_ij
+        a_input = torch.cat([Wh.repeat(1, N).view(N * N, -1), Wh.repeat(N, 1)], dim=1).view(N, -1,
+                                                                                            2 * self.out_features)
+        e = self.leakyrelu(torch.matmul(a_input, self.a).squeeze(2))
+
+        # 仅保留邻接矩阵中有连接的注意力权重
+        zero_vec = -9e15 * torch.ones_like(e)
+        attention = torch.where(adj > 0, e, zero_vec)
+        attention = F.softmax(attention, dim=1)
+        attention = F.dropout(attention, self.dropout, training=self.training)
+
+        # 聚合邻接节点特征
+        h_prime = torch.matmul(attention, Wh)
+
+        if self.concat:
+            return F.elu(h_prime)  # 激活并返回输出特征
+        else:
+            return h_prime
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
+
+
 # Multi-Head Graph Attention Layer
 class MultiHeadGraphAttentionLayer(nn.Module):
     def __init__(self, in_features, out_features, num_heads, dropout=0.6, alpha=0.2):
