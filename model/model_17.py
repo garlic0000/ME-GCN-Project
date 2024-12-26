@@ -1,11 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.parameter import Parameter
-import math
-import os
 import numpy as np
-
+import os
+import math
 
 # Graph Convolution Layer
 class GraphConvolution(nn.Module):
@@ -13,16 +11,16 @@ class GraphConvolution(nn.Module):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = Parameter(torch.Tensor(in_features, out_features))
+        self.weight = nn.Parameter(torch.Tensor(in_features, out_features))
         if bias:
-            self.bias = Parameter(torch.Tensor(out_features))
+            self.bias = nn.Parameter(torch.Tensor(out_features))
         else:
             self.register_parameter('bias', None)
         self.reset_parameters()
 
         # 可学习的邻接矩阵
         adj_mat = np.load(mat_path)
-        self.adj = Parameter(torch.from_numpy(adj_mat).float(), requires_grad=True)
+        self.adj = nn.Parameter(torch.from_numpy(adj_mat).float(), requires_grad=True)
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -40,23 +38,11 @@ class GraphConvolution(nn.Module):
             return output
 
     def __repr__(self):
-        return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
+        return f'{self.__class__.__name__} ({self.in_features} -> {self.out_features})'
 
 
 class GraphAttentionLayer(nn.Module):
-    """
-    单头的图注意力层 (GAT Layer)，基于 Velickovic 等人的论文: "Graph Attention Networks"
-    """
-
     def __init__(self, in_features, out_features, dropout, alpha, concat=True):
-        """
-        Args:
-            in_features (int): 输入特征的维度
-            out_features (int): 输出特征的维度
-            dropout (float): Dropout 概率
-            alpha (float): LeakyReLU 中的负斜率
-            concat (bool): 是否在激活后进行拼接
-        """
         super(GraphAttentionLayer, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -80,15 +66,6 @@ class GraphAttentionLayer(nn.Module):
         nn.init.xavier_uniform_(self.a.data, gain=1.414)
 
     def forward(self, h, adj):
-        """
-        前向传播
-        Args:
-            h (torch.Tensor): 输入特征矩阵，形状为 [B, N, in_features]
-            adj (torch.Tensor): 邻接矩阵，形状为 [B, N, N]
-
-        Returns:
-            h_prime (torch.Tensor): 输出特征矩阵，形状为 [B, N, out_features]
-        """
         Wh = torch.bmm(h, self.W.unsqueeze(0).repeat(h.size(0), 1, 1))  # [B, N, out_features]
         N = Wh.size(1)
 
@@ -101,46 +78,29 @@ class GraphAttentionLayer(nn.Module):
 
         # 计算每对节点的注意力系数 e_ij
         a_input = a_input.view(-1, 2 * self.out_features)  # [B * N * N, 2 * out_features]
-        e = torch.matmul(a_input, self.a).view(h.size(0), N, N)  # [B, N, N]  # 修正后，确保 e 的形状为 [B, N, N]
+        e = torch.matmul(a_input, self.a).view(h.size(0), N, N)  # [B, N, N]
 
-        e = self.leakyrelu(e)  # 使用 LeakyReLU 激活
+        e = self.leakyrelu(e)
 
         # 仅保留邻接矩阵中有连接的注意力权重
         zero_vec = -9e15 * torch.ones_like(e)
         attention = torch.where(adj > 0, e, zero_vec)  # 使用邻接矩阵来屏蔽无连接的节点
         attention = F.softmax(attention, dim=2)  # 在每个节点的邻居上应用 softmax
-        attention = F.dropout(attention, self.dropout, training=self.training)  # 应用 Dropout
+        attention = F.dropout(attention, self.dropout, training=self.training)
 
         # 聚合邻接节点特征
-        h_prime = torch.bmm(attention, Wh)  # [B, N, out_features]
+        h_prime = torch.bmm(attention, Wh)
 
         if self.concat:
-            return F.elu(h_prime)  # 激活并返回输出特征
+            return F.elu(h_prime)
         else:
-            return h_prime  # 不进行拼接，直接返回
+            return h_prime
 
     def __repr__(self):
-        return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
+        return f'{self.__class__.__name__} ({self.in_features} -> {self.out_features})'
 
 
-# Multi-Head Graph Attention Layer
-class MultiHeadGraphAttentionLayer(nn.Module):
-    def __init__(self, in_features, out_features, num_heads, dropout=0.6, alpha=0.2):
-        super(MultiHeadGraphAttentionLayer, self).__init__()
-        self.num_heads = num_heads
-        self.attention_heads = nn.ModuleList([
-            GraphAttentionLayer(in_features, out_features, dropout, alpha) for _ in range(num_heads)
-        ])
-        self.fc = nn.Linear(out_features * num_heads, out_features)
-
-    def forward(self, h, adj):
-        h_heads = [head(h, adj) for head in self.attention_heads]
-        h_concat = torch.cat(h_heads, dim=-1)  # Concatenate outputs from all heads
-        h_out = self.fc(h_concat)  # Linear layer to aggregate heads
-        return h_out
-
-
-# Temporal Convolutional Block (TCN) with Residual Connection
+# TCNBlock for Temporal Convolution
 class TCNBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
         super(TCNBlock, self).__init__()
@@ -209,15 +169,16 @@ class DualBranchGCN(nn.Module):
         return self.fusion(combined_feat)
 
 
+# Main Model
 class AUwGCNWithGATAndTCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        self.graph_embedding = DualBranchGCN(2, 16, 32, self.mat_path)  # 修改这里的输入维度为192
+        self.graph_embedding = DualBranchGCN(2, 16, 32, self.mat_path)  # 输入维度为2，输出维度为32
 
-        in_dim = 12
+        in_dim = 192
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
@@ -269,5 +230,3 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)
-
-
