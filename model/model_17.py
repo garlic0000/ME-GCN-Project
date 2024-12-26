@@ -217,7 +217,7 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
 
         self.graph_embedding = DualBranchGCN(2, 16, 32, self.mat_path)  # 修改这里的输入维度为192
 
-        in_dim = 32  
+        in_dim = 12
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
