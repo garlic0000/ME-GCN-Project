@@ -89,13 +89,13 @@ class GraphAttentionLayer(nn.Module):
         Returns:
             h_prime (torch.Tensor): 输出特征矩阵，形状为 [N, out_features]
         """
-        Wh = torch.mm(h, self.W)  # 线性变换: [N, in_features] -> [N, out_features]
-        N = Wh.size(0)
+        Wh = torch.bmm(h,
+                       self.W.unsqueeze(0).repeat(h.size(0), 1, 1))  # 线性变换: [B, N, in_features] -> [B, N, out_features]
+        N = Wh.size(1)
 
         # 计算注意力系数 e_ij
-        a_input = torch.cat([Wh.repeat(1, N).view(N * N, -1), Wh.repeat(N, 1)], dim=1).view(N, -1,
-                                                                                            2 * self.out_features)
-        e = self.leakyrelu(torch.matmul(a_input, self.a).squeeze(2))
+        a_input = torch.cat([Wh.repeat(1, N, 1), Wh.repeat(N, 1, 1)], dim=2)  # [B, N, 2*out_features]
+        e = self.leakyrelu(torch.matmul(a_input, self.a).squeeze(2))  # [B, N]
 
         # 仅保留邻接矩阵中有连接的注意力权重
         zero_vec = -9e15 * torch.ones_like(e)
@@ -104,12 +104,12 @@ class GraphAttentionLayer(nn.Module):
         attention = F.dropout(attention, self.dropout, training=self.training)
 
         # 聚合邻接节点特征
-        h_prime = torch.matmul(attention, Wh)
+        h_prime = torch.bmm(attention.unsqueeze(1), Wh)  # [B, 1, N] * [B, N, out_features] = [B, 1, out_features]
 
         if self.concat:
-            return F.elu(h_prime)  # 激活并返回输出特征
+            return F.elu(h_prime.squeeze(1))  # 激活并返回输出特征
         else:
-            return h_prime
+            return h_prime.squeeze(1)  # 不进行拼接的情况下，直接返回
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
