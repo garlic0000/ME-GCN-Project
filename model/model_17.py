@@ -218,7 +218,7 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
 
         self.graph_embedding = DualBranchGCN(2, 16, 32, self.mat_path)
 
-        in_dim = 192
+        in_dim = 192  # 确保输入特征的维度是192
         self._sequential = torch.nn.Sequential(
             torch.nn.Conv1d(in_dim, 64, kernel_size=1, stride=1, padding=0, bias=False),
             torch.nn.BatchNorm1d(64),
@@ -243,17 +243,22 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
 
     def forward(self, x):
         b, t, n, c = x.shape
-        x = x.reshape(b * t, n, c)
+        x = x.reshape(b * t, n, c)  # Flatten batch and time dimensions
+
         adj = self.graph_embedding.micro_gcn.adj  # 通过 micro_gcn 获取邻接矩阵
 
-        x = self.graph_embedding(x)
-        x = x.reshape(b, t, -1).transpose(1, 2)
+        # 图卷积和注意力层的计算
+        x = self.graph_embedding(x)  # Graph embedding step
+        x = x.reshape(b, t, -1).transpose(1, 2)  # Reshape for the next layers
+
+        # 确保在通过卷积前，通道数是正确的
         x = self._sequential(x)
 
         # Temporal attention weighting
         attention_weights = self.attention(x)
         x = x * attention_weights
 
+        # 分类层
         x = self._classification(x)
         return x
 
@@ -265,3 +270,4 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)
+
