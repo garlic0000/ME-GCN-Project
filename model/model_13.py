@@ -6,6 +6,44 @@ import math
 import os
 import numpy as np
 
+"""
+1. GCN层的权重初始化和Dropout:
+权重初始化:
+使用了 xavier_uniform_ 对权重矩阵进行了初始化，这在深度神经网络中通常能帮助模型更快收敛并减少梯度消失问题。
+Dropout:
+在 GCN 的中间层加入了 Dropout，以减少过拟合的风险。这是在 GCN 层后的输出进行 Dropout 操作，防止模型过度依赖某些特征。
+2. GraphAttentionLayer的更新:
+多头注意力机制:
+
+引入了多头图注意力机制（MultiHead Attention），通过并行多个注意力头来提升模型的表达能力。
+MultiHeadGraphAttentionLayer 允许多个注意力头共享输入特征，并将每个头的输出进行拼接，从而增强模型的学习能力。
+Dropout 被应用到多头注意力的输出上，用于防止过拟合。
+注意力系数的计算方式:
+
+GraphAttentionLayer 中的注意力权重计算使用了矩阵乘法而不是拼接的方式，从而减少了计算量，提升了效率。
+3. GCN和GAT的集成:
+GCN和GAT的联合使用:
+在 GCNWithGAT 中，首先使用图卷积层（GCN）来对输入进行初步处理，然后再通过图注意力层（GAT）进一步处理，以充分利用图结构信息。
+GCNWithGAT 先进行图卷积，之后加入了图注意力层，这种集成可以更好地捕获局部邻居的依赖和全局结构信息。
+4. 多层GCN结构:
+多层GCN:
+通过增加 num_layers 参数，可以灵活控制GCN的层数，进一步增强模型的表达能力。
+在每一层之间加入了 BatchNorm 和 ReLU 激活函数，提升了网络的训练稳定性和非线性表达能力。
+5. 卷积层和分类头:
+卷积操作:
+使用了多个卷积层（Conv1d），并且使用了不同大小的卷积核，包括有 dilation 的卷积核，这能够捕获不同尺度的特征信息。
+结合了 BatchNorm 和 ReLU 激活函数来增强模型的表现。
+分类头:
+最后的分类头部分使用了一个卷积层进行输出，通过 Conv1d 将最后的特征映射到目标类别（比如情感分析中的AU类标签）。
+6. 改变的初始化方式:
+初始化权重:
+在多头注意力层和卷积层中应用了 xavier_uniform_ 和 kaiming_normal_ 等方法来初始化权重。xavier_uniform_ 初始化帮助避免梯度消失，而 kaiming_normal_ 则适用于 ReLU 激活函数，能够加速收敛。
+7. 模型模块的重构:
+图嵌入模块:
+GCNWithGAT 类和 GCN 类被封装成独立模块，确保了模型的模块化设计。
+输入输出特征维度的改变:
+通过调整卷积层的输入输出维度，使得网络可以处理更高维度的特征信息，提升了模型的表达能力。
+"""
 
 class GraphConvolution(nn.Module):
     """

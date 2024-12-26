@@ -7,11 +7,25 @@ import os
 import numpy as np
 
 """
-修正了注意力归一化方向。
-添加了数值稳定性优化（e - max）。
-初始化调整：权重初始化改为 xavier_uniform_。
-加入 Dropout：支持图卷积网络中的 Dropout。
-移除不必要的 Sequential：graph_embedding 直接调用而不是用 torch.nn.Sequential 包装。
+1. 修正了注意力归一化方向：
+在 GraphAttentionLayer 中，原本的归一化方向存在问题。通过修改归一化操作，确保了 attention = torch.nn.functional.softmax(e, dim=-1) 的正确性。这个变更确保了在计算注意力时，使用的是正确的维度方向。
+2. 添加了数值稳定性优化：
+在计算注意力分数时，使用了 e = e - torch.max(e, dim=-1, keepdim=True).values 来减去 e 中每一行的最大值。这种做法防止了在数值上可能出现的溢出问题（如 softmax 函数可能导致的溢出），提高了模型的数值稳定性。
+3. 初始化调整：
+通过 nn.init.xavier_uniform_ 初始化了 W 和 a 权重，使得权重分布更加均匀，避免了初始化时可能产生的不稳定性。
+4. 加入 Dropout：
+在 MultiHeadGraphAttentionLayer 和 GCN 中加入了 Dropout 层，dropout=0.1。这样做可以在训练过程中减少过拟合，提高模型的泛化能力。
+5. 移除不必要的 Sequential：
+原来代码中的 graph_embedding 使用了 nn.Sequential 来包装多个层。这一层的组合没有必要使用 nn.Sequential，直接调用这些层会更清晰。因此，graph_embedding 被改成直接调用每个图卷积层和批归一化层，而不是用 Sequential 封装。
+6. 层数的增加：
+GCN 层数从 num_layers=1 增加到 num_layers=2，这为模型提供了更深的图卷积特征提取能力。
+7. 权重初始化：
+Conv1d 和 Conv2d 层的权重初始化方式也有所调整，使用了 nn.init.kaiming_normal_ 初始化，以便更好地适应 ReLU 激活函数，减少梯度消失和梯度爆炸问题。
+8. 图卷积的批归一化：
+在 GCN 层中，添加了 BatchNorm1d 层，用于每个图卷积层之后的特征规范化。这可以加速训练并稳定模型表现，尤其在深度网络中尤为重要。
+9. 调整了 AUwGCN 架构：
+在 AUwGCN 的 graph_embedding 模块中，层数和功能进行了优化，以适应新的图卷积和图注意力层的组合。
+_sequential 和 _classification 层保持不变，但修改了卷积层的配置，例如 kernel 的大小、步幅、填充方式等。
 """
 
 class GraphConvolution(nn.Module):
