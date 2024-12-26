@@ -100,8 +100,10 @@ class GraphAttentionLayer(nn.Module):
         a_input = torch.cat([Wh_i, Wh_j], dim=3)  # [B, N, N, 2 * out_features]
 
         # 计算每对节点的注意力系数 e_ij
-        e = self.leakyrelu(torch.matmul(a_input.view(-1, 2 * self.out_features), self.a).squeeze(2))  # [B * N * N]
-        e = e.view(h.size(0), N, N)  # 恢复为 [B, N, N]
+        a_input = a_input.view(-1, 2 * self.out_features)  # [B * N * N, 2 * out_features]
+        e = torch.matmul(a_input, self.a).view(h.size(0), N, N)  # [B, N, N]  # 修正后，确保 e 的形状为 [B, N, N]
+
+        e = self.leakyrelu(e)  # 使用 LeakyReLU 激活
 
         # 仅保留邻接矩阵中有连接的注意力权重
         zero_vec = -9e15 * torch.ones_like(e)
@@ -113,7 +115,6 @@ class GraphAttentionLayer(nn.Module):
         h_prime = torch.bmm(attention, Wh)  # [B, N, out_features]
 
         if self.concat:
-            # 拼接后的输出经过激活处理
             return F.elu(h_prime)  # 激活并返回输出特征
         else:
             return h_prime  # 不进行拼接，直接返回
