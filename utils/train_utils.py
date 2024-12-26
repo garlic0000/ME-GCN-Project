@@ -54,6 +54,9 @@ def configure_optimizers(model, learning_rate, weight_decay):
             # # Check if it's an attention parameter (e.g., 'W' in MultiHeadGraphAttentionLayer)
             # elif isinstance(m, MultiHeadGraphAttentionLayer) and pn == 'W':
             #     decay.add(fpn)
+            # 新增 根据model_17进行的调整
+            elif 'adj' in fpn or 'graph_embedding.adj' in fpn:
+                decay.add(fpn)  # 或者添加到 no_decay
 
     # 获取模型所有参数
     param_dict = {pn: p for pn, p in model.named_parameters()}
