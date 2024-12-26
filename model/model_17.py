@@ -137,7 +137,8 @@ class TCNBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
         super(TCNBlock, self).__init__()
         self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size, stride=1, padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+            in_channels, out_channels, kernel_size, stride=1, padding=(kernel_size - 1) * dilation // 2,
+            dilation=dilation
         )
         self.batch_norm = nn.BatchNorm1d(out_channels)
         self.relu = nn.ReLU(inplace=True)
@@ -200,7 +201,6 @@ class DualBranchGCN(nn.Module):
         return self.fusion(combined_feat)
 
 
-
 # Final Model
 class AUwGCNWithGATAndTCN(torch.nn.Module):
     def __init__(self, opt):
@@ -236,9 +236,9 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
     def forward(self, x):
         b, t, n, c = x.shape
         x = x.reshape(b * t, n, c)
-        adj = self.graph_embedding.micro_branch[0].adj  # 共享邻接矩阵
+        adj = self.graph_embedding.micro_gcn.adj  # 通过 micro_gcn 获取邻接矩阵
 
-        x = self.graph_embedding(x, adj)
+        x = self.graph_embedding(x)
         x = x.reshape(b, t, -1).transpose(1, 2)
         x = self._sequential(x)
 
