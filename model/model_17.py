@@ -158,21 +158,19 @@ class DualBranchGCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
         super(DualBranchGCN, self).__init__()
 
+        # 加载邻接矩阵
+        adj_mat = np.load(mat_path)
+        self.adj = nn.Parameter(torch.from_numpy(adj_mat).float(), requires_grad=True)
+
         # 微表情分支
-        self.micro_branch = nn.Sequential(
-            GraphConvolution(nfeat, nhid, mat_path),
-            nn.ReLU(inplace=True),
-            MultiHeadGraphAttentionLayer(nhid, nout, num_heads=4, dropout=dropout),
-            TCNBlock(nout, nout, kernel_size=3, dilation=2, dropout=0.2),
-        )
+        self.micro_gcn = GraphConvolution(nfeat, nhid, mat_path)
+        self.micro_attention = MultiHeadGraphAttentionLayer(nhid, nout, num_heads=4, dropout=dropout)
+        self.micro_tcn = TCNBlock(nout, nout, kernel_size=3, dilation=2, dropout=0.2)
 
         # 宏表情分支
-        self.macro_branch = nn.Sequential(
-            GraphConvolution(nfeat, nhid, mat_path),
-            nn.ReLU(inplace=True),
-            MultiHeadGraphAttentionLayer(nhid, nout, num_heads=4, dropout=dropout),
-            TCNBlock(nout, nout, kernel_size=5, dilation=1, dropout=0.2),
-        )
+        self.macro_gcn = GraphConvolution(nfeat, nhid, mat_path)
+        self.macro_attention = MultiHeadGraphAttentionLayer(nhid, nout, num_heads=4, dropout=dropout)
+        self.macro_tcn = TCNBlock(nout, nout, kernel_size=5, dilation=1, dropout=0.2)
 
         # 融合层
         self.fusion = nn.Sequential(
@@ -181,11 +179,26 @@ class DualBranchGCN(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-    def forward(self, x, adj):
-        micro_feat = self.micro_branch(x)
-        macro_feat = self.macro_branch(x)
-        combined_feat = torch.cat([micro_feat, macro_feat], dim=1)  # 融合微表情和宏表情
+    def forward(self, x):
+        # 获取邻接矩阵
+        adj = self.adj
+
+        # 微表情分支
+        micro_feat = self.micro_gcn(x)
+        micro_feat = F.relu(micro_feat)
+        micro_feat = self.micro_attention(micro_feat, adj)
+        micro_feat = self.micro_tcn(micro_feat)
+
+        # 宏表情分支
+        macro_feat = self.macro_gcn(x)
+        macro_feat = F.relu(macro_feat)
+        macro_feat = self.macro_attention(macro_feat, adj)
+        macro_feat = self.macro_tcn(macro_feat)
+
+        # 融合微表情和宏表情
+        combined_feat = torch.cat([micro_feat, macro_feat], dim=1)
         return self.fusion(combined_feat)
+
 
 
 # Final Model
