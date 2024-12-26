@@ -83,33 +83,40 @@ class GraphAttentionLayer(nn.Module):
         """
         前向传播
         Args:
-            h (torch.Tensor): 输入特征矩阵，形状为 [N, in_features]
-            adj (torch.Tensor): 邻接矩阵，形状为 [N, N]
+            h (torch.Tensor): 输入特征矩阵，形状为 [B, N, in_features]
+            adj (torch.Tensor): 邻接矩阵，形状为 [B, N, N]
 
         Returns:
-            h_prime (torch.Tensor): 输出特征矩阵，形状为 [N, out_features]
+            h_prime (torch.Tensor): 输出特征矩阵，形状为 [B, N, out_features]
         """
-        Wh = torch.bmm(h,
-                       self.W.unsqueeze(0).repeat(h.size(0), 1, 1))  # 线性变换: [B, N, in_features] -> [B, N, out_features]
+        Wh = torch.bmm(h, self.W.unsqueeze(0).repeat(h.size(0), 1, 1))  # [B, N, out_features]
         N = Wh.size(1)
 
         # 计算注意力系数 e_ij
-        a_input = torch.cat([Wh.repeat(1, N, 1), Wh.repeat(N, 1, 1)], dim=2)  # [B, N, 2*out_features]
-        e = self.leakyrelu(torch.matmul(a_input, self.a).squeeze(2))  # [B, N]
+        Wh_i = Wh.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, out_features]
+        Wh_j = Wh.unsqueeze(1).repeat(1, N, 1, 1)  # [B, N, N, out_features]
+
+        # 将 i 和 j 的特征拼接在一起
+        a_input = torch.cat([Wh_i, Wh_j], dim=3)  # [B, N, N, 2 * out_features]
+
+        # 计算每对节点的注意力系数 e_ij
+        e = self.leakyrelu(torch.matmul(a_input.view(-1, 2 * self.out_features), self.a).squeeze(2))  # [B * N * N]
+        e = e.view(h.size(0), N, N)  # 恢复为 [B, N, N]
 
         # 仅保留邻接矩阵中有连接的注意力权重
         zero_vec = -9e15 * torch.ones_like(e)
-        attention = torch.where(adj > 0, e, zero_vec)
-        attention = F.softmax(attention, dim=1)
-        attention = F.dropout(attention, self.dropout, training=self.training)
+        attention = torch.where(adj > 0, e, zero_vec)  # 使用邻接矩阵来屏蔽无连接的节点
+        attention = F.softmax(attention, dim=2)  # 在每个节点的邻居上应用 softmax
+        attention = F.dropout(attention, self.dropout, training=self.training)  # 应用 Dropout
 
         # 聚合邻接节点特征
-        h_prime = torch.bmm(attention.unsqueeze(1), Wh)  # [B, 1, N] * [B, N, out_features] = [B, 1, out_features]
+        h_prime = torch.bmm(attention, Wh)  # [B, N, out_features]
 
         if self.concat:
-            return F.elu(h_prime.squeeze(1))  # 激活并返回输出特征
+            # 拼接后的输出经过激活处理
+            return F.elu(h_prime)  # 激活并返回输出特征
         else:
-            return h_prime.squeeze(1)  # 不进行拼接的情况下，直接返回
+            return h_prime  # 不进行拼接，直接返回
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' + str(self.in_features) + ' -> ' + str(self.out_features) + ')'
