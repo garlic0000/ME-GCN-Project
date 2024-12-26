@@ -209,14 +209,13 @@ class DualBranchGCN(nn.Module):
         return self.fusion(combined_feat)
 
 
-# Final Model
 class AUwGCNWithGATAndTCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        self.graph_embedding = DualBranchGCN(2, 16, 32, self.mat_path)
+        self.graph_embedding = DualBranchGCN(192, 16, 32, self.mat_path)  # 修改这里的输入维度为192
 
         in_dim = 192  # 确保输入特征的维度是192
         self._sequential = torch.nn.Sequential(
@@ -270,4 +269,5 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)
+
 
