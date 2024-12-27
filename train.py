@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
     # prep model
     device = opt['device'] if torch.cuda.is_available() else 'cpu'
-    model = AUwGCNWithGATAndTCN(opt)
+    model = AUwGCNWithMultiScaleTCN(opt)
     model = model.to(device)
     print("Starting training...\n")
     print("Using GPU: {} \n".format(device))
