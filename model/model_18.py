@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 """
-在model_17基础上去掉gat2
+在model_14基础上在 GCN 和 TCN 中添加 Residual Connection（残差连接）；
 """
 
 
