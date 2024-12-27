@@ -13,12 +13,7 @@ import numpy as np
 
 class GraphConvolution(nn.Module):
     """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    Param:
-        in_features, out_features, bias
-    Input:
-        features: N x C (n = # nodes), C = in_features
-        adj: adjacency matrix (N x N)
+    Simple GCN layer with Residual Connection
     """
 
     def __init__(self, in_features, out_features, mat_path, bias=True):
@@ -32,9 +27,15 @@ class GraphConvolution(nn.Module):
             self.register_parameter('bias', None)
         self.reset_parameters()
 
-        # 直接在初始化时加载邻接矩阵
+        # Load adjacency matrix
         adj_mat = np.load(mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
+
+        # 添加一个线性层，用于匹配输入和输出维度
+        if in_features != out_features:
+            self.residual_layer = nn.Linear(in_features, out_features, bias=False)
+        else:
+            self.residual_layer = None
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -46,10 +47,17 @@ class GraphConvolution(nn.Module):
         b, n, c = input.shape
         support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
+
         if self.bias is not None:
-            return output + self.bias
+            output += self.bias
+
+        # Residual connection
+        if self.residual_layer is not None:
+            residual = self.residual_layer(input)
         else:
-            return output
+            residual = input
+
+        return F.relu(output + residual)  # 残差连接后激活
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
@@ -100,27 +108,43 @@ class GraphAttentionLayer(nn.Module):
 
 
 class TCNBlock(nn.Module):
+    """
+    TCN layer with Residual Connection
+    """
+
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
         super(TCNBlock, self).__init__()
         self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size, stride=1, padding=(kernel_size - 1) * dilation // 2,
-            dilation=dilation
+            in_channels, out_channels, kernel_size, stride=1,
+            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
         )
         self.batch_norm = nn.BatchNorm1d(out_channels)
         self.relu = nn.ReLU(inplace=True)
         self.dropout = nn.Dropout(dropout)
 
+        # 添加一个卷积层，用于匹配输入和输出维度
+        if in_channels != out_channels:
+            self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+        else:
+            self.residual_layer = None
+
     def forward(self, x):
+        residual = x  # 保存残差
         x = self.conv(x)
         x = self.batch_norm(x)
         x = self.relu(x)
         x = self.dropout(x)
-        return x
+
+        # Residual connection
+        if self.residual_layer is not None:
+            residual = self.residual_layer(residual)
+
+        return F.relu(x + residual)  # 残差连接后激活
 
 
 class GCNWithGATAndTCN(nn.Module):
     """
-    带有一层 GAT 和两层 TCN 的模块。
+    Modified GCN with Residual Connection and a single TCN
     """
 
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
@@ -133,8 +157,7 @@ class GCNWithGATAndTCN(nn.Module):
         self.gat1 = GraphAttentionLayer(nhid, nout, dropout)
         self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
 
-        # 第二层 TCN（移除 gat2）
-        self.tcn2 = TCNBlock(nout, nout, kernel_size=3, dilation=2, dropout=0.2)
+        # 去掉第二层 TCN（tcn2）
 
         # BatchNorm 层
         self.bn1 = nn.BatchNorm1d(nhid)
@@ -150,16 +173,14 @@ class GCNWithGATAndTCN(nn.Module):
         x = self.gat1(x, adj)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
-        # 第二层 TCN（移除 gat2，直接进入 tcn2）
-        x = self.bn2(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
-        x = self.tcn2(x.transpose(1, 2)).transpose(1, 2)
-
+        # 没有第二层 TCN，直接返回
         return x
+
 
 
 class AUwGCNWithGATAndTCN(torch.nn.Module):
     """
-    修改后的 AU 检测模型，包含一层 GAT 和两层 TCN。
+    AU detection model with GCN, GAT, and one TCN layer
     """
 
     def __init__(self, opt):
