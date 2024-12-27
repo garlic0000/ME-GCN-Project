@@ -10,6 +10,7 @@ import numpy as np
 在model_17基础上去掉gat2
 """
 
+
 class GraphConvolution(nn.Module):
     """
     Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
@@ -102,7 +103,8 @@ class TCNBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
         super(TCNBlock, self).__init__()
         self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size, stride=1, padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+            in_channels, out_channels, kernel_size, stride=1, padding=(kernel_size - 1) * dilation // 2,
+            dilation=dilation
         )
         self.batch_norm = nn.BatchNorm1d(out_channels)
         self.relu = nn.ReLU(inplace=True)
@@ -120,6 +122,7 @@ class GCNWithGATAndTCN(nn.Module):
     """
     带有一层 GAT 和两层 TCN 的模块。
     """
+
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
         super(GCNWithGATAndTCN, self).__init__()
 
@@ -158,6 +161,7 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
     """
     修改后的 AU 检测模型，包含一层 GAT 和两层 TCN。
     """
+
     def __init__(self, opt):
         super().__init__()
 
