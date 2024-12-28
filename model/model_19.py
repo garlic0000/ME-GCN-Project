@@ -7,8 +7,16 @@ import os
 import numpy as np
 
 """
-在model_18基础上引入 Non-Local Block 捕捉全局特征；
+在model_14基础上在 GCN 和 TCN 中添加 Residual Connection（残差连接）；
 """
+
+
+def drop_edge(adj, drop_prob=0.1):
+    """Randomly drop edges in the adjacency matrix."""
+    if drop_prob <= 0.0:
+        return adj
+    mask = torch.rand_like(adj, dtype=torch.float32) > drop_prob
+    return adj * mask
 
 
 class GraphConvolution(nn.Module):
@@ -16,7 +24,7 @@ class GraphConvolution(nn.Module):
     Simple GCN layer with Residual Connection
     """
 
-    def __init__(self, in_features, out_features, mat_path, bias=True):
+    def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.1):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -30,6 +38,9 @@ class GraphConvolution(nn.Module):
         # Load adjacency matrix
         adj_mat = np.load(mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
+
+        # DropEdge probability
+        self.drop_prob = drop_prob
 
         # 添加一个线性层，用于匹配输入和输出维度
         if in_features != out_features:
@@ -45,8 +56,12 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, c = input.shape
+
+        # Apply DropEdge to adjacency matrix
+        adj = drop_edge(self.adj, drop_prob=self.drop_prob)  # Apply drop_edge
+
         support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
+        output = torch.bmm(adj.unsqueeze(0).repeat(b, 1, 1), support)
 
         if self.bias is not None:
             output += self.bias
@@ -57,7 +72,7 @@ class GraphConvolution(nn.Module):
         else:
             residual = input
 
-        return F.relu(output + residual)  # 残差连接后激活
+        return F.relu(output + residual)  # Residual connection after ReLU
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
@@ -70,7 +85,7 @@ class GraphAttentionLayer(nn.Module):
     图注意力层 (GAT Layer)
     """
 
-    def __init__(self, in_features, out_features, dropout=0.6, alpha=0.2):
+    def __init__(self, in_features, out_features, dropout=0.6, alpha=0.2, drop_prob=0.1):
         super(GraphAttentionLayer, self).__init__()
 
         self.in_features = in_features
@@ -78,33 +93,37 @@ class GraphAttentionLayer(nn.Module):
 
         self.dropout = dropout
         self.alpha = alpha
+        self.drop_prob = drop_prob  # DropEdge probability
 
         self.W = nn.Linear(in_features, out_features, bias=False)
-        self.a = nn.Parameter(torch.zeros(1, out_features * 2))  # 注意力权重
+        self.a = nn.Parameter(torch.zeros(1, out_features * 2))  # Attention weights
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.softmax = nn.Softmax(dim=1)  # Softmax 是对每个节点的邻居节点计算的
+        self.softmax = nn.Softmax(dim=1)  # Softmax is computed over the neighbors
 
     def forward(self, h, adj):
-        # h: [B, N, F'] -> 节点特征
         B, N, F = h.size()
 
-        # 将输入特征进行线性变换
+        # Apply DropEdge to adjacency matrix
+        adj = drop_edge(adj, drop_prob=self.drop_prob)  # Apply drop_edge
+
+        # Linear transformation of node features
         h_prime = self.W(h)  # [B, N, F'']
 
-        # 计算注意力系数（改为矩阵乘法，避免重复拼接）
+        # Compute attention coefficients
         e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
         e = self.leakyrelu(e)  # [B, N, N]
-        attention = self.softmax(e)  # 对行进行 softmax [B, N, N]
+        attention = self.softmax(e)  # Softmax on each row [B, N, N]
 
-        # 应用注意力机制
+        # Apply attention mechanism
         h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F'']
         h_prime = h_prime * attention.unsqueeze(-1)  # [B, N, N, F'']
 
-        # 聚合邻居信息
+        # Aggregate neighbor information
         output = torch.sum(h_prime, dim=2)  # [B, N, F'']
 
         return output
+
 
 
 class TCNBlock(nn.Module):
@@ -140,38 +159,6 @@ class TCNBlock(nn.Module):
             residual = self.residual_layer(residual)
 
         return F.relu(x + residual)  # 残差连接后激活
-
-
-class NonLocalBlock(nn.Module):
-    """
-    Non-Local Block to capture global features
-    """
-
-    def __init__(self, in_channels):
-        super(NonLocalBlock, self).__init__()
-        self.theta = nn.Conv1d(in_channels, in_channels // 2, kernel_size=1, stride=1, padding=0, bias=False)
-        self.phi = nn.Conv1d(in_channels, in_channels // 2, kernel_size=1, stride=1, padding=0, bias=False)
-        self.g = nn.Conv1d(in_channels, in_channels // 2, kernel_size=1, stride=1, padding=0, bias=False)
-        self.out_conv = nn.Conv1d(in_channels // 2, in_channels, kernel_size=1, stride=1, padding=0, bias=False)
-        self.softmax = nn.Softmax(dim=-1)
-
-    def forward(self, x):
-        b, c, t = x.size()  # 输入尺寸 (batch, channel, time)
-        theta_x = self.theta(x).view(b, c // 2, -1)  # (b, c//2, t)
-        phi_x = self.phi(x).view(b, c // 2, -1).transpose(1, 2)  # (b, t, c//2)
-        g_x = self.g(x).view(b, c // 2, -1)  # (b, c//2, t)
-
-        # Affinity matrix
-        affinity = torch.bmm(phi_x, theta_x)  # (b, t, c//2) x (b, c//2, t) -> (b, t, t)
-        affinity = self.softmax(affinity)  # 对列进行softmax
-
-        # Weighted sum
-        out = torch.bmm(affinity, g_x.transpose(1, 2))  # (b, t, t) x (b, t, c//2) -> (b, t, c//2)
-        out = out.transpose(1, 2).view(b, c // 2, t)  # 转置回来，得到 (b, c//2, t)
-
-        # Final output
-        out = self.out_conv(out)  # (b, c, t)
-        return x + out  # 残差连接
 
 
 class GCNWithGATAndTCN(nn.Module):
@@ -211,7 +198,7 @@ class GCNWithGATAndTCN(nn.Module):
 
 class AUwGCNWithGATAndTCN(torch.nn.Module):
     """
-    AU detection model with GCN, GAT, one TCN layer, and Non-Local Block
+    AU detection model with GCN, GAT, and one TCN layer
     """
 
     def __init__(self, opt):
@@ -238,9 +225,6 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
         )
 
-        # 添加 Non-Local Block
-        self.non_local = NonLocalBlock(64)
-
         self._classification = torch.nn.Conv1d(
             64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
         )
@@ -260,8 +244,6 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
         x = x.reshape(b, t, -1).transpose(1, 2)
         # 卷积操作
         x = self._sequential(x)
-        # 应用 Non-Local Block
-        x = self.non_local(x)
         # 分类层
         x = self._classification(x)
         return x
