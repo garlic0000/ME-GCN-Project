@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 """
-在model_18基础上尝试 DropEdge 随机丢弃部分边，防止过拟合；
+在model_19基础上引入 Non-Local Block 捕捉全局特征；
 """
 
 

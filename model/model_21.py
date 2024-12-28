@@ -7,8 +7,17 @@ import os
 import numpy as np
 
 """
-在model_18基础上在 TCN 中引入 Multi-Scale TCN结构；
+在model_19基础上
+使用动态的 DropEdge 概率，例如根据训练轮次逐步降低 DropEdge 的概率，以在模型收敛阶段保留更多边信息
+
 """
+
+
+def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100):
+    """动态调整 DropEdge 概率"""
+    dynamic_prob = drop_prob * (1 - epoch / max_epochs)
+    mask = torch.rand_like(adj, dtype=torch.float32) > dynamic_prob
+    return adj * mask
 
 
 class GraphConvolution(nn.Module):
@@ -16,7 +25,7 @@ class GraphConvolution(nn.Module):
     Simple GCN layer with Residual Connection
     """
 
-    def __init__(self, in_features, out_features, mat_path, bias=True):
+    def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.1):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -30,6 +39,9 @@ class GraphConvolution(nn.Module):
         # Load adjacency matrix
         adj_mat = np.load(mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
+
+        # DropEdge probability
+        self.drop_prob = drop_prob
 
         # 添加一个线性层，用于匹配输入和输出维度
         if in_features != out_features:
@@ -45,8 +57,12 @@ class GraphConvolution(nn.Module):
 
     def forward(self, input):
         b, n, c = input.shape
+
+        # Apply DropEdge to adjacency matrix
+        adj = drop_edge(self.adj, drop_prob=self.drop_prob)  # Apply drop_edge
+
         support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
-        output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
+        output = torch.bmm(adj.unsqueeze(0).repeat(b, 1, 1), support)
 
         if self.bias is not None:
             output += self.bias
@@ -57,7 +73,7 @@ class GraphConvolution(nn.Module):
         else:
             residual = input
 
-        return F.relu(output + residual)  # 残差连接后激活
+        return F.relu(output + residual)  # Residual connection after ReLU
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
@@ -70,7 +86,7 @@ class GraphAttentionLayer(nn.Module):
     图注意力层 (GAT Layer)
     """
 
-    def __init__(self, in_features, out_features, dropout=0.6, alpha=0.2):
+    def __init__(self, in_features, out_features, dropout=0.6, alpha=0.2, drop_prob=0.1):
         super(GraphAttentionLayer, self).__init__()
 
         self.in_features = in_features
@@ -78,91 +94,89 @@ class GraphAttentionLayer(nn.Module):
 
         self.dropout = dropout
         self.alpha = alpha
+        self.drop_prob = drop_prob  # DropEdge probability
 
         self.W = nn.Linear(in_features, out_features, bias=False)
-        self.a = nn.Parameter(torch.zeros(1, out_features * 2))  # 注意力权重
+        self.a = nn.Parameter(torch.zeros(1, out_features * 2))  # Attention weights
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.softmax = nn.Softmax(dim=1)  # Softmax 是对每个节点的邻居节点计算的
+        self.softmax = nn.Softmax(dim=1)  # Softmax is computed over the neighbors
 
     def forward(self, h, adj):
-        # h: [B, N, F'] -> 节点特征
         B, N, F = h.size()
 
-        # 将输入特征进行线性变换
+        # Apply DropEdge to adjacency matrix
+        adj = drop_edge(adj, drop_prob=self.drop_prob)  # Apply drop_edge
+
+        # Linear transformation of node features
         h_prime = self.W(h)  # [B, N, F'']
 
-        # 计算注意力系数（改为矩阵乘法，避免重复拼接）
+        # Compute attention coefficients
         e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
         e = self.leakyrelu(e)  # [B, N, N]
-        attention = self.softmax(e)  # 对行进行 softmax [B, N, N]
+        attention = self.softmax(e)  # Softmax on each row [B, N, N]
 
-        # 应用注意力机制
+        # Apply attention mechanism
         h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F'']
         h_prime = h_prime * attention.unsqueeze(-1)  # [B, N, N, F'']
 
-        # 聚合邻居信息
+        # Aggregate neighbor information
         output = torch.sum(h_prime, dim=2)  # [B, N, F'']
 
         return output
 
 
-class MultiScaleTCNBlock(nn.Module):
+class TCNBlock(nn.Module):
     """
-    Multi-Scale TCN layer with Residual Connection
+    TCN layer with Residual Connection
     """
 
-    def __init__(self, in_channels, out_channels, kernel_sizes, dilations, dropout=0.2):
-        super(MultiScaleTCNBlock, self).__init__()
-        self.branches = nn.ModuleList()
+    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
+        super(TCNBlock, self).__init__()
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size, stride=1,
+            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+        )
+        self.batch_norm = nn.BatchNorm1d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout = nn.Dropout(dropout)
 
-        # 为每个尺度的 kernel size 和 dilation 构建卷积分支
-        for kernel_size, dilation in zip(kernel_sizes, dilations):
-            self.branches.append(nn.Sequential(
-                nn.Conv1d(
-                    in_channels, out_channels, kernel_size, stride=1,
-                    padding=(kernel_size - 1) * dilation // 2, dilation=dilation
-                ),
-                nn.BatchNorm1d(out_channels),
-                nn.ReLU(inplace=True),
-                nn.Dropout(dropout)
-            ))
-
-        # 用于匹配残差连接的输入输出通道
+        # 添加一个卷积层，用于匹配输入和输出维度
         if in_channels != out_channels:
             self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
         else:
             self.residual_layer = None
 
     def forward(self, x):
-        # 残差路径
-        residual = x
+        residual = x  # 保存残差
+        x = self.conv(x)
+        x = self.batch_norm(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+
+        # Residual connection
         if self.residual_layer is not None:
             residual = self.residual_layer(residual)
 
-        # 多尺度分支的输出融合（相加）
-        outputs = [branch(x) for branch in self.branches]
-        output = torch.sum(torch.stack(outputs, dim=0), dim=0)  # 按通道相加
-
-        return F.relu(output + residual)  # 残差连接后激活
+        return F.relu(x + residual)  # 残差连接后激活
 
 
-class GCNWithGATAndMultiScaleTCN(nn.Module):
+class GCNWithGATAndTCN(nn.Module):
     """
-    Modified GCN with Residual Connection and Multi-Scale TCN
+    Modified GCN with Residual Connection and a single TCN
     """
 
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
-        super(GCNWithGATAndMultiScaleTCN, self).__init__()
+        super(GCNWithGATAndTCN, self).__init__()
 
         # 第一层 GCN
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
 
-        # 第一层 GAT 和 Multi-Scale TCN
+        # 第一层 GAT 和 TCN
         self.gat1 = GraphAttentionLayer(nhid, nout, dropout)
-        self.tcn1 = MultiScaleTCNBlock(
-            nout, nout, kernel_sizes=[3, 5, 7], dilations=[1, 2, 3], dropout=0.2
-        )
+        self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
+
+        # 去掉第二层 TCN（tcn2）
 
         # BatchNorm 层
         self.bn1 = nn.BatchNorm1d(nhid)
@@ -174,7 +188,7 @@ class GCNWithGATAndMultiScaleTCN(nn.Module):
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
-        # 第一层 GAT 和 Multi-Scale TCN
+        # 第一层 GAT 和 TCN
         x = self.gat1(x, adj)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
@@ -182,9 +196,9 @@ class GCNWithGATAndMultiScaleTCN(nn.Module):
         return x
 
 
-class AUwGCNWithMultiScaleTCN(torch.nn.Module):
+class AUwGCNWithGATAndTCN(torch.nn.Module):
     """
-    AU detection model with GCN, GAT, and Multi-Scale TCN
+    AU detection model with GCN, GAT, and one TCN layer
     """
 
     def __init__(self, opt):
@@ -193,8 +207,8 @@ class AUwGCNWithMultiScaleTCN(torch.nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # 使用修改后的 GCNWithGATAndMultiScaleTCN
-        self.graph_embedding = GCNWithGATAndMultiScaleTCN(2, 16, 16, self.mat_path)
+        # 使用修改后的 GCNWithGATAndTCN
+        self.graph_embedding = GCNWithGATAndTCN(2, 16, 16, self.mat_path)
 
         in_dim = 192  # GCN 和 GAT 输出的维度
         self._sequential = torch.nn.Sequential(
@@ -224,7 +238,7 @@ class AUwGCNWithMultiScaleTCN(torch.nn.Module):
 
         # 获取邻接矩阵 adj
         adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
-        # 调用 GCNWithGATAndMultiScaleTCN 进行图卷积、图注意力和 Multi-Scale TCN 操作
+        # 调用 GCNWithGATAndTCN 进行图卷积、图注意力和 TCN 操作
         x = self.graph_embedding(x, adj)
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
