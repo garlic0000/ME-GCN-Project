@@ -162,12 +162,12 @@ class NonLocalBlock(nn.Module):
         g_x = self.g(x).view(b, c // 2, -1)  # (b, c//2, t)
 
         # Affinity matrix
-        affinity = torch.bmm(theta_x, phi_x)  # (b, c//2, c//2)
-        affinity = self.softmax(affinity)
+        affinity = torch.bmm(phi_x, theta_x)  # (b, t, c//2) x (b, c//2, t) -> (b, t, t)
+        affinity = self.softmax(affinity)  # 对列进行softmax
 
         # Weighted sum
-        out = torch.bmm(affinity, g_x.transpose(1, 2))  # (b, c//2, t)
-        out = out.transpose(1, 2).view(b, c // 2, t)
+        out = torch.bmm(affinity, g_x.transpose(1, 2))  # (b, t, t) x (b, t, c//2) -> (b, t, c//2)
+        out = out.transpose(1, 2).view(b, c // 2, t)  # 转置回来，得到 (b, c//2, t)
 
         # Final output
         out = self.out_conv(out)  # (b, c, t)
