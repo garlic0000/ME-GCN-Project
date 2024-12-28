@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 """
-在model_14基础上在 GCN 和 TCN 中添加 Residual Connection（残差连接）；
+在model_18基础上尝试 DropEdge 随机丢弃部分边，防止过拟合；
 """
 
 
