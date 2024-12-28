@@ -3,7 +3,7 @@ import torch.nn as nn
 import os
 import numpy as np
 from datasets import LOSO_DATASET
-from model.model_19_test import AUwGCNWithMultiScaleTCN
+from model.model_19 import AUwGCNWithGATAndTCN
 from torch.utils.tensorboard import SummaryWriter
 from utils.train_utils import configure_optimizers
 from loss_func.loss_func import _probability_loss, MultiCEFocalLoss_New
@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
     # prep model
     device = opt['device'] if torch.cuda.is_available() else 'cpu'
-    model = AUwGCNWithMultiScaleTCN(opt)
+    model = AUwGCNWithGATAndTCN(opt)
     model = model.to(device)
     print("Starting training...\n")
     print("Using GPU: {} \n".format(device))
