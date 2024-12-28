@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 """
-在model_14基础上在 GCN 和 TCN 中添加 Residual Connection（残差连接）；
+在model_18基础上在 TCN 中引入 Multi-Scale TCN结构；
 """
 
 
@@ -107,89 +107,62 @@ class GraphAttentionLayer(nn.Module):
         return output
 
 
-class TCNBlock(nn.Module):
+class MultiScaleTCNBlock(nn.Module):
     """
-    TCN layer with Residual Connection
+    Multi-Scale TCN layer with Residual Connection
     """
 
-    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
-        super(TCNBlock, self).__init__()
-        self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size, stride=1,
-            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
-        )
-        self.batch_norm = nn.BatchNorm1d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
-        self.dropout = nn.Dropout(dropout)
+    def __init__(self, in_channels, out_channels, kernel_sizes, dilations, dropout=0.2):
+        super(MultiScaleTCNBlock, self).__init__()
+        self.branches = nn.ModuleList()
 
-        # 添加一个卷积层，用于匹配输入和输出维度
+        # 为每个尺度的 kernel size 和 dilation 构建卷积分支
+        for kernel_size, dilation in zip(kernel_sizes, dilations):
+            self.branches.append(nn.Sequential(
+                nn.Conv1d(
+                    in_channels, out_channels, kernel_size, stride=1,
+                    padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+                ),
+                nn.BatchNorm1d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.Dropout(dropout)
+            ))
+
+        # 用于匹配残差连接的输入输出通道
         if in_channels != out_channels:
             self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
         else:
             self.residual_layer = None
 
     def forward(self, x):
-        residual = x  # 保存残差
-        x = self.conv(x)
-        x = self.batch_norm(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-
-        # Residual connection
+        # 残差路径
+        residual = x
         if self.residual_layer is not None:
             residual = self.residual_layer(residual)
 
-        return F.relu(x + residual)  # 残差连接后激活
+        # 多尺度分支的输出融合（相加）
+        outputs = [branch(x) for branch in self.branches]
+        output = torch.sum(torch.stack(outputs, dim=0), dim=0)  # 按通道相加
+
+        return F.relu(output + residual)  # 残差连接后激活
 
 
-class NonLocalBlock(nn.Module):
+class GCNWithGATAndMultiScaleTCN(nn.Module):
     """
-    Non-Local Block to capture global features
-    """
-
-    def __init__(self, in_channels):
-        super(NonLocalBlock, self).__init__()
-        self.theta = nn.Conv1d(in_channels, in_channels // 2, kernel_size=1, stride=1, padding=0, bias=False)
-        self.phi = nn.Conv1d(in_channels, in_channels // 2, kernel_size=1, stride=1, padding=0, bias=False)
-        self.g = nn.Conv1d(in_channels, in_channels // 2, kernel_size=1, stride=1, padding=0, bias=False)
-        self.out_conv = nn.Conv1d(in_channels // 2, in_channels, kernel_size=1, stride=1, padding=0, bias=False)
-        self.softmax = nn.Softmax(dim=-1)
-
-    def forward(self, x):
-        b, c, t = x.size()  # 输入尺寸 (batch, channel, time)
-        theta_x = self.theta(x).view(b, c // 2, -1)  # (b, c//2, t)
-        phi_x = self.phi(x).view(b, c // 2, -1).transpose(1, 2)  # (b, t, c//2)
-        g_x = self.g(x).view(b, c // 2, -1)  # (b, c//2, t)
-
-        # Affinity matrix
-        affinity = torch.bmm(theta_x, phi_x)  # (b, c//2, c//2)
-        affinity = self.softmax(affinity)
-
-        # Weighted sum
-        out = torch.bmm(affinity, g_x.transpose(1, 2))  # (b, c//2, t)
-        out = out.transpose(1, 2).view(b, c // 2, t)
-
-        # Final output
-        out = self.out_conv(out)  # (b, c, t)
-        return x + out  # 残差连接
-
-
-class GCNWithGATAndTCN(nn.Module):
-    """
-    Modified GCN with Residual Connection and a single TCN
+    Modified GCN with Residual Connection and Multi-Scale TCN
     """
 
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3):
-        super(GCNWithGATAndTCN, self).__init__()
+        super(GCNWithGATAndMultiScaleTCN, self).__init__()
 
         # 第一层 GCN
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
 
-        # 第一层 GAT 和 TCN
+        # 第一层 GAT 和 Multi-Scale TCN
         self.gat1 = GraphAttentionLayer(nhid, nout, dropout)
-        self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
-
-        # 去掉第二层 TCN（tcn2）
+        self.tcn1 = MultiScaleTCNBlock(
+            nout, nout, kernel_sizes=[3, 5, 7], dilations=[1, 2, 3], dropout=0.2
+        )
 
         # BatchNorm 层
         self.bn1 = nn.BatchNorm1d(nhid)
@@ -201,7 +174,7 @@ class GCNWithGATAndTCN(nn.Module):
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
-        # 第一层 GAT 和 TCN
+        # 第一层 GAT 和 Multi-Scale TCN
         x = self.gat1(x, adj)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
@@ -209,9 +182,9 @@ class GCNWithGATAndTCN(nn.Module):
         return x
 
 
-class AUwGCNWithGATAndTCN(torch.nn.Module):
+class AUwGCNWithMultiScaleTCN(torch.nn.Module):
     """
-    AU detection model with GCN, GAT, one TCN layer, and Non-Local Block
+    AU detection model with GCN, GAT, and Multi-Scale TCN
     """
 
     def __init__(self, opt):
@@ -220,8 +193,8 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
 
-        # 使用修改后的 GCNWithGATAndTCN
-        self.graph_embedding = GCNWithGATAndTCN(2, 16, 16, self.mat_path)
+        # 使用修改后的 GCNWithGATAndMultiScaleTCN
+        self.graph_embedding = GCNWithGATAndMultiScaleTCN(2, 16, 16, self.mat_path)
 
         in_dim = 192  # GCN 和 GAT 输出的维度
         self._sequential = torch.nn.Sequential(
@@ -238,9 +211,6 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
         )
 
-        # 添加 Non-Local Block
-        self.non_local = NonLocalBlock(64)
-
         self._classification = torch.nn.Conv1d(
             64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
         )
@@ -254,14 +224,12 @@ class AUwGCNWithGATAndTCN(torch.nn.Module):
 
         # 获取邻接矩阵 adj
         adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
-        # 调用 GCNWithGATAndTCN 进行图卷积、图注意力和 TCN 操作
+        # 调用 GCNWithGATAndMultiScaleTCN 进行图卷积、图注意力和 Multi-Scale TCN 操作
         x = self.graph_embedding(x, adj)
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
         # 卷积操作
         x = self._sequential(x)
-        # 应用 Non-Local Block
-        x = self.non_local(x)
         # 分类层
         x = self._classification(x)
         return x
