@@ -104,26 +104,23 @@ class GraphConvolution(nn.Module):
 
 
 class MultiHeadGraphAttentionLayer(nn.Module):
-    """
-    多头图注意力层 (Multi-Head GAT Layer)
-    """
-
-    def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
+    def __init__(self, in_features, out_features, num_heads, dropout=0.6, alpha=0.2):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
+        self.in_features = in_features
+        self.out_features = out_features
         self.num_heads = num_heads
-        self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
-        self.dropout = dropout
-        self.alpha = alpha
-        self.drop_prob = drop_prob  # DropEdge probability
 
-        # 为每个头定义独立的线性变换
-        self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
-        self.a = nn.ModuleList(
-            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
+        self.W = nn.ModuleList([nn.Linear(in_features, out_features, bias=False) for _ in range(num_heads)])
+        self.a = nn.ParameterList(
+            [
+                nn.Parameter(torch.zeros(1, out_features * 2)) for _ in range(num_heads)
+            ]
+        )
 
-        self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
+        self.leakyrelu = nn.LeakyReLU(alpha)
+        self.dropout = nn.Dropout(dropout)
+        self.softmax = nn.Softmax(dim=1)  # Softmax is computed over the neighbors
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
     def forward(self, h, adj):
