@@ -57,6 +57,10 @@ def configure_optimizers(model, learning_rate, weight_decay):
             # 新增 根据model_17进行的调整
             elif 'adj' in fpn or 'graph_embedding.adj' in fpn:
                 decay.add(fpn)  # 或者添加到 no_decay
+            # 新增 根据 model_22进行的调整
+            elif "residual_weight.alpha" in fpn:
+                # residual_weight.alpha 参数特殊处理（根据错误信息）
+                no_decay.add(fpn)
 
     # 获取模型所有参数
     param_dict = {pn: p for pn, p in model.named_parameters()}
