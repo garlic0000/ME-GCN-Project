@@ -118,7 +118,8 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
-        self.a = nn.ModuleList([nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
+        self.a = nn.ParameterList(
+            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
