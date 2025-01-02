@@ -62,9 +62,12 @@ def configure_optimizers(model, learning_rate, weight_decay):
                 # residual_weight.alpha 参数特殊处理（根据错误信息）
                 no_decay.add(fpn)
             # 根据model_23进行修改
-            # Check if it's an attention parameter (e.g., 'a' or 'W' in GraphAttentionLayer)
             elif isinstance(m, MultiHeadGraphAttentionLayer) and (pn == 'a' or pn == 'W'):
                 decay.add(fpn)
+            # 根据model_23进行修改
+            elif 'gat1.a' in fpn or 'gat.a' in fpn:  # 手动处理 GAT 的 attention 参数
+                # 对 `gat1.a` 或其他命名规则的参数单独处理
+                no_decay.add(fpn)
 
     # 获取模型所有参数
     param_dict = {pn: p for pn, p in model.named_parameters()}
