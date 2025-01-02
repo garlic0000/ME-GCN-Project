@@ -1,6 +1,6 @@
 import torch
 import opts
-from model.model_22 import AUwGCNWithGATAndTCN
+from model.model_23 import AUwGCNWithMultiHeadGATAndTCN
 from datasets import LOSO_DATASET
 import os
 import yaml
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     # define and load model
     device = opt['device'] if torch.cuda.is_available() else 'cpu'
-    model = AUwGCNWithGATAndTCN(opt)
+    model = AUwGCNWithMultiHeadGATAndTCN(opt)
     model = model.to(device)
     print("Starting evaluating...\n")
     print("Using GPU: {} \n".format(device))
