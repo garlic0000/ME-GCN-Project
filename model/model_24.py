@@ -7,11 +7,8 @@ import os
 import numpy as np
 
 """
-在model_22基础上
-
-引入残差优化模块：
-
-
+在model_23基础上
+动态调整残差权重
 """
 
 
@@ -22,20 +19,26 @@ def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100):
     return adj * mask
 
 
-class ResidualWeight(nn.Module):
-    """残差优化模块"""
+class DynamicResidualWeight(nn.Module):
+    """动态残差优化模块"""
 
-    def __init__(self):
-        super(ResidualWeight, self).__init__()
-        self.alpha = nn.Parameter(torch.tensor(0.5))  # 初始化比例参数为 0.5
+    def __init__(self, in_features):
+        super(DynamicResidualWeight, self).__init__()
+        self.gate = nn.Sequential(
+            nn.Linear(in_features, in_features // 2),
+            nn.ReLU(),
+            nn.Linear(in_features // 2, 1),
+            nn.Sigmoid()
+        )
 
     def forward(self, input, residual):
-        return self.alpha * input + (1 - self.alpha) * residual
+        alpha = self.gate(input.mean(dim=1))  # 根据输入动态调整权重
+        return alpha * input + (1 - alpha) * residual
 
 
 class GraphConvolution(nn.Module):
     """
-    Simple GCN layer with Residual Connection and ResidualWeight Optimization
+    Simple GCN layer with Residual Connection and DynamicResidualWeight Optimization
     """
 
     def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.1):
@@ -62,8 +65,8 @@ class GraphConvolution(nn.Module):
         else:
             self.residual_layer = None
 
-        # 残差优化模块
-        self.residual_weight = ResidualWeight()
+        # 动态残差优化模块
+        self.residual_weight = DynamicResidualWeight(out_features)
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -89,19 +92,15 @@ class GraphConvolution(nn.Module):
         else:
             residual = input
 
-        # 使用残差优化
+        # 使用动态残差优化
         return self.residual_weight(F.relu(output), residual)
-
-    def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-            + str(self.in_features) + ' -> ' \
-            + str(self.out_features) + ')'
 
 
 class MultiHeadGraphAttentionLayer(nn.Module):
     """
     多头图注意力层 (Multi-Head GAT Layer)
     """
+
     def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
@@ -114,11 +113,12 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
         self.a = nn.ParameterList(
-            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
+            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)]
+        )  # Attention weights
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
-        self.residual_weight = ResidualWeight()  # 残差优化模块
+        self.residual_weight = DynamicResidualWeight(out_features)  # 动态残差优化模块
 
     def forward(self, h, adj):
         B, N, F = h.size()
@@ -147,14 +147,13 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         # 将多个头的输出拼接
         output = torch.cat(outputs, dim=-1)  # [B, N, F]
 
-        # 残差连接与优化
+        # 动态残差连接与优化
         return self.residual_weight(output, h)
-
 
 
 class TCNBlock(nn.Module):
     """
-    TCN layer with ResidualWeight Optimization
+    TCN layer with DynamicResidualWeight Optimization
     """
 
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
@@ -173,8 +172,8 @@ class TCNBlock(nn.Module):
         else:
             self.residual_layer = None
 
-        # 残差优化模块
-        self.residual_weight = ResidualWeight()
+        # 动态残差优化模块
+        self.residual_weight = DynamicResidualWeight(out_channels)
 
     def forward(self, x):
         residual = x  # 保存残差
