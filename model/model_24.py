@@ -6,39 +6,40 @@ import math
 import os
 import numpy as np
 
-"""
-在model_23基础上
-动态调整残差权重
-"""
 
-
+"""
+在model_23的基础上
+引入自适应残差
+"""
 def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100):
     """动态调整 DropEdge 概率"""
     dynamic_prob = drop_prob * (1 - epoch / max_epochs)
     mask = torch.rand_like(adj, dtype=torch.float32) > dynamic_prob
     return adj * mask
 
-
-class DynamicResidualWeight(nn.Module):
-    """动态残差优化模块"""
+class AdaptiveResidualWeight(nn.Module):
+    """自适应残差优化模块"""
 
     def __init__(self, in_features):
-        super(DynamicResidualWeight, self).__init__()
-        self.gate = nn.Sequential(
+        super(AdaptiveResidualWeight, self).__init__()
+        # 使用一个小的 MLP 来动态调整残差的权重
+        self.fc = nn.Sequential(
             nn.Linear(in_features, in_features // 2),
             nn.ReLU(),
             nn.Linear(in_features // 2, 1),
-            nn.Sigmoid()
+            nn.Sigmoid()  # 输出一个[0, 1]之间的值，表示残差权重
         )
 
     def forward(self, input, residual):
-        alpha = self.gate(input.mean(dim=1))  # 根据输入动态调整权重
+        # 计算动态的残差权重
+        alpha = self.fc(input.mean(dim=1))  # 通过输入的均值来计算权重
+        alpha = alpha.unsqueeze(-1).unsqueeze(-1)  # 为了广播与输入形状一致
         return alpha * input + (1 - alpha) * residual
 
 
 class GraphConvolution(nn.Module):
     """
-    Simple GCN layer with Residual Connection and DynamicResidualWeight Optimization
+    Simple GCN layer with Adaptive Residual Connection and ResidualWeight Optimization
     """
 
     def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.1):
@@ -65,8 +66,8 @@ class GraphConvolution(nn.Module):
         else:
             self.residual_layer = None
 
-        # 动态残差优化模块
-        self.residual_weight = DynamicResidualWeight(out_features)
+        # 自适应残差模块
+        self.residual_weight = AdaptiveResidualWeight(in_features)
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -92,15 +93,19 @@ class GraphConvolution(nn.Module):
         else:
             residual = input
 
-        # 使用动态残差优化
+        # 使用自适应残差
         return self.residual_weight(F.relu(output), residual)
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+            + str(self.in_features) + ' -> ' \
+            + str(self.out_features) + ')'
 
 
 class MultiHeadGraphAttentionLayer(nn.Module):
     """
     多头图注意力层 (Multi-Head GAT Layer)
     """
-
     def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
@@ -113,12 +118,11 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
         self.a = nn.ParameterList(
-            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)]
-        )  # Attention weights
+            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
-        self.residual_weight = DynamicResidualWeight(out_features)  # 动态残差优化模块
+        self.residual_weight = AdaptiveResidualWeight(in_features)  # 自适应残差优化模块
 
     def forward(self, h, adj):
         B, N, F = h.size()
@@ -147,13 +151,13 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         # 将多个头的输出拼接
         output = torch.cat(outputs, dim=-1)  # [B, N, F]
 
-        # 动态残差连接与优化
+        # 自适应残差连接与优化
         return self.residual_weight(output, h)
 
 
 class TCNBlock(nn.Module):
     """
-    TCN layer with DynamicResidualWeight Optimization
+    TCN layer with Adaptive Residual Optimization
     """
 
     def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
@@ -172,8 +176,8 @@ class TCNBlock(nn.Module):
         else:
             self.residual_layer = None
 
-        # 动态残差优化模块
-        self.residual_weight = DynamicResidualWeight(out_channels)
+        # 自适应残差模块
+        self.residual_weight = AdaptiveResidualWeight(in_channels)
 
     def forward(self, x):
         residual = x  # 保存残差
@@ -182,7 +186,7 @@ class TCNBlock(nn.Module):
         x = self.relu(x)
         x = self.dropout(x)
 
-        # Residual connection with optimization
+        # 自适应残差连接与优化
         if self.residual_layer is not None:
             residual = self.residual_layer(residual)
 
