@@ -24,24 +24,32 @@ class AdaptiveResidualWeight(nn.Module):
 
     def __init__(self, in_features):
         super(AdaptiveResidualWeight, self).__init__()
-        # 使用一个小的 MLP 来动态调整残差的权重
+        # 假设 in_features 是 16，fc 层需要根据这个来调整
         self.fc = nn.Sequential(
-            nn.Linear(in_features, in_features // 2),  # 将输入特征数改为 in_features
+            nn.Linear(in_features, in_features // 2),  # 输入 16，输出 8
             nn.ReLU(),
-            nn.Linear(in_features // 2, 1),  # 输出为 1，用来调整残差的权重
-            nn.Sigmoid()  # 输出一个 [0, 1] 之间的值，表示残差权重
+            nn.Linear(in_features // 2, 1),  # 最终输出一个标量
+            nn.Sigmoid()  # 输出 0 到 1 之间的值，用作残差权重
         )
 
     def forward(self, input, residual):
-        # 确保输入的形状正确
+        # input 的形状为 [batch_size, num_nodes, features]，我们按 num_nodes 维度求均值
         batch_size, num_nodes, _ = input.size()
 
         # 计算输入的均值 (按节点维度求均值)
-        alpha = self.fc(input.mean(dim=1))  # [batch_size, 1]
+        mean_input = input.mean(dim=1)  # [batch_size, features]
+
+        # 通过 fc 层计算权重 alpha，输出形状为 [batch_size, 1]
+        alpha = self.fc(mean_input)  # [batch_size, 1]
+
+        # alpha 扩展成 [batch_size, 1, 1] 的形状，以便与输入相乘
         alpha = alpha.unsqueeze(-1).unsqueeze(-1)  # [batch_size, 1, 1]
 
-        # 返回残差加权后的结果
+        # 返回加权后的残差
         return alpha * input + (1 - alpha) * residual
+
+
+
 
 
 
