@@ -6,16 +6,18 @@ import math
 import os
 import numpy as np
 
-
 """
 在model_23的基础上
 引入自适应残差
 """
+
+
 def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100):
     """动态调整 DropEdge 概率"""
     dynamic_prob = drop_prob * (1 - epoch / max_epochs)
     mask = torch.rand_like(adj, dtype=torch.float32) > dynamic_prob
     return adj * mask
+
 
 class AdaptiveResidualWeight(nn.Module):
     """自适应残差优化模块"""
@@ -31,9 +33,14 @@ class AdaptiveResidualWeight(nn.Module):
         )
 
     def forward(self, input, residual):
-        # 计算动态的残差权重
-        alpha = self.fc(input.mean(dim=1))  # 通过输入的均值来计算权重
-        alpha = alpha.unsqueeze(-1).unsqueeze(-1)  # 为了广播与输入形状一致
+        # 确保输入的形状正确
+        batch_size, num_nodes, _ = input.size()
+
+        # 计算输入的均值 (按节点维度求均值)
+        alpha = self.fc(input.mean(dim=1))  # [batch_size, 1]
+        alpha = alpha.unsqueeze(-1).unsqueeze(-1)  # [batch_size, 1, 1]
+
+        # 调整形状以匹配输入
         return alpha * input + (1 - alpha) * residual
 
 
@@ -106,6 +113,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
     """
     多头图注意力层 (Multi-Head GAT Layer)
     """
+
     def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
