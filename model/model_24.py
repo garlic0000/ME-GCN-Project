@@ -26,10 +26,10 @@ class AdaptiveResidualWeight(nn.Module):
         super(AdaptiveResidualWeight, self).__init__()
         # 使用一个小的 MLP 来动态调整残差的权重
         self.fc = nn.Sequential(
-            nn.Linear(in_features, in_features // 2),
+            nn.Linear(in_features, in_features // 2),  # 将输入特征数改为 in_features
             nn.ReLU(),
-            nn.Linear(in_features // 2, 1),
-            nn.Sigmoid()  # 输出一个[0, 1]之间的值，表示残差权重
+            nn.Linear(in_features // 2, 1),  # 输出为 1，用来调整残差的权重
+            nn.Sigmoid()  # 输出一个 [0, 1] 之间的值，表示残差权重
         )
 
     def forward(self, input, residual):
@@ -40,8 +40,9 @@ class AdaptiveResidualWeight(nn.Module):
         alpha = self.fc(input.mean(dim=1))  # [batch_size, 1]
         alpha = alpha.unsqueeze(-1).unsqueeze(-1)  # [batch_size, 1, 1]
 
-        # 调整形状以匹配输入
+        # 返回残差加权后的结果
         return alpha * input + (1 - alpha) * residual
+
 
 
 class GraphConvolution(nn.Module):
