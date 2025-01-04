@@ -7,9 +7,9 @@ import os
 import numpy as np
 
 """
-在model_23基础上
+在model_22基础上
 
-使用 GraphSAGE 和 GATv2
+引入残差优化模块：
 
 
 """
@@ -33,160 +33,208 @@ class ResidualWeight(nn.Module):
         return self.alpha * input + (1 - self.alpha) * residual
 
 
-class GraphSAGEConv(nn.Module):
-    def __init__(self, in_features, out_features, aggregation='mean', drop_prob=0.1):
-        super(GraphSAGEConv, self).__init__()
+class GraphConvolution(nn.Module):
+    """
+    Simple GCN layer with Residual Connection and ResidualWeight Optimization
+    """
+
+    def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.1):
+        super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.aggregation = aggregation
-        self.drop_prob = drop_prob
         self.weight = Parameter(torch.Tensor(in_features, out_features))
-        self.bias = Parameter(torch.Tensor(out_features))
+        if bias:
+            self.bias = Parameter(torch.Tensor(out_features))
+        else:
+            self.register_parameter('bias', None)
         self.reset_parameters()
 
-    def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.weight.size(1))
-        self.weight.data.uniform_(-stdv, stdv)
-        self.bias.data.uniform_(-stdv, stdv)
+        # Load adjacency matrix
+        adj_mat = np.load(mat_path)
+        self.register_buffer('adj', torch.from_numpy(adj_mat))
 
-    def aggregate(self, neighbors):
-        if self.aggregation == 'mean':
-            return torch.mean(neighbors, dim=1)
-        elif self.aggregation == 'sum':
-            return torch.sum(neighbors, dim=1)
-        elif self.aggregation == 'max':
-            return torch.max(neighbors, dim=1)[0]
-        else:
-            raise ValueError("Unknown aggregation method")
-
-    def forward(self, input, adj):
-        b, n, c = input.shape
-
-        # Apply DropEdge to adjacency matrix
-        adj = drop_edge(adj, drop_prob=self.drop_prob)
-
-        support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))  # [B, N, F_out]
-        output = torch.bmm(adj.unsqueeze(0).repeat(b, 1, 1), support)  # [B, N, F_out]
-
-        if self.bias is not None:
-            output += self.bias
-
-        return F.relu(output)
-
-
-
-class GATv2Layer(nn.Module):
-    def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
-        super(GATv2Layer, self).__init__()
-
-        self.num_heads = num_heads
-        self.out_per_head = out_features // num_heads
-        self.dropout = dropout
-        self.alpha = alpha
+        # DropEdge probability
         self.drop_prob = drop_prob
 
-        self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
-        self.a = nn.ParameterList([nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])
-
-        self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.softmax = nn.Softmax(dim=2)
-        self.residual_weight = ResidualWeight()
-
-    def forward(self, h, adj):
-        B, N, F = h.size()
-        outputs = []
-
-        adj = drop_edge(adj, drop_prob=self.drop_prob)  # Apply drop_edge
-
-        for i in range(self.num_heads):
-            h_prime = self.W[i](h)
-            e = torch.matmul(h_prime, h_prime.transpose(1, 2))
-            e = self.leakyrelu(e)
-            attention = self.softmax(e)
-
-            h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)
-            h_prime = h_prime * attention.unsqueeze(-1)
-            output = torch.sum(h_prime, dim=2)
-            outputs.append(output)
-
-        output = torch.cat(outputs, dim=-1)
-
-        return self.residual_weight(output, h)
-
-
-class TCNBlock(nn.Module):
-    """
-    TCN layer with ResidualWeight Optimization
-    """
-
-    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
-        super(TCNBlock, self).__init__()
-        self.conv = nn.Conv1d(
-            in_channels, out_channels, kernel_size, stride=1,
-            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
-        )
-        self.batch_norm = nn.BatchNorm1d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
-        self.dropout = nn.Dropout(dropout)
-
-        # 添加一个卷积层，用于匹配输入和输出维度
-        if in_channels != out_channels:
-            self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+        # 添加一个线性层，用于匹配输入和输出维度
+        if in_features != out_features:
+            self.residual_layer = nn.Linear(in_features, out_features, bias=False)
         else:
             self.residual_layer = None
 
         # 残差优化模块
         self.residual_weight = ResidualWeight()
 
-    def forward(self, x):
-        residual = x  # 保存残差
-        x = self.conv(x)
-        x = self.batch_norm(x)
-        x = self.relu(x)
-        x = self.dropout(x)
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weight.size(1))
+        self.weight.data.uniform_(-stdv, stdv)
+        if self.bias is not None:
+            self.bias.data.uniform_(-stdv, stdv)
 
-        # Residual connection with optimization
+    def forward(self, input):
+        b, n, c = input.shape
+
+        # Apply DropEdge to adjacency matrix
+        adj = drop_edge(self.adj, drop_prob=self.drop_prob)  # Apply drop_edge
+
+        support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
+        output = torch.bmm(adj.unsqueeze(0).repeat(b, 1, 1), support)
+
+        if self.bias is not None:
+            output += self.bias
+
+        # Residual connection
+        if self.residual_layer is not None:
+            residual = self.residual_layer(input)
+        else:
+            residual = input
+
+        # 使用残差优化
+        return self.residual_weight(F.relu(output), residual)
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+            + str(self.in_features) + ' -> ' \
+            + str(self.out_features) + ')'
+
+
+class MultiHeadGraphAttentionLayer(nn.Module):
+    """
+    多头图注意力层 (Multi-Head GAT Layer)
+    """
+    def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
+        super(MultiHeadGraphAttentionLayer, self).__init__()
+
+        self.num_heads = num_heads
+        self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
+        self.dropout = dropout
+        self.alpha = alpha
+        self.drop_prob = drop_prob  # DropEdge probability
+
+        # 为每个头定义独立的线性变换
+        self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
+        self.a = nn.ParameterList(
+            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
+
+        self.leakyrelu = nn.LeakyReLU(self.alpha)
+        self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
+        self.residual_weight = ResidualWeight()  # 残差优化模块
+
+    def forward(self, h, adj):
+        B, N, F = h.size()
+        outputs = []
+
+        # Apply DropEdge to adjacency matrix
+        adj = drop_edge(adj, drop_prob=self.drop_prob)  # Apply drop_edge
+
+        for i in range(self.num_heads):
+            # 对每个头进行独立的线性变换
+            h_prime = self.W[i](h)  # [B, N, F_per_head]
+
+            # 计算注意力分数
+            e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
+            e = self.leakyrelu(e)  # [B, N, N]
+            attention = self.softmax(e)  # Softmax on each row [B, N, N]
+
+            # Apply attention mechanism
+            h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F_per_head]
+            h_prime = h_prime * attention.unsqueeze(-1)  # [B, N, N, F_per_head]
+
+            # 聚合邻居信息
+            output = torch.sum(h_prime, dim=2)  # [B, N, F_per_head]
+            outputs.append(output)
+
+        # 将多个头的输出拼接
+        output = torch.cat(outputs, dim=-1)  # [B, N, F]
+
+        # 残差连接与优化
+        return self.residual_weight(output, h)
+
+
+class MultiScaleTCNBlock(nn.Module):
+    """
+    Multi-Scale TCN Block with ResidualWeight Optimization
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_sizes=[3, 5, 7], dilation=1, dropout=0.2):
+        super(MultiScaleTCNBlock, self).__init__()
+
+        self.convs = nn.ModuleList([
+            nn.Conv1d(in_channels, out_channels, kernel_size=ks, stride=1,
+                      padding=(ks - 1) * dilation // 2, dilation=dilation)
+            for ks in kernel_sizes
+        ])
+
+        self.batch_norms = nn.ModuleList([nn.BatchNorm1d(out_channels) for _ in kernel_sizes])
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout = nn.Dropout(dropout)
+
+        # Residual layer for input-output matching
+        self.residual_layer = None
+        if in_channels != out_channels:
+            self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+
+        # ResidualWeight optimization
+        self.residual_weight = ResidualWeight()
+
+    def forward(self, x):
+        residual = x  # 保存输入数据作为残差
+
+        # 多尺度卷积处理
+        outputs = []
+        for conv, bn in zip(self.convs, self.batch_norms):
+            out = conv(x)
+            out = bn(out)
+            out = self.relu(out)
+            out = self.dropout(out)
+            outputs.append(out)
+
+        # 聚合所有尺度的输出
+        output = torch.cat(outputs, dim=1)  # [B, N, C]
+
         if self.residual_layer is not None:
             residual = self.residual_layer(residual)
 
-        return self.residual_weight(x, residual)
+        # 使用残差优化
+        return self.residual_weight(output, residual)
 
 
 class GCNWithMultiHeadGATAndTCN(nn.Module):
     """
-    Modified GCN with GraphSAGE and GATv2 with a single TCN layer
+    Modified GCN with Multi-Head GAT and a single TCN
     """
 
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_heads=4):
         super(GCNWithMultiHeadGATAndTCN, self).__init__()
 
-        # 第一层 GraphSAGE
-        self.gc1 = GraphSAGEConv(nfeat, nhid, aggregation='mean', drop_prob=dropout)
+        # 第一层 GCN
+        self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
 
-        # 第一层 GATv2 和 TCN
-        self.gat1 = GATv2Layer(nhid, nout, num_heads=num_heads, dropout=dropout)
-        self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
+        # 第一层多头 GAT 和 TCN
+        self.gat1 = MultiHeadGraphAttentionLayer(nhid, nout, num_heads, dropout)
+        self.tcn1 = MultiScaleTCNBlock(nout, nout, kernel_sizes=[3, 5, 7], dilation=1, dropout=0.2)
 
         # BatchNorm 层
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj):
-        # 第一层 GraphSAGE
-        x = self.gc1(x, adj)
+        # 第一层 GCN
+        x = self.gc1(x)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
-        # 第一层 GATv2 和 TCN
+        # 第一层多头 GAT 和 TCN
         x = self.gat1(x, adj)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
+        # 没有第二层 TCN，直接返回
         return x
 
 
 class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
     """
-    AU detection model with GraphSAGE, GATv2, and one TCN layer
+    AU detection model with GCN, Multi-Head GAT, Multi-Scale TCN and separate branches for micro and macro expressions
     """
 
     def __init__(self, opt):
@@ -213,29 +261,34 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
         )
 
-        self._classification = torch.nn.Conv1d(
-            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
+        # 分类器分为微表情和宏表情部分
+        self._micro_expression_classification = torch.nn.Conv1d(
+            64, 3, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
+        )
+        self._macro_expression_classification = torch.nn.Conv1d(
+            64, 5, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
         )
 
         self._init_weight()
 
-    def forward(self, x, adj):
+    def forward(self, x):
         b, t, n, c = x.shape
-
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
-        # 将邻接矩阵传递给 graph_embedding 的 forward 函数
+        # 获取邻接矩阵 adj
+        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
+        # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
         x = self.graph_embedding(x, adj)
-
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
-
         # 卷积操作
         x = self._sequential(x)
 
-        # 分类层
-        x = self._classification(x)
-        return x
+        # 微表情和宏表情的分类
+        micro_expression_output = self._micro_expression_classification(x)
+        macro_expression_output = self._macro_expression_classification(x)
+
+        return micro_expression_output, macro_expression_output
 
     def _init_weight(self):
         for m in self.modules():
@@ -245,5 +298,3 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)
-
-
