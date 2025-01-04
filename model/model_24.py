@@ -7,9 +7,9 @@ import os
 import numpy as np
 
 """
-在model_22基础上
-
-引入残差优化模块：
+在model_23基础上
+tcn
+kernel_size=5
 
 
 """
@@ -151,52 +151,43 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         return self.residual_weight(output, h)
 
 
-class MultiScaleTCNBlock(nn.Module):
+
+class TCNBlock(nn.Module):
     """
-    Multi-Scale TCN Block with ResidualWeight Optimization
+    TCN layer with ResidualWeight Optimization
     """
 
-    def __init__(self, in_channels, out_channels, kernel_sizes=[3, 5, 7], dilation=1, dropout=0.2):
-        super(MultiScaleTCNBlock, self).__init__()
-
-        self.convs = nn.ModuleList([
-            nn.Conv1d(in_channels, out_channels, kernel_size=ks, stride=1,
-                      padding=(ks - 1) * dilation // 2, dilation=dilation)
-            for ks in kernel_sizes
-        ])
-
-        self.batch_norms = nn.ModuleList([nn.BatchNorm1d(out_channels) for _ in kernel_sizes])
+    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
+        super(TCNBlock, self).__init__()
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size, stride=1,
+            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+        )
+        self.batch_norm = nn.BatchNorm1d(out_channels)
         self.relu = nn.ReLU(inplace=True)
         self.dropout = nn.Dropout(dropout)
 
-        # Residual layer for input-output matching
-        self.residual_layer = None
+        # 添加一个卷积层，用于匹配输入和输出维度
         if in_channels != out_channels:
             self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+        else:
+            self.residual_layer = None
 
-        # ResidualWeight optimization
+        # 残差优化模块
         self.residual_weight = ResidualWeight()
 
     def forward(self, x):
-        residual = x  # 保存输入数据作为残差
+        residual = x  # 保存残差
+        x = self.conv(x)
+        x = self.batch_norm(x)
+        x = self.relu(x)
+        x = self.dropout(x)
 
-        # 多尺度卷积处理
-        outputs = []
-        for conv, bn in zip(self.convs, self.batch_norms):
-            out = conv(x)
-            out = bn(out)
-            out = self.relu(out)
-            out = self.dropout(out)
-            outputs.append(out)
-
-        # 聚合所有尺度的输出
-        output = torch.cat(outputs, dim=1)  # [B, N, C]
-
+        # Residual connection with optimization
         if self.residual_layer is not None:
             residual = self.residual_layer(residual)
 
-        # 使用残差优化
-        return self.residual_weight(output, residual)
+        return self.residual_weight(x, residual)
 
 
 class GCNWithMultiHeadGATAndTCN(nn.Module):
@@ -212,7 +203,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
 
         # 第一层多头 GAT 和 TCN
         self.gat1 = MultiHeadGraphAttentionLayer(nhid, nout, num_heads, dropout)
-        self.tcn1 = MultiScaleTCNBlock(nout, nout, kernel_sizes=[3, 5, 7], dilation=1, dropout=0.2)
+        self.tcn1 = TCNBlock(nout, nout, kernel_size=5, dilation=1, dropout=0.2)
 
         # BatchNorm 层
         self.bn1 = nn.BatchNorm1d(nhid)
@@ -234,7 +225,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
 
 class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
     """
-    AU detection model with GCN, Multi-Head GAT, Multi-Scale TCN and separate branches for micro and macro expressions
+    AU detection model with GCN, Multi-Head GAT, and one TCN layer
     """
 
     def __init__(self, opt):
@@ -261,18 +252,15 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
             torch.nn.ReLU(inplace=True),
         )
 
-        # 分类器分为微表情和宏表情部分
-        self._micro_expression_classification = torch.nn.Conv1d(
-            64, 3, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
-        )
-        self._macro_expression_classification = torch.nn.Conv1d(
-            64, 5, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
+        self._classification = torch.nn.Conv1d(
+            64, 3 + 3 + 2 + 2, kernel_size=3, stride=1, padding=2, dilation=2, bias=False
         )
 
         self._init_weight()
 
     def forward(self, x):
         b, t, n, c = x.shape
+
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
         # 获取邻接矩阵 adj
@@ -283,12 +271,9 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
         x = x.reshape(b, t, -1).transpose(1, 2)
         # 卷积操作
         x = self._sequential(x)
-
-        # 微表情和宏表情的分类
-        micro_expression_output = self._micro_expression_classification(x)
-        macro_expression_output = self._macro_expression_classification(x)
-
-        return micro_expression_output, macro_expression_output
+        # 分类层
+        x = self._classification(x)
+        return x
 
     def _init_weight(self):
         for m in self.modules():
