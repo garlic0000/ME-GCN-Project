@@ -74,6 +74,7 @@ class GraphSAGEConv(nn.Module):
         return F.relu(output)
 
 
+
 class GATv2Layer(nn.Module):
     def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1):
         super(GATv2Layer, self).__init__()
@@ -218,19 +219,20 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
 
         self._init_weight()
 
-    def forward(self, x):
+    def forward(self, x, adj):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
-        # 获取邻接矩阵 adj
-        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
-        # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
+        # 将邻接矩阵传递给 graph_embedding 的 forward 函数
         x = self.graph_embedding(x, adj)
+
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
+
         # 卷积操作
         x = self._sequential(x)
+
         # 分类层
         x = self._classification(x)
         return x
@@ -243,3 +245,5 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)
+
+
