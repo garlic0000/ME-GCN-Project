@@ -1,6 +1,6 @@
 import torch
-from model.model_24 import GraphConvolution
-from model.model_24 import MultiHeadGraphAttentionLayer
+from model.model_25 import GraphConvolution
+from model.model_25 import MultiHeadGraphAttentionLayer
 
 
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
@@ -54,7 +54,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
             # # Check if it's an attention parameter (e.g., 'W' in MultiHeadGraphAttentionLayer)
             # elif isinstance(m, MultiHeadGraphAttentionLayer) and pn == 'W':
             #     decay.add(fpn)
-            # 新增 根据model_17进行的调整
+            # 新增 根据model_17进行的调整l
             elif 'adj' in fpn or 'graph_embedding.adj' in fpn:
                 decay.add(fpn)  # 或者添加到 no_decay
             # 新增 根据 model_22进行的调整
