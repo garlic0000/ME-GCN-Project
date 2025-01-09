@@ -7,10 +7,11 @@ import os
 import numpy as np
 
 """
-在model_23基础上
+在model_27基础上
 
-ResidualWeight 的初始化为 0.5，对其增加约束范围[0, 1]，使用 torch.clamp 确保参数稳定性。
-
+动态调整 DropEdge 概率
+drop_edge 函数使用了固定的 max_epochs，引入外部调控机制，避免在超大训练轮次中 dynamic_prob 下降过低。
+根据需要调整 min_prob 和 max_epochs 的值，以适应不同的训练策略和数据集
 
 """
 
