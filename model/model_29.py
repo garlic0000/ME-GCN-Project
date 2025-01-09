@@ -135,7 +135,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
         # 对称性约束的可学习注意力权重
         self.a = nn.ParameterList(
-            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)]
+            [nn.Parameter(torch.zeros(1, 1, out_features, out_features)) for _ in range(num_heads)]
         )
 
         # LeakyReLU 激活函数
@@ -162,7 +162,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
             e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
 
             # 引入可学习的对称性约束
-            a = self.a[i].expand(B, N, N)  # 这里将对称权重扩展到批次维度
+            a = self.a[i].expand(B, N, N, self.out_per_head)  # 修改为适配 B, N, N
             e = e + a  # 使用对称的权重矩阵进行注意力加权
 
             e = self.leakyrelu(e)  # [B, N, N]
