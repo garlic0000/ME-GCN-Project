@@ -163,8 +163,8 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
             # 引入可学习的对称性约束
             # 扩展 self.a[i] 以适应 B, N, N
-            a = self.a[i].unsqueeze(0).unsqueeze(0).expand(B, N, N, self.out_per_head)  # 适配 B, N, N
-            e = e + a  # 使用对称的权重矩阵进行注意力加权
+            a = self.a[i].unsqueeze(0).unsqueeze(0).expand(B, N, N, self.out_per_head, self.out_per_head)  # 适配 B, N, N
+            e = e + a.view(1, 1, N, N, self.out_per_head, self.out_per_head)  # 使用对称的权重矩阵进行注意力加权
 
             e = self.leakyrelu(e)  # [B, N, N]
             attention = self.softmax(e)  # Softmax 对每行计算
