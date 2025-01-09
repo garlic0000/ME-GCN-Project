@@ -117,7 +117,6 @@ class GraphConvolution(nn.Module):
 class MultiHeadGraphAttentionLayer(nn.Module):
     """
     多头图注意力层 (Multi-Head GAT Layer)
-    引入对称注意力权重来增强特征交互
     """
 
     def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1,
@@ -128,18 +127,24 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
         self.dropout = dropout
         self.alpha = alpha
-        self.drop_prob = drop_prob  # DropEdge probability
+        self.drop_prob = drop_prob  # DropEdge 概率
         self.min_drop_prob = min_drop_prob  # 最小 DropEdge 概率
 
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
 
-        # 引入可学习的对称注意力权重
+        # 对称性约束的可学习注意力权重
         self.a = nn.ParameterList(
-            [nn.Parameter(torch.zeros(self.out_per_head * 2, 1)) for _ in range(num_heads)])  # Attention 权重
+            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)]
+        )
 
+        # LeakyReLU 激活函数
         self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.softmax = nn.Softmax(dim=2)  # Softmax 是在邻居上计算的
+
+        # Softmax 层
+        self.softmax = nn.Softmax(dim=2)  # 在每行上进行 softmax
+
+        # 残差优化模块
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
     def forward(self, h, adj, epoch=0, max_epochs=100):
@@ -153,14 +158,15 @@ class MultiHeadGraphAttentionLayer(nn.Module):
             # 对每个头进行独立的线性变换
             h_prime = self.W[i](h)  # [B, N, F_per_head]
 
-            # 计算对称的注意力分数
-            e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N] 对称计算
-            e = e.view(B, N, N, -1)  # [B, N, N, 1] reshaping to match attention weight
-            e = torch.matmul(e, self.a[i])  # [B, N, N, 1] 通过可学习的权重进行加权
+            # 计算注意力分数
+            e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
 
-            e = e.squeeze(-1)  # [B, N, N] 移除最后一个维度
-            e = self.leakyrelu(e)  # [B, N, N] 使用 LeakyReLU 激活函数
-            attention = self.softmax(e)  # Softmax [B, N, N] over each row
+            # 引入可学习的对称性约束
+            a = self.a[i].expand(B, N, N)  # 这里将对称权重扩展到批次维度
+            e = e + a  # 使用对称的权重矩阵进行注意力加权
+
+            e = self.leakyrelu(e)  # [B, N, N]
+            attention = self.softmax(e)  # Softmax 对每行计算
 
             # Apply attention mechanism
             h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F_per_head]
@@ -175,7 +181,6 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
         # 残差连接与优化
         return self.residual_weight(output, h)
-
 
 
 class TCNBlock(nn.Module):
