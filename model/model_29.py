@@ -7,11 +7,11 @@ import os
 import numpy as np
 
 """
-在model_28基础上
+在model_27基础上
 
-对称性约束：对于每个注意力头，定义可学习的对称权重，而不是直接通过 h_prime 的线性变换后直接相乘。我们可以通过对称矩阵来优化注意力权重，并确保其对称性，从而增强特征交互。
-
-引入对称注意力计算：我们将引入对称的注意力权重 self.a，并通过对称计算方法来计算每对节点之间的相似度。
+动态调整 DropEdge 概率
+drop_edge 函数使用了固定的 max_epochs，引入外部调控机制，避免在超大训练轮次中 dynamic_prob 下降过低。
+根据需要调整 min_prob 和 max_epochs 的值，以适应不同的训练策略和数据集
 
 """
 
@@ -36,15 +36,26 @@ def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100, min_prob=0.01):
 class ResidualWeight(nn.Module):
     """残差优化模块"""
 
-    def __init__(self):
+    def __init__(self, init_alpha=0.5, lr_factor=0.1):
         super(ResidualWeight, self).__init__()
         # 初始化比例参数为 0.5，并约束其范围为 [0, 1]
-        self.alpha = nn.Parameter(torch.tensor(0.5))  # 初始值为 0.5
+        self.alpha = nn.Parameter(torch.tensor(init_alpha))  # 初始值为 0.5
+        self.lr_factor = lr_factor  # 学习率调节因子
 
     def forward(self, input, residual):
         # 在每次前向传播时，确保 alpha 的值在 [0, 1] 范围内
         alpha = torch.clamp(self.alpha, 0.0, 1.0)
-        return alpha * input + (1 - alpha) * residual
+
+        # 可以根据需要添加 alpha 的正则化项，例如 L2 正则化
+        reg_loss = torch.sum(self.alpha ** 2)  # L2 正则化项
+
+        # 将正则化损失加入模型的损失计算中
+        output = alpha * input + (1 - alpha) * residual
+        return output, reg_loss
+
+    def get_regularization_loss(self):
+        """获取 alpha 的正则化损失"""
+        return torch.sum(self.alpha ** 2)  # L2 正则化
 
 
 class GraphConvolution(nn.Module):
@@ -127,24 +138,16 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
         self.dropout = dropout
         self.alpha = alpha
-        self.drop_prob = drop_prob  # DropEdge 概率
+        self.drop_prob = drop_prob  # DropEdge probability
         self.min_drop_prob = min_drop_prob  # 最小 DropEdge 概率
 
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
-
-        # 对称性约束的可学习注意力权重
         self.a = nn.ParameterList(
-            [nn.Parameter(torch.zeros(1, 1, self.out_per_head, self.out_per_head)) for _ in range(num_heads)]
-        )
+            [nn.Parameter(torch.zeros(1, self.out_per_head * 2)) for _ in range(num_heads)])  # Attention weights
 
-        # LeakyReLU 激活函数
         self.leakyrelu = nn.LeakyReLU(self.alpha)
-
-        # Softmax 层
-        self.softmax = nn.Softmax(dim=2)  # 在每行上进行 softmax
-
-        # 残差优化模块
+        self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
     def forward(self, h, adj, epoch=0, max_epochs=100):
@@ -160,14 +163,8 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
             # 计算注意力分数
             e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
-
-            # 引入可学习的对称性约束
-            # 扩展 self.a[i] 以适应 B, N, N
-            a = self.a[i].unsqueeze(0).unsqueeze(0).expand(B, N, N, self.out_per_head, self.out_per_head)  # 适配 B, N, N
-            e = e + a.view(1, 1, N, N, self.out_per_head, self.out_per_head)  # 使用对称的权重矩阵进行注意力加权
-
             e = self.leakyrelu(e)  # [B, N, N]
-            attention = self.softmax(e)  # Softmax 对每行计算
+            attention = self.softmax(e)  # Softmax on each row [B, N, N]
 
             # Apply attention mechanism
             h_prime = h_prime.unsqueeze(2).repeat(1, 1, N, 1)  # [B, N, N, F_per_head]
@@ -305,7 +302,10 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
         x = self._sequential(x)
         # 分类层
         x = self._classification(x)
-        return x
+
+        # 获取残差优化模块的正则化损失
+        _, reg_loss = self.graph_embedding.gc1.residual_weight(x, x)
+        return x, reg_loss
 
     def _init_weight(self):
         for m in self.modules():
@@ -315,3 +315,4 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
                 torch.nn.init.xavier_normal_(m.weight)
             elif isinstance(m, nn.Parameter):
                 m.data.uniform_(-0.1, 0.1)
+
