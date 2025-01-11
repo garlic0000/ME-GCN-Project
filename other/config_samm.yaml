@@ -71,3 +71,4 @@ samm:
         "samm_032","samm_033","samm_034","samm_036","samm_035","samm_037"
   ]
 
+  reg_loss_weight: 1e-3 # 自定义
