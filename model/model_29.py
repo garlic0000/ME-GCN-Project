@@ -241,6 +241,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
     def forward(self, x, adj):
         # 第一层 GCN
         x = self.gc1(x)
+        print(f"Output from graph_embedding: {x}, {type(x)}, shape: {x.shape}")
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
