@@ -238,16 +238,14 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj):
-        print(f"Output from graph_embedding: {x}, {type(x)}, shape: {x.shape}")
+    def forward(self, x, adj, epoch=0, max_epochs=100):
         # 第一层 GCN
-        x = self.gc1(x)
-        print(f"Output from graph_embedding: {x}, {type(x)}, shape: {x.shape}")
+        x = self.gc1(x, epoch, max_epochs)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
         # 第一层多头 GAT 和 TCN
-        x = self.gat1(x, adj)
+        x = self.gat1(x, adj, epoch, max_epochs)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
         # 没有第二层 TCN，直接返回
