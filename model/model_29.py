@@ -238,25 +238,6 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
-    class GCNWithMultiHeadGATAndTCN(nn.Module):
-        """
-        Modified GCN with Multi-Head GAT and a single TCN
-        """
-
-        def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_heads=4):
-            super(GCNWithMultiHeadGATAndTCN, self).__init__()
-
-            # 第一层 GCN
-            self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
-
-            # 第一层多头 GAT 和 TCN
-            self.gat1 = MultiHeadGraphAttentionLayer(nhid, nout, num_heads, dropout)
-            self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
-
-            # BatchNorm 层
-            self.bn1 = nn.BatchNorm1d(nhid)
-            self.bn2 = nn.BatchNorm1d(nout)
-
         def forward(self, x, adj, epoch=0, max_epochs=100):
             # 检查返回值是否是元组
             if isinstance(x, tuple):
