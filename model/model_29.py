@@ -241,6 +241,11 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
     def forward(self, x, adj, epoch=0, max_epochs=100):
         # 第一层 GCN
         x = self.gc1(x, epoch, max_epochs)
+        # 检查返回值是否是元组
+        if isinstance(x, tuple):
+            x, reg_loss = x  # 如果是元组，解包
+        else:
+            x = x  # 否则直接使用 x
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
