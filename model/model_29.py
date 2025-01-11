@@ -239,6 +239,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj):
+        x, reg_loss = self.graph_embedding(x, adj)
         print(f"Output from graph_embedding: {x}, {type(x)}, shape: {x.shape}")
         # 第一层 GCN
         x = self.gc1(x)
