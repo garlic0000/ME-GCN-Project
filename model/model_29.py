@@ -304,9 +304,8 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
         # 分类层
         x = self._classification(x)
 
-        # # 获取残差优化模块的正则化损失
-        # _, reg_loss = self.graph_embedding.gc1.residual_weight(x, x)
         return x, reg_loss
+
 
     def _init_weight(self):
         for m in self.modules():
