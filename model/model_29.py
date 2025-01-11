@@ -239,6 +239,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj):
+        x, reg_loss = self.graph_embedding(x, adj)
         # 第一层 GCN
         x = self.gc1(x)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
@@ -249,7 +250,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
         # 没有第二层 TCN，直接返回
-        return x
+        return x, reg_loss
 
 
 class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
