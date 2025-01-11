@@ -238,24 +238,45 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj, epoch=0, max_epochs=100):
-        # 检查返回值是否是元组
-        if isinstance(x, tuple):
-            x, reg_loss = x  # 如果是元组，解包
-        else:
-            x = x  # 否则直接使用 x
-        # 第一层 GCN
-        x = self.gc1(x, epoch, max_epochs)
+    class GCNWithMultiHeadGATAndTCN(nn.Module):
+        """
+        Modified GCN with Multi-Head GAT and a single TCN
+        """
 
-        x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
-        x = F.relu(x)
+        def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_heads=4):
+            super(GCNWithMultiHeadGATAndTCN, self).__init__()
 
-        # 第一层多头 GAT 和 TCN
-        x = self.gat1(x, adj, epoch, max_epochs)
-        x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
+            # 第一层 GCN
+            self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
 
-        # 没有第二层 TCN，直接返回
-        return x
+            # 第一层多头 GAT 和 TCN
+            self.gat1 = MultiHeadGraphAttentionLayer(nhid, nout, num_heads, dropout)
+            self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
+
+            # BatchNorm 层
+            self.bn1 = nn.BatchNorm1d(nhid)
+            self.bn2 = nn.BatchNorm1d(nout)
+
+        def forward(self, x, adj, epoch=0, max_epochs=100):
+            # 检查返回值是否是元组
+            if isinstance(x, tuple):
+                x, reg_loss = x  # 如果是元组，解包
+            else:
+                reg_loss = None  # 如果没有返回 reg_loss，设为 None
+
+            # 第一层 GCN
+            x = self.gc1(x, epoch, max_epochs)
+
+            # 对 x 进行 BatchNorm 和 ReLU 操作
+            x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
+            x = F.relu(x)
+
+            # 第一层多头 GAT 和 TCN
+            x = self.gat1(x, adj, epoch, max_epochs)
+            x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
+
+            # 没有第二层 TCN，直接返回
+            return x, reg_loss  # 返回 x 和 reg_loss
 
 
 class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
