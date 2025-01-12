@@ -7,11 +7,9 @@ import os
 import numpy as np
 
 """
-在model_27基础上
+在model_28基础上
 
-动态调整 DropEdge 概率
-drop_edge 函数使用了固定的 max_epochs，引入外部调控机制，避免在超大训练轮次中 dynamic_prob 下降过低。
-根据需要调整 min_prob 和 max_epochs 的值，以适应不同的训练策略和数据集
+self._sequential增加一个层
 
 """
 
@@ -36,26 +34,15 @@ def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100, min_prob=0.01):
 class ResidualWeight(nn.Module):
     """残差优化模块"""
 
-    def __init__(self, init_alpha=0.5, lr_factor=0.1):
+    def __init__(self):
         super(ResidualWeight, self).__init__()
         # 初始化比例参数为 0.5，并约束其范围为 [0, 1]
-        self.alpha = nn.Parameter(torch.tensor(init_alpha))  # 初始值为 0.5
-        self.lr_factor = lr_factor  # 学习率调节因子
+        self.alpha = nn.Parameter(torch.tensor(0.5))  # 初始值为 0.5
 
     def forward(self, input, residual):
         # 在每次前向传播时，确保 alpha 的值在 [0, 1] 范围内
         alpha = torch.clamp(self.alpha, 0.0, 1.0)
-
-        # 可以根据需要添加 alpha 的正则化项，例如 L2 正则化
-        reg_loss = torch.sum(self.alpha ** 2)  # L2 正则化项
-
-        # 将正则化损失加入模型的损失计算中
-        output = alpha * input + (1 - alpha) * residual
-        return output, reg_loss
-
-    def get_regularization_loss(self):
-        """获取 alpha 的正则化损失"""
-        return torch.sum(self.alpha ** 2)  # L2 正则化
+        return alpha * input + (1 - alpha) * residual
 
 
 class GraphConvolution(nn.Module):
@@ -238,26 +225,18 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj, epoch=0, max_epochs=100):
-        # 检查返回值是否是元组
-        if isinstance(x, tuple):
-            x, reg_loss = x  # 如果是元组，解包
-        else:
-            reg_loss = None  # 如果没有返回 reg_loss，设为 None
-
+    def forward(self, x, adj):
         # 第一层 GCN
-        x = self.gc1(x, epoch, max_epochs)
-
-        # 对 x 进行 BatchNorm 和 ReLU 操作
+        x = self.gc1(x)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
         # 第一层多头 GAT 和 TCN
-        x = self.gat1(x, adj, epoch, max_epochs)
+        x = self.gat1(x, adj)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
         # 没有第二层 TCN，直接返回
-        return x, reg_loss  # 返回 x 和 reg_loss
+        return x
 
 
 class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
@@ -287,6 +266,10 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
             torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
+
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
+            torch.nn.BatchNorm1d(64),
+            torch.nn.ReLU(inplace=True),
         )
 
         self._classification = torch.nn.Conv1d(
@@ -303,15 +286,14 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
         # 获取邻接矩阵 adj
         adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
         # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
-        x, reg_loss = self.graph_embedding(x, adj)  # 解包返回值
+        x = self.graph_embedding(x, adj)
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
         # 卷积操作
         x = self._sequential(x)
         # 分类层
         x = self._classification(x)
-
-        return x, reg_loss
+        return x
 
     def _init_weight(self):
         for m in self.modules():
