@@ -1,6 +1,6 @@
 import torch
-from model.model_29 import GraphConvolution
-from model.model_29 import MultiHeadGraphAttentionLayer
+from model.model_30 import GraphConvolution
+from model.model_30 import MultiHeadGraphAttentionLayer
 
 
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
