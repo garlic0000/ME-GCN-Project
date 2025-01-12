@@ -33,6 +33,9 @@ def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100, min_prob=0.01):
 
 class ResidualWeight(nn.Module):
     """残差优化模块"""
+    """
+    没有残差块的网络仍然可以通过 ResidualWeight 来优化残差连接
+    """
 
     def __init__(self):
         super(ResidualWeight, self).__init__()
