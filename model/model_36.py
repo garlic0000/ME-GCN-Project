@@ -7,14 +7,20 @@ import os
 import numpy as np
 
 """
-在model_34基础上
+在model_35基础上
 
-drop_prob从0.1改成0.05
+在train函数中增加了
+# 需要在这输入epoch
+        output_probability = model(feature, epoch=epoch, max_epochs=opt['epochs'])
+即之前drop_edge这个函数没有起作用 
+
+重新设置drop_prob=0.1
+再从0.1开始重新测试
 
 """
 
 
-def drop_edge(adj, drop_prob=0.05, epoch=0, max_epochs=100, min_prob=0.01):
+def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100, min_prob=0.01):
     """动态调整 DropEdge 概率
 
     参数:
@@ -27,7 +33,7 @@ def drop_edge(adj, drop_prob=0.05, epoch=0, max_epochs=100, min_prob=0.01):
     # 动态计算丢弃概率
     dynamic_prob = drop_prob * (1 - epoch / max_epochs)
     dynamic_prob = max(dynamic_prob, min_prob)  # 确保最小值不会低于 min_prob
-    # print(f"Epoch {epoch}, DropEdge probability: {dynamic_prob:.4f}")  # 打印当前动态概率
+    print(f"Epoch {epoch}, DropEdge probability: {dynamic_prob:.4f}")  # 打印当前动态概率
     mask = torch.rand_like(adj, dtype=torch.float32) > dynamic_prob
     return adj * mask
 
@@ -89,7 +95,7 @@ class GraphConvolution(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input, epoch=0, max_epochs=100):
-        # print(f"GraphConvolution Forward Called: Epoch {epoch}")  # 添加调试信息
+        print(f"GraphConvolution Forward Called: Epoch {epoch}")  # 添加调试信息
         b, n, c = input.shape
 
         # Apply DropEdge to adjacency matrix with dynamic probability
@@ -143,7 +149,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
     def forward(self, h, adj, epoch=0, max_epochs=100):
-        # print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
+        print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
 
@@ -157,6 +163,8 @@ class MultiHeadGraphAttentionLayer(nn.Module):
             # 计算注意力分数
             e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
             e = self.leakyrelu(e)  # [B, N, N]
+            # 使用邻接矩阵约束注意力分数
+            e = e.masked_fill(adj == 0, float('-inf'))  # 将不存在的边的权重设为负无穷
             attention = self.softmax(e)  # Softmax on each row [B, N, N]
 
             # Apply attention mechanism
@@ -232,7 +240,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj, epoch=0, max_epochs=100):
-        # print(f"GCNWithMultiHeadGATAndTCN Forward Called: Epoch {epoch}")  # 添加调试信息
+        print(f"GCNWithMultiHeadGATAndTCN Forward Called: Epoch {epoch}")  # 添加调试信息
         # 第一层 GCN
         x = self.gc1(x, epoch=epoch, max_epochs=max_epochs)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm

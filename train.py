@@ -3,7 +3,7 @@ import torch.nn as nn
 import os
 import numpy as np
 from datasets import LOSO_DATASET
-from model.model_35 import AUwGCNWithMultiHeadGATAndTCN
+from model.model_36 import AUwGCNWithMultiHeadGATAndTCN
 from torch.utils.tensorboard import SummaryWriter
 from utils.train_utils import configure_optimizers
 from loss_func.loss_func import _probability_loss, MultiCEFocalLoss_New
@@ -92,7 +92,8 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
         STEP = int(opt["RECEPTIVE_FILED"] // 2)
 
         # 获取模型预测
-        output_probability = model(feature, epoch=epoch)
+        # 需要在这输入epoch
+        output_probability = model(feature, epoch=epoch, max_epochs=opt['epochs'])
         # # 调试
         # print("output_probability shape:", output_probability.shape)
         output_probability = output_probability[:, :, STEP:-STEP]
