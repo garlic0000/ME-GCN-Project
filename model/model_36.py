@@ -16,7 +16,10 @@ import numpy as np
 
 重新设置drop_prob=0.1
 再从0.1开始重新测试
-使用0.1会输出nan
+
+# 不能使用这个进行约束 没法训练 损失率输出为nan
+            # # 使用邻接矩阵约束注意力分数
+            # e = e.masked_fill(adj == 0, float('-inf'))  # 将不存在的边的权重设为负无穷
 
 """
 
@@ -164,6 +167,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
             # 计算注意力分数
             e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
             e = self.leakyrelu(e)  # [B, N, N]
+            # 不能使用这个进行约束 没法训练 损失率输出为nan
             # # 使用邻接矩阵约束注意力分数
             # e = e.masked_fill(adj == 0, float('-inf'))  # 将不存在的边的权重设为负无穷
             attention = self.softmax(e)  # Softmax on each row [B, N, N]
