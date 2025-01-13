@@ -89,6 +89,7 @@ class GraphConvolution(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input, epoch=0, max_epochs=100):
+        print(f"GraphConvolution Forward Called: Epoch {epoch}")  # 添加调试信息
         b, n, c = input.shape
 
         # Apply DropEdge to adjacency matrix with dynamic probability
@@ -142,6 +143,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
     def forward(self, h, adj, epoch=0, max_epochs=100):
+        print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
 
