@@ -232,6 +232,7 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj, epoch=0, max_epochs=100):
+        print(f"GCNWithMultiHeadGATAndTCN Forward Called: Epoch {epoch}")  # 添加调试信息
         # 第一层 GCN
         x = self.gc1(x, epoch=epoch, max_epochs=max_epochs)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm

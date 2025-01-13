@@ -92,7 +92,7 @@ def train(opt, data_loader, model, optimizer, epoch, device, writer):
         STEP = int(opt["RECEPTIVE_FILED"] // 2)
 
         # 获取模型预测
-        output_probability = model(feature)
+        output_probability = model(feature, epoch=epoch)
         # # 调试
         # print("output_probability shape:", output_probability.shape)
         output_probability = output_probability[:, :, STEP:-STEP]
