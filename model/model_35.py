@@ -27,6 +27,7 @@ def drop_edge(adj, drop_prob=0.05, epoch=0, max_epochs=100, min_prob=0.01):
     # 动态计算丢弃概率
     dynamic_prob = drop_prob * (1 - epoch / max_epochs)
     dynamic_prob = max(dynamic_prob, min_prob)  # 确保最小值不会低于 min_prob
+    print(f"Epoch {epoch}, DropEdge probability: {dynamic_prob:.4f}")  # 打印当前动态概率
     mask = torch.rand_like(adj, dtype=torch.float32) > dynamic_prob
     return adj * mask
 
@@ -228,14 +229,14 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj):
+    def forward(self, x, adj, epoch=0, max_epochs=100):
         # 第一层 GCN
-        x = self.gc1(x)
+        x = self.gc1(x, epoch=epoch, max_epochs=max_epochs)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
         # 第一层多头 GAT 和 TCN
-        x = self.gat1(x, adj)
+        x = self.gat1(x, adj, epoch=epoch, max_epochs=max_epochs)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
         # 没有第二层 TCN，直接返回
@@ -301,19 +302,23 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
 
         self._init_weight()
 
-    def forward(self, x):
+    def forward(self, x, epoch=0, max_epochs=100):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
         # 获取邻接矩阵 adj
         adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
+
         # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
-        x = self.graph_embedding(x, adj)
+        x = self.graph_embedding(x, adj, epoch=epoch, max_epochs=max_epochs)
+
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
+
         # 卷积操作
         x = self._sequential(x)
+
         # 分类层
         x = self._classification(x)
         return x
