@@ -21,7 +21,7 @@ import numpy as np
 """
 
 
-def drop_edge(adj, drop_prob=0.05, epoch=0, max_epochs=100, min_prob=0.01):
+def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100, min_prob=0.01):
     """动态调整 DropEdge 概率
 
     参数:
@@ -61,7 +61,7 @@ class GraphConvolution(nn.Module):
     Simple GCN layer with Residual Connection and ResidualWeight Optimization
     """
 
-    def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.05, min_drop_prob=0.01):
+    def __init__(self, in_features, out_features, mat_path, bias=True, drop_prob=0.1, min_drop_prob=0.01):
         super(GraphConvolution, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -129,7 +129,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
     多头图注意力层 (Multi-Head GAT Layer)
     """
 
-    def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.05,
+    def __init__(self, in_features, out_features, num_heads=4, dropout=0.6, alpha=0.2, drop_prob=0.1,
                  min_drop_prob=0.01):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
@@ -164,8 +164,8 @@ class MultiHeadGraphAttentionLayer(nn.Module):
             # 计算注意力分数
             e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
             e = self.leakyrelu(e)  # [B, N, N]
-            # 使用邻接矩阵约束注意力分数
-            e = e.masked_fill(adj == 0, float('-inf'))  # 将不存在的边的权重设为负无穷
+            # # 使用邻接矩阵约束注意力分数
+            # e = e.masked_fill(adj == 0, float('-inf'))  # 将不存在的边的权重设为负无穷
             attention = self.softmax(e)  # Softmax on each row [B, N, N]
 
             # Apply attention mechanism
