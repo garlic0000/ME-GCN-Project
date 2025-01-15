@@ -315,10 +315,6 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
             torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
-
-            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
-            torch.nn.BatchNorm1d(64),
-            torch.nn.ReLU(inplace=True),
         )
 
         self._classification = torch.nn.Conv1d(
