@@ -11,6 +11,9 @@ import numpy as np
 
 对ResidualWeight 的self.alpha进行调整
 
+self._sequential增加5层
+drop_prob=0.06
+
 1.直接指定
 initial_alpha=0.5
 
