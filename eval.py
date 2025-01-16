@@ -1,6 +1,6 @@
 import torch
 import opts
-from model.model_47 import AUwGCNWithMultiHeadGATAndTCN
+from model.model_48 import AUwGCNWithMultiHeadGATAndTCN
 from datasets import LOSO_DATASET
 import os
 import yaml
