@@ -3,7 +3,7 @@ import torch.nn as nn
 import os
 import numpy as np
 from datasets import LOSO_DATASET
-from model.model_48 import AUwGCNWithMultiHeadGATAndTCN
+from model.model_49 import AUwGCNWithMultiHeadGATAndTCN
 from torch.utils.tensorboard import SummaryWriter
 from utils.train_utils import configure_optimizers
 from loss_func.loss_func import _probability_loss, MultiCEFocalLoss_New
