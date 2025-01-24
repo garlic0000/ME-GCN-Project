@@ -8,7 +8,7 @@ import numpy as np
 
 """
 在model_44的基础上
-initial_alpha=0.9
+initial_alpha=0.3
 
 
 
@@ -40,7 +40,7 @@ class ResidualWeight(nn.Module):
     没有残差块的网络仍然可以通过 ResidualWeight 来优化残差连接
     """
 
-    def __init__(self, initial_alpha=0.9):
+    def __init__(self, initial_alpha=0.3):
         super(ResidualWeight, self).__init__()
         # 初始化比例参数为 0.6，并约束其范围为 [0, 1]
         self.alpha = nn.Parameter(torch.tensor(initial_alpha))  # 初始值为 0.6

@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 """
-在model_43的基础上
+在model_44的基础上
 initial_alpha=0.7
 
 
