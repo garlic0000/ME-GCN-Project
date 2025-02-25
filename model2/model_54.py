@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 """
-进行drop_prob和min_prob组合参数调优实验
+进行drop_prob和min_drop_prob组合参数调优实验
 
 drop_prob=0.1
 min_drop_prob=0.05
@@ -23,22 +23,26 @@ def drop_edge(adj, drop_prob=0.1, epoch=0, max_epochs=100, min_drop_prob=0.05):
         drop_prob (float): 初始丢弃概率
         epoch (int): 当前训练轮次
         max_epochs (int): 最大训练轮次
-        min_drop_prob (float): 最小丢弃概率，避免概率下降过低
+        min_prob (float): 最小丢弃概率，避免概率下降过低
     """
     # 动态计算丢弃概率
     dynamic_prob = drop_prob * (1 - epoch / max_epochs)
     dynamic_prob = max(dynamic_prob, min_drop_prob)  # 确保最小值不会低于 min_prob
+    # print(f"Epoch {epoch}, DropEdge probability: {dynamic_prob:.4f}")  # 打印当前动态概率
     mask = torch.rand_like(adj, dtype=torch.float32) > dynamic_prob
     return adj * mask
 
 
 class ResidualWeight(nn.Module):
     """残差优化模块"""
+    """
+    没有残差块的网络仍然可以通过 ResidualWeight 来优化残差连接
+    """
 
-    def __init__(self):
+    def __init__(self, initial_alpha=0.5):
         super(ResidualWeight, self).__init__()
         # 初始化比例参数为 0.5，并约束其范围为 [0, 1]
-        self.alpha = nn.Parameter(torch.tensor(0.5))  # 初始值为 0.5
+        self.alpha = nn.Parameter(torch.tensor(initial_alpha))  # 初始值为 0.5
 
     def forward(self, input, residual):
         # 在每次前向传播时，确保 alpha 的值在 [0, 1] 范围内
@@ -86,6 +90,7 @@ class GraphConvolution(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input, epoch=0, max_epochs=100):
+        # print(f"GraphConvolution Forward Called: Epoch {epoch}")  # 添加调试信息
         b, n, c = input.shape
 
         # Apply DropEdge to adjacency matrix with dynamic probability
@@ -139,6 +144,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
     def forward(self, h, adj, epoch=0, max_epochs=100):
+        # print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
 
@@ -152,6 +158,9 @@ class MultiHeadGraphAttentionLayer(nn.Module):
             # 计算注意力分数
             e = torch.matmul(h_prime, h_prime.transpose(1, 2))  # [B, N, N]
             e = self.leakyrelu(e)  # [B, N, N]
+            # 不能使用这个进行约束 没法训练 损失率输出为nan
+            # # 使用邻接矩阵约束注意力分数
+            # e = e.masked_fill(adj == 0, float('-inf'))  # 将不存在的边的权重设为负无穷
             attention = self.softmax(e)  # Softmax on each row [B, N, N]
 
             # Apply attention mechanism
@@ -226,14 +235,15 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.bn1 = nn.BatchNorm1d(nhid)
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj):
+    def forward(self, x, adj, epoch=0, max_epochs=100):
+        # print(f"GCNWithMultiHeadGATAndTCN Forward Called: Epoch {epoch}")  # 添加调试信息
         # 第一层 GCN
-        x = self.gc1(x)
+        x = self.gc1(x, epoch=epoch, max_epochs=max_epochs)
         x = self.bn1(x.transpose(1, 2)).transpose(1, 2)  # BatchNorm
         x = F.relu(x)
 
         # 第一层多头 GAT 和 TCN
-        x = self.gat1(x, adj)
+        x = self.gat1(x, adj, epoch=epoch, max_epochs=max_epochs)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
         # 没有第二层 TCN，直接返回
@@ -267,6 +277,10 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
             torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
             torch.nn.BatchNorm1d(64),
             torch.nn.ReLU(inplace=True),
+
+            torch.nn.Conv1d(64, 64, kernel_size=3, stride=1, padding=2, dilation=2, bias=False),
+            torch.nn.BatchNorm1d(64),
+            torch.nn.ReLU(inplace=True),
         )
 
         self._classification = torch.nn.Conv1d(
@@ -275,19 +289,23 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
 
         self._init_weight()
 
-    def forward(self, x):
+    def forward(self, x, epoch=0, max_epochs=100):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
         # 获取邻接矩阵 adj
         adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
+
         # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
-        x = self.graph_embedding(x, adj)
+        x = self.graph_embedding(x, adj, epoch=epoch, max_epochs=max_epochs)
+
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
+
         # 卷积操作
         x = self._sequential(x)
+
         # 分类层
         x = self._classification(x)
         return x
