@@ -1,6 +1,7 @@
 import torch
 from model2.model_97 import GraphConvolution
 from model2.model_97 import MultiHeadGraphAttentionLayer
+from model2.model_97 import TCNBlock
 
 
 # refer to https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
@@ -25,7 +26,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
     # whitelist_weight_modules = (torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, torch.nn.Conv2d)
     # 根据model_1的修改 加入GraphAttentionLayer
     whitelist_weight_modules = (
-    torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, MultiHeadGraphAttentionLayer, torch.nn.Conv2d)
+    torch.nn.Linear, torch.nn.Conv1d, GraphConvolution, MultiHeadGraphAttentionLayer, TCNBlock, torch.nn.Conv2d)
 
     # 不需要进行权重衰减的模块
     # 包括BatchNorm1d batchNorm2d 批归一化层参数不需要进行衰减
@@ -67,6 +68,9 @@ def configure_optimizers(model, learning_rate, weight_decay):
             # 根据model_23进行修改
             elif 'gat1.a' in fpn or 'gat.a' in fpn:  # 手动处理 GAT 的 attention 参数
                 # 对 `gat1.a` 或其他命名规则的参数单独处理
+                no_decay.add(fpn)
+            # 根据model_97进行修改
+            elif 'tcn1.time_positional_encoding' in fpn:  # 处理TCN中的time_positional_encoding
                 no_decay.add(fpn)
 
     # 获取模型所有参数
