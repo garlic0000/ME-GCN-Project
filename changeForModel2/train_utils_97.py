@@ -70,7 +70,7 @@ def configure_optimizers(model, learning_rate, weight_decay):
                 # 对 `gat1.a` 或其他命名规则的参数单独处理
                 no_decay.add(fpn)
             # 根据model_97进行修改
-            elif 'tcn1.time_positional_encoding' in fpn:  # 处理TCN中的time_positional_encoding
+            elif 'tcn1.time_positional_encoding' or 'tcn1.batch_norm.weight' in fpn:  # 处理TCN中的time_positional_encoding
                 no_decay.add(fpn)
 
     # 获取模型所有参数
