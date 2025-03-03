@@ -8,6 +8,7 @@ import numpy as np
 
 """
 去掉ResidualWeight
+但有普通的残差连接
 drop_prob=0.4
 min_drop_prob=0.05
 """
