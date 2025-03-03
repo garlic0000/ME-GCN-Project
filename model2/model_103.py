@@ -303,9 +303,9 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
         # 获取邻接矩阵 adj
         # 由于直接在GCNWithMultiHeadGATAndTCN注册了参数adj 因此直接调用adj 不用通过gc1调用
         # adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
-        # 可以直接内部管理 不需要从外部在引入adj
+        adj = self.graph_embedding.adj
         # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
-        x = self.graph_embedding(x, epoch=epoch, max_epochs=max_epochs)
+        x = self.graph_embedding(x, adj, epoch=epoch, max_epochs=max_epochs)
 
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
