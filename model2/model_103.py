@@ -221,6 +221,10 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_heads=4):
         super(GCNWithMultiHeadGATAndTCN, self).__init__()
 
+        # Load adjacency matrix
+        adj_mat = np.load(mat_path)
+        self.register_buffer('adj', torch.from_numpy(adj_mat))
+
         # 第一层 GCN 改为普通线性变换 不考虑图结构信息 只处理普通的特征转换
         # self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         self.gc1 = nn.Linear(nfeat, nhid)
@@ -242,11 +246,14 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         x = F.relu(x)
 
         # 第一层多头 GAT 和 TCN
+        # 取消GCN层 GAT还可以进行adj的构建吗？应该可以 GCN的影响在于x而不是adj
         x = self.gat1(x, adj, epoch=epoch, max_epochs=max_epochs)
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
 
         # 没有第二层 TCN，直接返回
         return x
+
+
 
 
 class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
@@ -294,10 +301,11 @@ class AUwGCNWithMultiHeadGATAndTCN(torch.nn.Module):
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
 
         # 获取邻接矩阵 adj
-        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
-
+        # 由于直接在GCNWithMultiHeadGATAndTCN注册了参数adj 因此直接调用adj 不用通过gc1调用
+        # adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
+        # 可以直接内部管理 不需要从外部在引入adj
         # 调用 GCNWithMultiHeadGATAndTCN 进行图卷积、图注意力和 TCN 操作
-        x = self.graph_embedding(x, adj, epoch=epoch, max_epochs=max_epochs)
+        x = self.graph_embedding(x, epoch=epoch, max_epochs=max_epochs)
 
         # reshape 处理为适合卷积输入的维度
         x = x.reshape(b, t, -1).transpose(1, 2)
