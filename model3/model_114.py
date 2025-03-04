@@ -131,7 +131,9 @@ class AUwGCN(torch.nn.Module):
         super().__init__()
         mat_dir = '/kaggle/working/ME-GCN-Project'
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
-        self.graph_embedding = GCN(2, 16, 16, self.mat_path, num_heads=4)
+        adj_mat = np.load(self.mat_path)
+        self.register_buffer('adj', torch.from_numpy(adj_mat))
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, self.mat_path, num_heads=4))
         # self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path))
         in_dim = 192  # 24
 
@@ -163,10 +165,9 @@ class AUwGCN(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        # 获取邻接矩阵 adj
-        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
         # TCN+GAT
-        x = self.graph_embedding(x, adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        # 获取存储的静态adj矩阵
+        x = self.graph_embedding(x, self.adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
         # x = self.graph_embedding(x).reshape(b, t, n, 16)
         x = self._sequential(x)
         x = self._classification(x)
