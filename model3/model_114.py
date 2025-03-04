@@ -59,12 +59,12 @@ class MultiHeadGraphAttentionLayer(nn.Module):
     多头图注意力层 (Multi-Head GAT Layer)
     """
 
-    def __init__(self, in_features, out_features, num_heads=4):
+    def __init__(self, in_features, out_features, num_heads=4, alpha=0.2):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
         self.num_heads = num_heads
         self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
-
+        self.alpha = alpha
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
         self.a = nn.ParameterList(
