@@ -61,12 +61,12 @@ class MultiHeadGraphAttentionLayer(nn.Module):
     多头图注意力层 (Multi-Head GAT Layer)
     """
 
-    def __init__(self, in_features, out_features, num_heads=4):
+    def __init__(self, in_features, out_features, num_heads=4, alpha=0.2):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
         self.num_heads = num_heads
         self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
-
+        self.alpha = alpha
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
         self.a = nn.ParameterList(
@@ -75,7 +75,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
 
-    def forward(self, h, adj):
+    def forward(self, h):
         # print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
@@ -149,14 +149,14 @@ class GCN(nn.Module):
         # 输出层也进行归一化
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj):
+    def forward(self, x):
         x = self.gc1(x)
         x = x.transpose(1, 2).contiguous()
         x = self.bn1(x).transpose(1, 2).contiguous()
         x = F.relu(x)
 
         # 加上GAT
-        x = self.gat1(x, adj)
+        x = self.gat1(x)
         # 加上TCN
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
         return x
@@ -199,10 +199,8 @@ class AUwGCN(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        # 获取邻接矩阵 adj
-        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
-        # TCN+GAT
-        x = self.graph_embedding(x, adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        # GCN+GAT+TCN
+        x = self.graph_embedding(x).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
         # x = self.graph_embedding(x).reshape(b, t, n, 16)
         x = self._sequential(x)
         x = self._classification(x)
