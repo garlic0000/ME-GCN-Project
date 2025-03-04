@@ -190,14 +190,14 @@ class GCN(nn.Module):
         # 输出层也进行归一化
         self.bn2 = nn.BatchNorm1d(nout)
 
-    def forward(self, x, adj):
+    def forward(self, x):
         x = self.gc1(x)
         x = x.transpose(1, 2).contiguous()
         x = self.bn1(x).transpose(1, 2).contiguous()
         x = F.relu(x)
 
         # 加上GAT
-        x = self.gat1(x, adj)
+        x = self.gat1(x)
         # 加上TCN
         x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
         return x
@@ -240,10 +240,8 @@ class AUwGCN(torch.nn.Module):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
-        # 获取邻接矩阵 adj
-        adj = self.graph_embedding.gc1.adj  # 从 graph_embedding 中获取 adj
         # TCN+GAT
-        x = self.graph_embedding(x, adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        x = self.graph_embedding(x).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
         # x = self.graph_embedding(x).reshape(b, t, n, 16)
         x = self._sequential(x)
         x = self._classification(x)
