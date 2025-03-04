@@ -7,6 +7,7 @@ import numpy as np
 
 """
 Baseline+GCN+GAT+TCN+RW+DE
+可能有问题 还没测试
 """
 
 def drop_edge(adj, drop_prob=0.4, epoch=0, max_epochs=100, min_drop_prob=0.05):
