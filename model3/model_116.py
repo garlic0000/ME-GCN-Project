@@ -6,17 +6,27 @@ import math, os
 import numpy as np
 
 """
-Baseline+GCN+GAT
+Baseline+GCN+GAT+TCN+RW
 """
+
+class ResidualWeight(nn.Module):
+    """
+    残差连接优化模块
+    """
+
+    def __init__(self, initial_alpha=0.5):
+        super(ResidualWeight, self).__init__()
+        # 初始化比例参数为 0.5，并约束其范围为 [0, 1]
+        self.alpha = nn.Parameter(torch.tensor(initial_alpha))  # 初始值为 0.5
+
+    def forward(self, input, residual):
+        # 在每次前向传播时，确保 alpha 的值在 [0, 1] 范围内
+        alpha = torch.clamp(self.alpha, 0.0, 1.0)
+        return alpha * input + (1 - alpha) * residual
 
 class GraphConvolution(nn.Module):
     """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    Param:
-        in_features, out_features, bias
-    Input:
-        features: N x C (n = # nodes), C = in_features
-        adj: adjacency matrix (N x N)
+    Simple GCN layer with Residual Connection and ResidualWeight Optimization
     """
 
     def __init__(self, in_features, out_features, mat_path, bias=True):
@@ -30,8 +40,18 @@ class GraphConvolution(nn.Module):
             self.register_parameter('bias', None)
         self.reset_parameters()
 
+        # Load adjacency matrix
         adj_mat = np.load(mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
+
+        # 添加一个线性层，用于匹配输入和输出维度
+        if in_features != out_features:
+            self.residual_layer = nn.Linear(in_features, out_features, bias=False)
+        else:
+            self.residual_layer = None
+
+        # 残差优化模块
+        self.residual_weight = ResidualWeight()
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.weight.size(1))
@@ -40,30 +60,43 @@ class GraphConvolution(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def forward(self, input):
+        # print(f"GraphConvolution Forward Called: Epoch {epoch}")  # 添加调试信息
         b, n, c = input.shape
+
         support = torch.bmm(input, self.weight.unsqueeze(0).repeat(b, 1, 1))
         output = torch.bmm(self.adj.unsqueeze(0).repeat(b, 1, 1), support)
-        # output = SparseMM(adj)(support)
+
         if self.bias is not None:
-            return output + self.bias
+            output += self.bias
+
+        # Residual connection
+        if self.residual_layer is not None:
+            residual = self.residual_layer(input)
         else:
-            return output
+            residual = input
+
+        # 使用残差优化
+        return self.residual_weight(F.relu(output), residual)
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
             + str(self.in_features) + ' -> ' \
             + str(self.out_features) + ')'
 
+
 class MultiHeadGraphAttentionLayer(nn.Module):
     """
     多头图注意力层 (Multi-Head GAT Layer)
     """
 
-    def __init__(self, in_features, out_features, num_heads=4):
+    def __init__(self, in_features, out_features, num_heads=4, dropout=0.3, alpha=0.2):
         super(MultiHeadGraphAttentionLayer, self).__init__()
 
         self.num_heads = num_heads
         self.out_per_head = out_features // num_heads  # 每个头的输出特征维度
+        self.dropout = dropout
+        self.alpha = alpha
+
 
         # 为每个头定义独立的线性变换
         self.W = nn.ModuleList([nn.Linear(in_features, self.out_per_head, bias=False) for _ in range(num_heads)])
@@ -72,8 +105,9 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
+        self.residual_weight = ResidualWeight()  # 残差优化模块
 
-    def forward(self, h, adj):
+    def forward(self, h, adj, epoch=0, max_epochs=100):
         # print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
@@ -101,7 +135,47 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         # 将多个头的输出拼接
         output = torch.cat(outputs, dim=-1)  # [B, N, F]
 
-        return output
+        # 残差连接与优化
+        return self.residual_weight(output, h)
+
+
+class TCNBlock(nn.Module):
+    """
+    TCN layer with ResidualWeight Optimization
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_size=3, dilation=1, dropout=0.2):
+        super(TCNBlock, self).__init__()
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size, stride=1,
+            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+        )
+        self.batch_norm = nn.BatchNorm1d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout = nn.Dropout(dropout)
+
+        # 添加一个卷积层，用于匹配输入和输出维度
+        if in_channels != out_channels:
+            self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+        else:
+            self.residual_layer = None
+
+        # 残差优化模块
+        self.residual_weight = ResidualWeight()
+
+    def forward(self, x):
+        residual = x  # 保存残差
+        x = self.conv(x)
+        x = self.batch_norm(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+
+        # Residual connection with optimization
+        if self.residual_layer is not None:
+            residual = self.residual_layer(residual)
+
+        return self.residual_weight(x, residual)
+
 
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_heads=4):
@@ -110,10 +184,11 @@ class GCN(nn.Module):
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         # 加上GAT
         self.gat1 = MultiHeadGraphAttentionLayer(nhid, nout, num_heads)
+        # 加上TCN
+        self.tcn1 = TCNBlock(nout, nout)
         self.bn1 = nn.BatchNorm1d(nhid)
-        # self.gc2 = GraphConvolution(nhid, nout, mat_path)
-        # self.bn2 = nn.BatchNorm1d(nout)
-        # self.dropout = dropout
+        # 输出层也进行归一化
+        self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj):
         x = self.gc1(x)
@@ -123,6 +198,8 @@ class GCN(nn.Module):
 
         # 加上GAT
         x = self.gat1(x, adj)
+        # 加上TCN
+        x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
         return x
 
 
@@ -180,6 +257,3 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
-
-
-

@@ -232,8 +232,8 @@ class GCNWithMultiHeadGATAndTCN(nn.Module):
         self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
 
         # BatchNorm 层
-        self.bn1 = nn.BatchNorm1d(nhid)
-        self.bn2 = nn.BatchNorm1d(nout)
+        self.bn1 = nn.BatchNorm1d(nhid)  # 对隐藏层批量归一化
+        self.bn2 = nn.BatchNorm1d(nout)  # 对输出层批量归一化
 
     def forward(self, x, adj, epoch=0, max_epochs=100):
         # print(f"GCNWithMultiHeadGATAndTCN Forward Called: Epoch {epoch}")  # 添加调试信息

@@ -6,8 +6,9 @@ import math, os
 import numpy as np
 
 """
-Baseline+GCN+GAT
+Baseline+GCN+GAT+TCN
 """
+
 
 class GraphConvolution(nn.Module):
     """
@@ -53,6 +54,7 @@ class GraphConvolution(nn.Module):
         return self.__class__.__name__ + ' (' \
             + str(self.in_features) + ' -> ' \
             + str(self.out_features) + ')'
+
 
 class MultiHeadGraphAttentionLayer(nn.Module):
     """
@@ -103,6 +105,37 @@ class MultiHeadGraphAttentionLayer(nn.Module):
 
         return output
 
+
+class TCNBlock(nn.Module):
+    """
+    TCN layer with ResidualWeight Optimization
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_size, dilation=1, dropout=0.2):
+        super(TCNBlock, self).__init__()
+        self.conv = nn.Conv1d(
+            in_channels, out_channels, kernel_size, stride=1,
+            padding=(kernel_size - 1) * dilation // 2, dilation=dilation
+        )
+        self.batch_norm = nn.BatchNorm1d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.dropout = nn.Dropout(dropout)
+
+        # 添加一个卷积层，用于匹配输入和输出维度
+        if in_channels != out_channels:
+            self.residual_layer = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+        else:
+            self.residual_layer = None
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.batch_norm(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+
+        return x
+
+
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nout, mat_path, dropout=0.3, num_heads=4):
         super(GCN, self).__init__()
@@ -110,10 +143,11 @@ class GCN(nn.Module):
         self.gc1 = GraphConvolution(nfeat, nhid, mat_path)
         # 加上GAT
         self.gat1 = MultiHeadGraphAttentionLayer(nhid, nout, num_heads)
+        # 加上TCN
+        self.tcn1 = TCNBlock(nout, nout, kernel_size=3, dilation=1, dropout=0.2)
         self.bn1 = nn.BatchNorm1d(nhid)
-        # self.gc2 = GraphConvolution(nhid, nout, mat_path)
-        # self.bn2 = nn.BatchNorm1d(nout)
-        # self.dropout = dropout
+        # 输出层也进行归一化
+        self.bn2 = nn.BatchNorm1d(nout)
 
     def forward(self, x, adj):
         x = self.gc1(x)
@@ -123,6 +157,8 @@ class GCN(nn.Module):
 
         # 加上GAT
         x = self.gat1(x, adj)
+        # 加上TCN
+        x = self.tcn1(x.transpose(1, 2)).transpose(1, 2)
         return x
 
 
@@ -180,6 +216,3 @@ class AUwGCN(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight)
             if isinstance(m, torch.nn.Conv2d):
                 torch.nn.init.kaiming_normal_(m.weight)
-
-
-
