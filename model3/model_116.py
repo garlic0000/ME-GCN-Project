@@ -206,11 +206,9 @@ class GCN(nn.Module):
 class AUwGCN(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
-        mat_path = os.path.join(
-            'assets',
-            '{}.npy'.format(opt['dataset'])
-        )
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, mat_path, num_heads=4))
+        mat_dir = '/kaggle/working/ME-GCN-Project'
+        self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, self.mat_path, num_heads=4))
         # self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path))
         in_dim = 192  # 24
 
