@@ -161,12 +161,12 @@ class AUwGCN(torch.nn.Module):
 
         self._init_weight()
 
-    def forward(self, x):
+    def forward(self, x, adj):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
         # TCN+GAT
-        # 获取存储的静态adj矩阵
+        # TypeError: Sequential.forward() takes 2 positional arguments but 3 were given
         x = self.graph_embedding(x, self.adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
         # x = self.graph_embedding(x).reshape(b, t, n, 16)
         x = self._sequential(x)
