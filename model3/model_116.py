@@ -107,7 +107,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
         self.residual_weight = ResidualWeight()  # 残差优化模块
 
-    def forward(self, h, adj, epoch=0, max_epochs=100):
+    def forward(self, h):
         # print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
