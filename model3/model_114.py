@@ -73,7 +73,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         self.leakyrelu = nn.LeakyReLU(self.alpha)
         self.softmax = nn.Softmax(dim=2)  # Softmax is computed over the neighbors
 
-    def forward(self, h, adj):
+    def forward(self, h):
         # print(f"MultiHeadGraphAttentionLayer Forward Called: Epoch {epoch}")  # 添加调试信息
         B, N, F = h.size()
         outputs = []
@@ -115,14 +115,14 @@ class GCN(nn.Module):
         # self.bn2 = nn.BatchNorm1d(nout)
         # self.dropout = dropout
 
-    def forward(self, x, adj):
+    def forward(self, x):
         x = self.gc1(x)
         x = x.transpose(1, 2).contiguous()
         x = self.bn1(x).transpose(1, 2).contiguous()
         x = F.relu(x)
 
         # 加上GAT
-        x = self.gat1(x, adj)
+        x = self.gat1(x)
         return x
 
 
@@ -133,7 +133,7 @@ class AUwGCN(torch.nn.Module):
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
         adj_mat = np.load(self.mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, self.mat_path, num_heads=4), self.adj)
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, self.mat_path, num_heads=4))
         # self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path))
         in_dim = 192  # 24
 
@@ -161,13 +161,13 @@ class AUwGCN(torch.nn.Module):
 
         self._init_weight()
 
-    def forward(self, x, adj):
+    def forward(self, x):
         b, t, n, c = x.shape
 
         x = x.reshape(b * t, n, c)  # (b*t, n, c)
         # TCN+GAT
         # TypeError: Sequential.forward() takes 2 positional arguments but 3 were given
-        x = self.graph_embedding(x, self.adj).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
+        x = self.graph_embedding(x).reshape(b, t, -1).transpose(1, 2)  # (b, C=384=12*32, t)
         # x = self.graph_embedding(x).reshape(b, t, n, 16)
         x = self._sequential(x)
         x = self._classification(x)

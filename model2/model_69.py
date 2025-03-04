@@ -148,7 +148,7 @@ class MultiHeadGraphAttentionLayer(nn.Module):
         B, N, F = h.size()
         outputs = []
 
-        # Apply DropEdge to adjacency matrix with dynamic probability
+        # 更新邻接矩阵
         adj = drop_edge(adj, drop_prob=self.drop_prob, epoch=epoch, max_epochs=max_epochs, min_drop_prob=self.min_drop_prob)
 
         for i in range(self.num_heads):
