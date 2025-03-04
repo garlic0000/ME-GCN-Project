@@ -133,7 +133,7 @@ class AUwGCN(torch.nn.Module):
         self.mat_path = os.path.join(mat_dir, 'assets', '{}.npy'.format(opt['dataset']))
         adj_mat = np.load(self.mat_path)
         self.register_buffer('adj', torch.from_numpy(adj_mat))
-        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, self.mat_path, num_heads=4))
+        self.graph_embedding = torch.nn.Sequential(GCN(2, 16, 16, self.mat_path, num_heads=4), self.adj)
         # self.graph_embedding = torch.nn.Sequential(GCN(2, 32, 32, mat_path))
         in_dim = 192  # 24
 
